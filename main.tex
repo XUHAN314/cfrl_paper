@@ -1,0 +1,56 @@
+\documentclass{article}
+\usepackage{iclr2027_conference,times}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{amsmath,amssymb,amsthm,bm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc,decorations.pathmorphing,fit,backgrounds}
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage{textcomp}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{wrapfig}
+\input{math_commands.tex}
+\newcommand{\jpc}{\textsc{JPC}}
+\newcommand{\dep}{\gamma56@64}
+\newcommand{\hl}[1]{\textcolor{blue!70!black}{#1}}
+% Table 1 pending cells: \pendA = ELF runs in progress (Countdown GRPO seeds), \pendD = d1 matched-data rows
+\newcommand{\pendA}{--}\newcommand{\pendD}{--}
+% d1 baseline pending cells (filled by baselines/d1 results)
+\newcommand{\PENDcd}{--}\newcommand{\PENDsd}{--}\newcommand{\PENDkk}{--}\newcommand{\PENDgt}{--}\newcommand{\PENDScd}{--}\newcommand{\PENDSsd}{--}\newcommand{\PENDSkk}{--}\newcommand{\PENDSgt}{--}
+\newtheorem{proposition}{Proposition}
+\newtheorem{remark}{Remark}
+
+\title{Reinforcement Learning for Continuous-State Language Models:\\ Pathwise Gradients with a Jointly Trained Two-Dimensional Critic}
+\author{Anonymous authors\\ Paper under double-blind review}
+
+\begin{document}
+\maketitle
+\input{sections/0_abstract}
+\input{sections/1_intro}
+\input{sections/2_estimators}
+\input{sections/3_method}
+\input{sections/4_loop}
+\input{sections/5_experiments}
+\input{sections/6_ablations}
+\input{sections/7_related}
+\input{sections/8_conclusion}
+
+\subsubsection*{Reproducibility statement}
+\input{sections/9_statements}
+
+\bibliography{refs}
+\bibliographystyle{iclr2027_conference}
+
+\appendix
+\input{appendix/A_datasets}
+\input{appendix/B_derivations}
+\input{appendix/C_details}
+\input{appendix/D_results}
+\input{appendix/E_related}
+\end{document}

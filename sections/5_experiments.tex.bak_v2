@@ -1,0 +1,51 @@
+\section{Experiments}
+\label{sec:experiments}
+\paragraph{Tasks.}
+All four tasks have a program verifier, so rewards are exact and no reward model is involved (details in Appendix~\ref{app:datasets}). \textbf{Countdown} \citep{gandhi2024sos}: reach a target from four to five numbers with $+,-,\times,\div$; the answer is a derivation. \textbf{Sudoku} \citep{shah2024sudoku}: fill a $9\times9$ grid; solutions are unique; the model emits all 81 cells. \textbf{Knights-and-Knaves} (K\&K) \citep{xie2024kk}: assign knight/knave to $n\in\{4,5,6\}$ characters from their statements; solutions are unique. \textbf{Game24} \citep{yao2023tot}: reach 24 from four numbers. Game24 has only 1{,}345 solvable number sets, so we split by \emph{set}: the 1{,}601 evaluation prompts are orderings of 269 sets the model has never seen, and on this split more supervised fine-tuning \emph{hurts} (Appendix~\ref{app:g24_sft}), so no RL gain can be attributed to continued SFT.
+
+\paragraph{Models and protocol.}
+Every run starts from ELF-B (105M) fine-tuned on the task with the ELF recipe, at a checkpoint with headroom (Countdown epoch 60; Sudoku the converged model; K\&K epoch 4, since epoch 8 already reaches 99.7 and serves as the supervised oracle; Game24 the epoch-20 peak). We report accuracy under four samplers, ODE64 / $\gamma4$@16 / $\gamma28$@32 / $\gamma56$@64 ($\gamma14$@16 replaces $\gamma28$@32 for Sudoku), on 2{,}000 held-out prompts (1{,}601 for Game24). GRPO is the score-function baseline (group size 8, uniform step credit, no KL, best of six checkpoints), the strongest member of the family in Table~\ref{tab:sf_variants}; \jpc{} uses $10^{-6}$ with the 2D critic and the two-phase $3\times10^{-6}\!\to\!10^{-6}$ schedule with the scalar critic, with the held-out peak reported (Appendix~\ref{app:details}). Every headline number is the mean $\pm$ standard deviation over three seeds of the per-seed peak (evaluation jitter $\approx\pm0.3$).
+
+\begin{table}[t]
+\centering\small
+\caption{Main results at the deployment sampler (accuracy \%, mean $\pm$ standard deviation over three seeds; $\dagger$ = single seed). The 2D critic at $10^{-6}$ is the only recipe that replicates on every task.}
+\label{tab:main}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+ & Countdown & Sudoku & K\&K & Game24 \\
+ & $\gamma56$@64 & $\gamma28$@32 & $\gamma56$@64 & $\gamma56$@64 \\
+\midrule
+SFT base & 42.2 & 66.2 & 67.5 & 45.0 \\
+GRPO (best checkpoint) & $47.2^\dagger$ & $67.8\pm3.4$ & $71.6\pm2.1$ & $47.0\pm0.7$ \\
+\jpc{}, scalar critic, $3{\times}10^{-6}\!\to\!10^{-6}$ & $50.2\pm1.0$ (2/3 seeds) & collapse & $70.5^\dagger$ & $55.2^\dagger$ (1/2 seeds) \\
+\hl{\jpc{}, 2D critic, $10^{-6}$} & $47.9\pm0.6$ & $\mathbf{69.7\pm0.4}$ & $70.5\pm0.2$ & $\mathbf{58.7\pm1.6}$ \\
+\midrule
+\jpc{} + amortisation loop (4--5 rounds) & $\mathbf{54.4}$ & null & $\mathbf{94.9}$ & $\mathbf{58.3}$ \\
+\; same loop from the SFT base (no RL) & 44.1 & --- & 82.3 & 48.0 \\
+\; gold labels for the loop's problems & --- & --- & 96.7 & 53.8 \\
+\midrule
+SFT-final / gold-SFT oracle & 61.7 & --- & 99.7 & (45.0, peak) \\
+AR GPT-2 (124M) + token-level GRPO/PPO & $44.2\!\to\!53.9$ & --- & --- & $26.9\!\to\!32.2$ \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\paragraph{Pure RL.}
+Table~\ref{tab:main} gives the headline numbers (Figure~\ref{fig:results} in Appendix~\ref{app:results} plots them with seed error bars). On \textbf{Game24}, where the test set is unseen number sets and supervised training cannot help, \jpc{} with the 2D critic reaches $58.7\pm1.6$ ($56.8/60.6/58.8$ over seeds) against $45.0$ for the base, $47.0$ for GRPO and $32.2$ for the AR control; the gain of $+13.7$ points is the largest we observed and it replicates on every seed. On \textbf{Countdown} the scalar two-phase schedule has the higher ceiling when it works ($+9.0$ and $+7.0$; the third seed never learns), the 2D critic gives $+5.6$ on both seeds, and the loop reaches $54.4$. On \textbf{Sudoku} and \textbf{K\&K} the two estimators land in the same band at the deployment sampler ($+3$ to $+4$) with very different reliability (the 2D critic's seeds agree within $0.4$ points, GRPO's spread over up to $7$, one Sudoku seed ending below the base), and they differ most at the cheap samplers, which \jpc{} lifts by $+5$ to $+8$ while GRPO leaves them near the base (Appendix~\ref{app:results}).
+
+\paragraph{The AR control.}
+The score-function estimator is not the problem in itself. A GPT-2 fine-tuned on the same Countdown data climbs from 44.2 to 53.9 under token-level GRPO/PPO with textbook clip statistics, while the same estimator on the flow model, with every advantage refinement of Table~\ref{tab:sf_variants}, stays within $+5$. On the Game24 set split the AR model gains $+5.3$ from a lower start and the flow model $+13.7$ through its native estimator: each architecture improves through its own gradient channel, and the continuous one has the larger channel. Appendix~\ref{app:d1} runs d1 \citep{zhao2025d1}, a masked-diffusion baseline, on our tasks.
+
+\paragraph{The loop and its controls.}
+Figure~\ref{fig:curves} (right) isolates the loop on Game24. Four rounds from the RL policy take the deployment sampler from $55.2$ to $58.3$ and the 64-step ODE sampler from $41.2$ to $52.7$ ($+17.5$ over the base), so a sampler four times cheaper than the deployment one ends within six points of it. Two controls hold the problems fixed: supervised fine-tuning on the \emph{gold} derivations of the very orderings the loop sampled gives $55.5\!\to\!53.8$, nothing; the identical loop from the SFT base gives $+0.8$ after one round and $+3.1$ after two, against $+11.4$ after one round from the RL policy (Countdown: $+1.9$ against $+12.2$, Appendix~\ref{app:cd_loop}). The gain is therefore in the RL policy's derivations: on-distribution, diverse (up to four verified derivations per problem), and, unlike gold labels, things the policy can already almost do.
+
+\paragraph{Where it does not help.}
+Sudoku's loop is null, on training puzzles and on 50k fresh ones: solutions are unique, the policy only re-solves what it already solves, and the cheap samplers already sit within four points of the deployment one, so there is nothing to amortise. On K\&K a fresh-problem self-labelling loop compounds strongly ($70.5\!\to\!94.9$ over four rounds, within two points of a full-gold control), but it does so from the SFT base as well: the base already covers as many fresh problems as the RL policy, so the loop is bounded by coverage rather than by RL (Appendix~\ref{app:kk_by_n}).
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.86\linewidth]{figures/fig_dynamics_loop.pdf}
+\caption{Left, middle: replay-buffer success (grey), critic value (red) and held-out accuracy (blue) for two \jpc{} runs; every run eventually enters a regime where the critic's value drifts while held-out accuracy falls, and the recipe keeps the held-out peak. Right: loop attribution on Game24 at the deployment and ODE-64 samplers (base, RL policy, loop from the RL policy, loop from the base, gold-label SFT on the same problems).}
+\label{fig:curves}
+\end{figure}

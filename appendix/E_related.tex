@@ -1,0 +1,19 @@
+\section{Extended related work}
+\label{app:related}
+\paragraph{Continuous-state and diffusion language models.}
+Diffusion-LM \citep{li2022diffusionlm} introduced continuous diffusion over word embeddings with per-step rounding; ELF \citep{hu2026elf} shows that removing intermediate discretisation and using flow matching \citep{lipman2022flow,liu2022rectified,albergo2023stochastic} in a frozen T5 embedding space matches autoregressive baselines on translation and summarisation. Masked discrete diffusion \citep{lou2023sedd,sahoo2024mdlm,nie2025llada} is the other line; its RL methods \citep{zhao2025d1,zhu2025llada15} construct mean-field or ELBO likelihood surrogates because the exact trajectory likelihood is intractable, a problem that the continuous chain does not have.
+
+\paragraph{RL for diffusion and flow models.}
+DDPO and DPOK \citep{black2023ddpo,fan2023dpok} cast denoising as an MDP and apply policy gradients to image diffusion; Flow-GRPO, DanceGRPO and MixGRPO \citep{liu2025flowgrpo,xue2025dancegrpo,li2025mixgrpo} extend GRPO to flow matching with ODE-to-SDE conversion, denoising reduction and sliding windows; FPO \citep{mcallister2025fpo} uses the flow-matching loss as a likelihood surrogate inside PPO. Reward back-propagation \citep{prabhudesai2023alignprop,clark2023draft} differentiates a fixed reward model through the sampler, and Adjoint Matching \citep{domingoenrich2024adjoint} frames reward fine-tuning as stochastic optimal control with a memoryless noise schedule. Our setting differs in three ways: the reward is a program verifier and not differentiable, so the critic must be learned; the critic is trained jointly, which we show is what prevents exploitation; and the pathwise update touches one random step, so nothing is differentiated through the chain.
+
+\paragraph{Actor-critic control.}
+DDPG and SAC \citep{lillicrap2015ddpg,haarnoja2018sac} optimise a deterministic or reparameterised policy through a learned $Q$-function that is trained on replayed transitions; \jpc{} is this pattern applied to a generative chain with a per-position critic.
+
+\paragraph{AR post-training.}
+RLHF and RLVR \citep{ouyang2022instructgpt,shao2024deepseekmath,deepseek2025r1} use PPO or GRPO \citep{schulman2017ppo,schulman2015gae}; recent variants adjust the clipping and sampling \citep{yu2025dapo,zheng2025gspo}. Their estimator is the score function over categorical decisions, and the reparameterisation alternatives \citep{jang2016gumbel,maddison2016concrete,kingma2013vae} are biased for categorical actions, which is why the pathwise estimator has no role in AR post-training.
+
+\paragraph{Self-training with verifiers.}
+STaR, RFT, ReST-EM and related work \citep{zelikman2022star,yuan2023rft,singh2023restem,huang2022selfimprove} fine-tune a model on its own verified generations; expert iteration \citep{anthony2017exit} alternates a stronger search-based policy with distillation. The amortisation loop is this pattern with an RL policy as the sampler; the controls in \S\ref{sec:experiments} show that the sampler's identity, and not the self-training step itself, is what carries the gain.
+
+\paragraph{Tasks.}
+Countdown and Game24 follow \citet{gandhi2024sos} and \citet{yao2023tot}; Sudoku follows \citet{shah2024sudoku}; Knights-and-Knaves follows \citet{xie2024kk}.

@@ -1,0 +1,48 @@
+\section{Two estimators for a continuous-state language model}
+\label{sec:estimators}
+\paragraph{Model and sampler.}
+We use ELF-B \citep{hu2026elf}: a frozen T5 encoder \citep{raffel2020t5} maps a target sequence of $L$ tokens to embeddings $x\in\mathbb R^{L\times d}$ ($d{=}512$), a transformer $D_\theta(y,t,c)$ predicts $x$ from a noisy state $y$ at time $t$ given a condition $c$, and text is read out by a factorised categorical decode of the final prediction. Generation runs a stochastic sampler for $K$ steps. Re-indexing it by its post-noising iterates gives a Markov chain with exact diagonal Gaussian kernels,
+\begin{equation}
+y_k=\alpha_k\,D_\theta(y_{k-1},t_{k-1},c)+\sigma_k\,\varepsilon_k,\qquad \varepsilon_k\sim\mathcal N(0,I),
+\label{eq:chain}
+\end{equation}
+where $\alpha_k=1-\gamma h_k$, $\sigma_k=\gamma h_k c_\sigma$ and $\gamma$ sets the per-step churn (Appendix~\ref{app:derivations}). Larger $\gamma$ is better at sampling: with $K{=}64$ and $\gamma{=}56$ (retention $\alpha\approx0.125$) accuracy on Countdown is $42.2$ against $28.1$ for the paper's 64-step ODE sampler, so \emph{deployment} means $\gamma56@64$ throughout ($\gamma28@32$ for Sudoku, whose sequences are longer). The trajectory likelihood is exact and factorises over the $K\times L\times d$ coordinates, so every estimator below is well defined; nothing here needs an ELBO.
+
+\paragraph{Score-function.}
+With reward $r(y_K)\in\{0,1\}$ from a verifier and any advantage $A$ (group-relative, per-step, or per-position), the policy-gradient estimator is
+\begin{equation}
+\hat g_{\mathrm{SF}}=\sum_{k}A_k\,\nabla_\theta\log\mathcal N\!\big(y_k;\alpha_kD_\theta,\sigma_k^2I\big)=\sum_k A_k\,\frac{\varepsilon_k^{\top}}{\sigma_k}\,\alpha_k\frac{\partial D_\theta}{\partial\theta}.
+\label{eq:sf}
+\end{equation}
+The score of a Gaussian transition is the noise itself, $\varepsilon_k/\sigma_k$, contracted with a Jacobian. For an AR policy the corresponding quantity is $\nabla_\theta\log\pi(a_t)=(\mathbf 1_{a_t}-p_t)^{\top}\partial z_t/\partial\theta$: bounded, attached to a categorical decision that is itself the semantic event the reward depends on, and there are only $\sim$30 of them per Countdown trajectory. In~\eqref{eq:sf} there are $K\!\cdot\! L\!\cdot\! d$ noise scalars per trajectory, $5.5\times10^{5}$ at $\gamma4@16$ and $2.4\times10^{6}$ at $\gamma56@64$. None of them individually decides a token: we measured that 86\% of positions commit to their final token at the first denoising step and never change (Appendix~\ref{app:commit}), so token identity is a property of the accumulated dynamics, not of any coordinate at any step. A reward bit is therefore correlated against $10^{4}$--$10^{5}$ times more nuisance directions than in the AR case, and the resulting signal-to-noise ratio, not the quality of the advantage, is what limits learning (Appendix~\ref{app:variance}).
+
+\paragraph{The cap is empirical, not a tuning failure.}
+Table~\ref{tab:sf_variants} lists the score-function variants we ran on Countdown from the same base. Making the advantage exact (an oracle verifier applied to every intermediate decode), dense (per step and per position on a $K\times L$ grid), sparse (last-$n$ steps only), ratio-based (per-position PPO with clip fraction in the textbook range), or critic-selected (advantages from a live, jointly trained critic whose top-1 pick is correct 100\% of the time) moves the result between $+3$ and $+5$ points at the deployment sampler. The same token-level GRPO/PPO applied to a GPT-2 \citep{radford2019gpt2} fine-tuned on the same data rises from $44.2$ to $53.9$ ($+9.7$) with unremarkable clip statistics. The estimator is not broken; it is applied to the wrong kind of action.
+
+\begin{table}[t]
+\centering\small
+\caption{Score-function variants on Countdown (ELF-B, base $28.1/23.1/38.0/42.2$ at ODE64/$\gamma4$@16/$\gamma28$@32/$\gamma56$@64). Every variant caps at $+3$--$+5$ at the deployment sampler; the AR control with the same estimator gains $+9.7$.}
+\label{tab:sf_variants}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+variant & what changes & best $\Delta$ at $\gamma56$@64 \\
+\midrule
+GRPO, uniform credit over $K$ steps & group baseline & $+2.8$ \\
+credit to the last $n$ steps only & sparse credit & $+1.6$ \\
+oracle advantage (verifier on every intermediate decode) & exact advantage & $+3.1$ \\
+per-step $\times$ per-position advantage grid & dense credit & $+3.9$ \\
+per-position PPO ratios, clip $0.2$ & clipped ratios & $+5.0$ \\
+jointly trained critic selects advantages (pick@$V$ = 1.0) & critic-selected & $+4.6$ \\
+\midrule
+AR GPT-2 (124M) + token-level GRPO/PPO & same estimator, AR actions & $+9.7$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Pathwise.}
+Because the state is continuous, the reparameterisation is already written in~\eqref{eq:chain}: $y_k$ is a deterministic function of $\theta$ given the noise. If a critic $V_\phi(y_k,t_k,c)$ estimates the expected reward of a noisy state, then
+\begin{equation}
+\hat g_{\mathrm{PW}}=\frac{\partial V_\phi(y_k)}{\partial y_k}\;\alpha_k\,\frac{\partial D_\theta(y_{k-1})}{\partial\theta}
+\label{eq:pw}
+\end{equation}
+delivers a deterministic, per-coordinate signal whose magnitude is set by the critic's local slope rather than by $\varepsilon_k/\sigma_k$. This is the estimator of continuous control \citep{lillicrap2015ddpg,haarnoja2018sac} and of reward back-propagation through image diffusion \citep{prabhudesai2023alignprop,clark2023draft,domingoenrich2024adjoint}. It is absent from AR post-training for one reason: categorical sampling has no reparameterisation, and its relaxations \citep{jang2016gumbel,maddison2016concrete} are biased. Its known failure mode is equally specific: the policy climbs the critic rather than the reward unless the critic tracks the policy. Section~\ref{sec:method} builds the critic that makes~\eqref{eq:pw} work, and \S\ref{sec:ablations} shows that freezing it removes the gains.

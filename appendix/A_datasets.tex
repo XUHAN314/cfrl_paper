@@ -1,0 +1,18 @@
+\section{Datasets and verifiers}
+\label{app:datasets}
+All tasks are generated programmatically; every prompt has a program verifier that decides correctness of a model output without reference to the gold answer, so rewards are exact and label-free.
+
+\paragraph{Countdown.}
+Following the Countdown formulation of \citet{gandhi2024sos}, a prompt is four or five integers and a target; the model emits a derivation as a sequence of binary operations (\texttt{12-5=7 , 4*7=28 , 28-4=24}). The verifier parses the derivation, checks that every operation is arithmetically correct, that each input number is used at most once, and that the last result equals the target. Training uses 50k problems with one gold derivation each; the RL pool is a disjoint set of unlabelled problems; evaluation uses 2{,}000 held-out problems. Sequence length is 72 embedding positions (16 for the condition).
+
+\paragraph{Sudoku.}
+Puzzles are drawn from a public collection of rated Sudoku puzzles (with solutions); the model reads the 81-cell puzzle (blanks as \texttt{*}) and emits all 81 cells. The verifier checks that the output is a valid grid consistent with the givens; since solutions are unique this equals exact match. The supervised set is 400k puzzles, evaluation 2{,}000 held-out puzzles; the ``fresh puzzle'' pool for the loop is 50k further puzzles with no overlap with training, validation or test. Sequence length is 164 (82 condition, 82 target).
+
+\paragraph{Knights-and-Knaves.}
+Following \citet{xie2024kk}, each puzzle has $n\in\{4,5,6\}$ characters who each make one statement (``A: C knave'', ``B: A same C'', ``C: D diff B''); the model outputs an assignment (``A knight B knave \dots''). Our generator enumerates assignments and keeps only puzzles with a unique solution; the verifier re-parses the statements and checks that the assignment satisfies every one. Training uses 300k puzzles; evaluation 2{,}000; the fresh-problem pools for the loop are 50k puzzles each, disjoint from training, validation and from each other. The supervised model reaches 96.8/93.8/99.4/99.7 at epoch 8, so the RL base is the epoch-4 checkpoint (57.8/58.1/65.8/67.5) and the epoch-8 model is the supervised oracle. Sequence length is 96 (56 condition).
+
+\paragraph{Game24.}
+Following the Game of 24 of \citet{yao2023tot}, reach 24 from four numbers in $\{1,\dots,13\}$ with each number used once. Only 1{,}345 unordered number sets are solvable, so we split by set: the training set contains 13{,}150 orderings of 1{,}076 sets with one gold derivation each, the loop pool a further 4{,}693 orderings of the training sets, and the evaluation set 1{,}601 orderings of the 269 remaining sets, which the model never sees in any order. The verifier is the Countdown verifier with target 24. Sequence length is 72 (16 condition). The supervised model is initialised from the Countdown model and trained for 40 epochs; held-out accuracy peaks at epoch 20 (35.2/35.4/42.6/45.0) and falls to 30.5/29.8/32.1/34.7 by epoch 40, so the epoch-20 checkpoint is the RL base and there is no supervised oracle above it.
+
+\paragraph{Samplers.}
+ODE64 is the 64-step deterministic sampler of \citet{hu2026elf}. $\gamma g$@$K$ denotes the SDE sampler of~\eqref{eq:chain} with $K$ uniform steps and churn $\gamma{=}g$; $\gamma56$@64, $\gamma28$@32 and $\gamma14$@16 all have per-step retention $\alpha\approx0.125$, which we found to be the best sampling configuration independently of $K$ (more steps still help at fixed $\alpha$); $\gamma4$@16 is a cheap low-churn configuration. All evaluations use classifier-free guidance 2 and self-conditioning guidance 1 as in the ELF release.

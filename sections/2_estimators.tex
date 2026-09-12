@@ -1,0 +1,48 @@
+\section{Background: the model, its samplers, and the RL objective}
+\label{sec:estimators}
+
+\paragraph{ELF: text as a flow in embedding space.}
+We use ELF-B \citep{hu2026elf}. A frozen T5 encoder \citep{raffel2020t5} maps a token sequence $w=(w_1,\dots,w_L)$ to clean embeddings $x=\mathrm{Enc}(w)\in\mathbb R^{L\times d}$, one vector $x_i\in\mathbb R^{d}$ per position ($d{=}512$). Generation reverses a linear interpolant between Gaussian noise and $x$, $z_t=(1-t)\,c_\sigma\varepsilon+t\,x$ with $\varepsilon\sim\mathcal N(0,I)$, $t\in[0,1]$ and $c_\sigma$ a fixed noise scale. A transformer $\hat x_\theta(z,t,c)$ is trained to predict $x$ from $z_t$ given the prompt $c$ (its embeddings occupy a prefix of the $L$ positions and are held clean), and the induced velocity is $v_\theta(z,t,c)=(\hat x_\theta(z,t,c)-z)/(1-t)$.
+
+\emph{ODE sampler and decode.} Start from $z_0=c_\sigma\varepsilon_0$ and integrate the velocity with Euler steps over a grid $0=t_0<\dots<t_K=1$: $z_k=z_{k-1}+h_k\,v_\theta(z_{k-1},t_{k-1},c)$ with $h_k=t_k-t_{k-1}$. Every step moves all $L$ positions jointly; no token is chosen along the way. At $t_K{=}1$ a decoder head applied to the final network pass gives per-position logits $\ell_i(z_K)\in\mathbb R^{|\mathcal V|}$, and tokens are read out independently per position, $w_i=\arg\max\ell_i(z_K)$. The ODE sampler is therefore a deterministic function of the initial noise $\varepsilon_0$: all the randomness of a sample sits in $\varepsilon_0$.
+
+\emph{SDE sampler.} ELF's stochastic sampler with churn $\gamma$ re-injects noise at every step. From $z_{k-1}$ it first \emph{noises back},
+$y_k=\alpha_k z_{k-1}+(1-\alpha_k)\,c_\sigma\,\varepsilon_k$ with $\alpha_k=1-\gamma h_k$ and $\varepsilon_k\sim\mathcal N(0,I)$, re-timing the state to $\tilde t_k=\alpha_kt_{k-1}$, and then takes an Euler step forward, $z_k=y_k+(t_k-\tilde t_k)\,v_\theta(y_k,\tilde t_k,c)\;=:\;D_\theta(y_k)$; the last step is a plain ODE step and is followed by the decode. Setting $\gamma{=}0$ recovers the ODE sampler. Larger churn samples better ($42.2$ against $28.1$ on Countdown for $\gamma56@64$ versus the 64-step ODE, Appendix~\ref{app:sampler_sweep}), so \emph{deployment} means $\gamma56@64$ throughout ($\gamma28@32$ on Sudoku, whose sequences are longer).
+
+\emph{The sampler as a Markov chain.} Indexing the SDE sampler by its noised iterates $y_k=(y_{k,1},\dots,y_{k,L})$, where the first index is the \emph{flow step} and the second the \emph{token position}, gives a chain with exact diagonal Gaussian kernels,
+\begin{equation}
+y_{k,i}=\alpha_k\,D_\theta(y_{k-1})_i+\sigma_k\,\varepsilon_{k,i},\qquad \varepsilon_{k,i}\sim\mathcal N(0,I_d),\quad \sigma_k=(1-\alpha_k)c_\sigma,
+\label{eq:chain}
+\end{equation}
+so that a trajectory $\tau=(y_1,\dots,y_K)$ has likelihood $p_\theta(\tau\mid c)=\prod_{k=1}^{K}\prod_{i=1}^{L}\mathcal N\big(y_{k,i};\alpha_kD_\theta(y_{k-1})_i,\sigma_k^2I_d\big)$, exact and without any bound (Appendix~\ref{app:derivations}). The decoded text $w(\tau)=\arg\max\ell(D_\theta(y_K))$ is a deterministic function of the last state. Everything below is stated on this chain; the two indices of $y_{k,i}$ are the two axes on which our critic will live.
+
+\paragraph{The RL objective.}
+A verifier returns $r(w,c)\in\{0,1\}$ for a decoded answer. Post-training maximises the expected reward of the model's own samples,
+\begin{equation}
+J(\theta)=\mathbb E_{c}\,\mathbb E_{\tau\sim p_\theta(\cdot\mid c)}\big[\,r\big(w(\tau),c\big)\big],
+\label{eq:objective}
+\end{equation}
+and every policy-gradient method estimates $\nabla_\theta J$ from samples in one of two ways. The \emph{score-function} (likelihood-ratio) identity, $\nabla_\theta J=\mathbb E[\,r\,\nabla_\theta\log p_\theta(\tau\mid c)]$, needs only the log-likelihood of the sample and is the basis of REINFORCE, PPO and GRPO. The \emph{pathwise} (reparameterisation) identity writes the sample as a deterministic function of the parameters and an independent noise, $\tau=\tau(\theta,\varepsilon)$, and differentiates through it, $\nabla_\theta J=\mathbb E[\nabla_\theta\, r(\tau(\theta,\varepsilon))]$; it needs a differentiable path from $\theta$ to the reward.
+
+\paragraph{How autoregressive post-training does it.}
+For an AR model the trajectory is the token sequence itself, $p_\theta(w\mid c)=\prod_t\pi_\theta(w_t\mid w_{<t},c)$, and the score-function identity gives $\nabla_\theta J=\mathbb E\big[\sum_t r\,\nabla_\theta\log\pi_\theta(w_t\mid w_{<t},c)\big]$. Subtracting a baseline turns $r$ into an advantage $A_t$ without changing the expectation; GRPO \citep{shao2024deepseekmath} uses $A=(r-\bar r)/\mathrm{std}(r)$ within a group of $G$ samples per prompt; PPO \citep{schulman2017ppo} adds the ratio $\rho_t=\pi_\theta(w_t\mid\cdot)/\pi_{\theta_{\mathrm{old}}}(w_t\mid\cdot)$ and the clipped surrogate $\sum_t\min(\rho_tA_t,\mathrm{clip}(\rho_t,1\pm\epsilon)A_t)$ so that several updates can be taken per batch. The per-token score $\nabla_\theta\log\pi_\theta(w_t\mid\cdot)=(\mathbf 1_{w_t}-p_t)^{\top}\partial z_t/\partial\theta$ ($z_t$ the logits) is bounded and attached to a categorical decision that is itself the semantic event the reward depends on; a Countdown derivation has a few dozen of them.
+
+\paragraph{Porting it to a flow language model.}
+The same identity applies verbatim to the chain~(\ref{eq:chain}), whose log-likelihood is a sum of Gaussian terms over both indices. Because the gradient of a Gaussian log-density with respect to its mean is the standardised residual, which is exactly the noise that was injected, the estimator is
+\begin{equation}
+\hat g_{\mathrm{SF}}=\sum_{k=1}^{K}\sum_{i=1}^{L}A_{k}\,\nabla_\theta\log\mathcal N\!\big(y_{k,i};\alpha_kD_\theta(y_{k-1})_i,\sigma_k^2I\big)=\sum_{k,i}A_{k}\,\frac{\varepsilon_{k,i}^{\top}}{\sigma_k}\,\alpha_k\,\frac{\partial D_\theta(y_{k-1})_i}{\partial\theta},
+\label{eq:sf}
+\end{equation}
+with $A_k$ any advantage (group-relative, per step, or per position). With group advantages and per-step ratios this is GRPO for flow models \citep{liu2025flowgrpo,xue2025dancegrpo}. The difference from the AR case is what multiplies the Jacobian. In the AR model it is a bounded, semantically meaningful score at a few dozen decisions; in~(\ref{eq:sf}) it is white noise at $K\cdot L\cdot d$ coordinates ($2.4\times10^{6}$ at $\gamma56@64$), none of which individually decides a token: 86\% of positions already decode to their final token after the first network evaluation and never change (Appendix~\ref{app:commit}), so token identity is a property of the accumulated dynamics, not of any coordinate at any step. A reward bit is therefore correlated against $10^{4}$--$10^{5}$ times more nuisance directions than in the AR case, and the resulting signal-to-noise ratio, not the advantage, limits learning (Appendix~\ref{app:variance}).
+
+\paragraph{The cap is empirical, not a tuning failure.}
+Table~\ref{tab:sf_variants} (Appendix~\ref{app:sf_variants}) lists the score-function variants we ran on Countdown: oracle-exact advantages, dense per-step per-position credit, sparse credit, per-position PPO ratios with textbook clip fractions, and critic-selected advantages. All land between $+3$ and $+5$ points at the deployment sampler, while the same token-level GRPO/PPO lifts a GPT-2 \citep{radford2019gpt2} fine-tuned on the same data by $+9.7$. The estimator is not broken; it is applied to the wrong kind of action.
+
+
+\paragraph{The pathwise route.}
+Equation~(\ref{eq:chain}) is already the reparameterisation: given the noise, every $y_{k,i}$ is a deterministic, differentiable function of $\theta$. The pathwise identity cannot be applied to $r$ directly, because the decode is an $\arg\max$ and the verifier is a program, and differentiating the whole chain would in any case be expensive and a known route to reward hacking. What can be differentiated is an estimate of the reward \emph{from an intermediate state}: if a critic $V_\phi(y_k,t_k,c)\approx\mathbb E[r\mid y_k,c]$ is available, then
+\begin{equation}
+\hat g_{\mathrm{PW}}=\sum_{i=1}^{L}\frac{\partial V_\phi(y_k)}{\partial y_{k,i}}\;\alpha_k\,\frac{\partial D_\theta(y_{k-1})_i}{\partial\theta}
+\label{eq:pw}
+\end{equation}
+delivers a deterministic, per-coordinate signal whose magnitude is set by the critic's local slope rather than by $\varepsilon_{k,i}/\sigma_k$. This is the estimator of continuous control \citep{lillicrap2015ddpg,haarnoja2018sac} and of reward back-propagation through image diffusion \citep{prabhudesai2023alignprop,clark2023draft,domingoenrich2024adjoint}; it is absent from AR post-training only because categorical sampling has no reparameterisation and its relaxations \citep{jang2016gumbel,maddison2016concrete} are biased, and its known failure mode is that the policy climbs the critic rather than the reward unless the critic tracks the policy. Appendix~\ref{app:pw_derivation} derives~(\ref{eq:pw}) from~(\ref{eq:objective}) and shows it is~(\ref{eq:sf}) with the noise integrated out by parts; the next section builds the critic that makes it work.
