@@ -8,7 +8,7 @@ Every run starts from ELF-B (105M) fine-tuned on the task with the ELF recipe, a
 
 \begin{table}[t]
 \centering\small
-\caption{Main results (accuracy \%) at the deployment sampler ($\gamma56$@64; $\gamma28$@32 on Sudoku) and at the cheap 64-step ODE sampler. RL rows are means over three seeds of the per-seed peak over evaluated checkpoints, every seed counted (per-seed values in Appendices~\ref{app:details} and~\ref{app:results}); bold marks the best of the three RL levels in a column, both when they are within evaluation jitter; ``--'' marks a run in progress. Scalar critic: $3{\times}10^{-6}\!\to\!10^{-6}$ schedule (on Sudoku every seed peaks at 125--250 iterations, below the base, and collapses by 500); 2D critic: $10^{-6}$. Loop rows start from each task's best RL policy (scalar on Countdown and Game24, 2D on Sudoku and K\&K). LLaDA rows: d1's recipe, 256 tokens (Appendix~\ref{app:d1}).}
+\caption{Main results (accuracy \%) at the deployment sampler ($\gamma56$@64; $\gamma28$@32 on Sudoku) and at the cheap 64-step ODE sampler. RL rows are means over three seeds of the per-seed peak over evaluated checkpoints, every seed counted (per-seed values in Appendices~\ref{app:details} and~\ref{app:results}); bold marks the best of the three RL levels in a column, both when they are within evaluation jitter; ``--'' marks a run in progress. Scalar critic: $3{\times}10^{-6}\!\to\!10^{-6}$ schedule (on Sudoku every seed peaks at 125--250 iterations, below the base, and collapses by 500); 2D critic: $10^{-6}$. Loop rows start from an RL policy of each task (the scalar-critic policy on Countdown and Game24, a 2D-critic policy on Sudoku and K\&K). LLaDA rows: d1's recipe, 256 tokens (Appendix~\ref{app:d1}).}
 \label{tab:main}
 \resizebox{\linewidth}{!}{%
 \begin{tabular}{@{}l cccc c cccc@{}}
@@ -24,7 +24,7 @@ SFT base & 42.2 & 66.2 & 67.5 & 45.0 & & 28.1 & 62.3 & 57.8 & 35.2 \\
 + \hl{\jpc{}, 2D critic} & \textbf{48.3} & \textbf{69.7} & 70.5 & \textbf{58.7} & & \textbf{33.6} & \textbf{67.8} & 62.2 & \textbf{39.7} \\
 \midrule
 \multicolumn{10}{@{}l}{\emph{ELF-B, amortisation stage}}\\
-best RL policy + loop (4--5 rounds) & 54.4 & 69.8 & 94.9 & 58.3 & & 51.1 & 67.0 & 90.3 & 52.7 \\
+RL policy + loop (4--5 rounds) & 54.4 & 69.8 & 94.9 & 58.3 & & 51.1 & 67.0 & 90.3 & 52.7 \\
 \; same loop from the SFT base (no RL) & 44.1 & --- & 82.3 & 48.0 & & 34.4 & --- & 75.8 & 41.0 \\
 \; gold labels for the loop's problems & --- & --- & 96.7 & 53.8 & & --- & --- & 91.0 & 40.0 \\
 \midrule
