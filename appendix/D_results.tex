@@ -33,10 +33,10 @@ AR GPT-2 (124M) + token-level GRPO/PPO & same estimator, AR actions & $+9.7$ \\
 \toprule
  & Countdown & Sudoku & K\&K & Game24 \\
 \midrule
-scalar, $3{\times}10^{-6}$ (then $10^{-6}$) & $+9.0,+7.0,\approx0$ & collapse (2/2) & $+3.0$ & $+10.2$, collapse \\
+scalar, $3{\times}10^{-6}$ (then $10^{-6}$) & $+9.0,+7.0,+2.1$ & collapse (3/3) & $+2.0,+4.5,+4.5$ & $+10.2,-1.3,+5.6$ \\
 scalar, $10^{-6}$ & --- & --- & $+3.4$ & $+2.6$ \\
 2D, $3{\times}10^{-6}$ & collapse & $+2.2$ then collapse & $-1.5$ & collapse \\
-\hl{2D, $10^{-6}$} & $+6.2,+5.1$ & $+3.6,+3.8,+2.9$ & $+2.8,+2.8,+3.3$ & $+11.8,+15.7,+13.9$ \\
+\hl{2D, $10^{-6}$} & $+6.2,+5.1,+7.1$ & $+3.6,+3.8,+2.9$ & $+2.8,+2.8,+3.3$ & $+11.8,+15.7,+13.9$ \\
 \bottomrule
 \end{tabular}}
 \end{table}
@@ -57,12 +57,12 @@ Tables~\ref{tab:full_cd}--\ref{tab:full_g24} give every number behind \S\ref{sec
 \caption{Countdown (base 28.1/23.1/38.0/42.2).}\label{tab:full_cd}
 \begin{tabular}{@{}lcccc@{}}\toprule
 run & ODE64 & $\gamma4$@16 & $\gamma28$@32 & $\gamma56$@64\\\midrule
-GRPO family, best (per-position PPO, $10^{-5}$) & 30.6 & 25.9 & 41.2 & 47.2\\
+GRPO seeds 1/2/3 (peak 300/100/500; final 42.4/42.2/41.7) & 29.2/28.5/28.9 & 23.2/23.4/24.3 & 40.6/39.4/39.6 & 43.1/42.8/43.3\\
+score-function variant, best (per-position PPO, $10^{-5}$, single run) & 30.6 & 25.9 & 41.2 & 47.2\\
 \jpc{} scalar two-phase, seed 1 & 35.4 & 27.4 & 41.8 & 51.2\\
 \jpc{} scalar two-phase, seed 2 & 34.4 & 29.0 & 44.4 & 49.2\\
-\jpc{} scalar, seed 3 (never learns) & 31.5 & 21.7 & 36.8 & 42.8\\
-\jpc{} 2D $10^{-6}$, seed 1 (peak 750) & 34.0 & 26.2 & 40.8 & 48.4\\
-\jpc{} 2D $10^{-6}$, seed 2 (peak 750) & 33.1 & 25.6 & 41.9 & 47.3\\
+\jpc{} scalar, seed 3 (peak 125; barely leaves the base, final 42.8) & 29.0 & 23.2 & 37.0 & 44.3\\
+\jpc{} 2D $10^{-6}$, seeds 1/2/3 (peak 750/750/1000) & 34.0/33.1/33.8 & 26.2/25.6/25.6 & 40.8/41.9/40.8 & 48.4/47.3/49.3\\
 amortisation loop, round 5 (from scalar policy) & 51.1 & 48.8 & 54.8 & 54.4\\
 loop from the SFT base, round 1 (no RL) & 34.4 & 29.3 & 42.9 & 44.1\\
 SFT-final oracle & 46.2 & 39.7 & 58.7 & 61.7\\\bottomrule\end{tabular}\end{table}
@@ -71,14 +71,14 @@ SFT-final oracle & 46.2 & 39.7 & 58.7 & 61.7\\\bottomrule\end{tabular}\end{table
 \caption{Sudoku (base 62.3/55.3/62.0/66.2).}\label{tab:full_sd}
 \begin{tabular}{@{}lcccc@{}}\toprule
 run & ODE64 & $\gamma4$@16 & $\gamma14$@16 & $\gamma28$@32\\\midrule
-GRPO seed 1 (final) & 65.9 & 55.5 & 65.0 & 70.0\\
-GRPO seed 2 (final; peak at 500 was 72.8) & 67.0 & 59.4 & 66.1 & 70.5\\
-GRPO seed 3 (final) & 59.1 & 51.5 & 59.0 & 63.0\\
+GRPO seed 1 (peak 600) & 65.9 & 55.5 & 65.0 & 70.1\\
+GRPO seed 2 (peak 500; final 70.5) & 69.7 & 59.1 & 67.1 & 72.8\\
+GRPO seed 3 (peak 100; final 63.0) & 62.4 & 53.3 & 61.4 & 66.2\\
 \jpc{} 2D $10^{-6}$, seed 1 (peak 500) & 67.6 & 59.8 & 66.5 & 69.9\\
 \jpc{} 2D $10^{-6}$, seed 2 (peak 500) & 68.0 & 61.0 & 66.5 & 70.1\\
 \jpc{} 2D $10^{-6}$, seed 3 (peak 500) & 67.8 & 59.6 & 66.8 & 69.2\\
 \jpc{} 2D $3{\times}10^{-6}$, seeds 1/2 (peak 250; collapse by 500) & 65.9/65.8 & 61.7/62.5 & 66.2/65.4 & 68.4/67.0\\
-\jpc{} scalar, seeds 1/2 (250) & 49.8/55.6 & 42.0/48.9 & 50.0/55.0 & 53.1/58.1\\
+\jpc{} scalar, seeds 1/2/3 (peak 250/250/125; all collapse by 500) & 49.8/55.6/60.5 & 42.0/48.9/52.0 & 50.0/55.0/59.0 & 53.1/58.1/63.3\\
 loop on training puzzles, round 1 (from 2D policy) & 67.3 & 59.5 & 66.8 & 69.2\\
 loop on 50k fresh puzzles, round 1 & 67.0 & 60.2 & 66.5 & 69.8\\\bottomrule\end{tabular}\end{table}
 
@@ -87,9 +87,10 @@ loop on 50k fresh puzzles, round 1 & 67.0 & 60.2 & 66.5 & 69.8\\\bottomrule\end{
 \resizebox{\linewidth}{!}{%
 \begin{tabular}{@{}lcccc@{}}\toprule
 run & ODE64 & $\gamma4$@16 & $\gamma28$@32 & $\gamma56$@64\\\midrule
-GRPO seeds 1/2/3 (final) & 62.6/61.6/67.0 & 63.8/62.6/66.9 & 69.7/69.3/73.0 & 70.2/70.0/74.6\\
+GRPO seeds 1/2/3 (peak = final, 600) & 62.6/61.6/67.0 & 63.8/62.6/66.9 & 69.7/69.3/73.0 & 70.2/70.0/74.6\\
 \jpc{} 2D $10^{-6}$ seeds 1/2/3 (peak 250) & 62.3/62.7/61.6 & 64.0/63.8/63.9 & 69.0/69.3/69.3 & 70.3/70.3/70.8\\
-\jpc{} scalar $3{\times}10^{-6}$, continued (peak) & 64.5 & 65.6 & 69.5 & 70.5\\
+\jpc{} scalar $3{\times}10^{-6}\!\to\!10^{-6}$, seeds 1/2/3 (peak) & 64.8/65.3/66.1 & 66.2/66.2/66.1 & 68.6/70.7/70.5 & 69.5/72.0/72.0\\
+\jpc{} scalar, seed 1 continued at $3{\times}10^{-6}$ instead (peak 625, then collapse) & 64.5 & 65.6 & 69.5 & 70.5\\
 \jpc{} scalar $10^{-6}$ (peak 250) & 59.5 & 60.9 & 68.9 & 70.9\\
 fresh-problem loop, rounds 2/3/4/5 (from \jpc{}) & 72.2/78.8/86.0/90.3 & 71.0/77.3/82.8/87.2 & 76.5/82.8/90.1/93.7 & 77.3/83.9/91.3/94.9\\
 gold-label controls, rounds 2/3/4/5 & 78.1/83.2/87.9/91.0 & 76.2/80.9/84.2/88.5 & 82.3/88.8/92.5/95.7 & 84.0/89.8/93.8/96.7\\
@@ -101,9 +102,10 @@ loop from the SFT base, round 1 (no RL) & 75.8 & 74.0 & 81.0 & 82.3\\\bottomrule
 \begin{tabular}{@{}lcccc@{}}\toprule
 run & ODE64 & $\gamma4$@16 & $\gamma28$@32 & $\gamma56$@64\\\midrule
 SFT epoch 40 (more SFT hurts) & 30.5 & 29.8 & 32.1 & 34.7\\
-GRPO seeds 1/2/3 (final) & 36.0/37.3/36.6 & 36.9/36.8/37.0 & 45.8/46.6/43.8 & 46.8/48.0/46.3\\
+GRPO seeds 1/2/3 (peak 600/500/500; final 46.8/48.0/46.3) & 36.0/36.9/36.5 & 36.9/36.7/36.4 & 45.8/46.9/44.8 & 46.8/48.6/47.1\\
 \jpc{} scalar $3{\times}10^{-6}\!\to\!10^{-6}$, seed 1 & 41.2 & 39.9 & 52.2 & 55.2\\
-\jpc{} scalar $3{\times}10^{-6}$, seed 2 (collapse at 250) & 32.9 & 33.2 & 33.9 & 39.5\\
+\jpc{} scalar $3{\times}10^{-6}$, seed 2 (peak 125; collapses to 39.5 at 250) & 32.1 & 32.9 & 39.7 & 43.7\\
+\jpc{} scalar $3{\times}10^{-6}\!\to\!10^{-6}$, seed 3 & 38.4 & 36.3 & 47.0 & 50.6\\
 \jpc{} 2D $10^{-6}$ seeds 1/2/3 (1375--1500 iterations) & 39.5/40.0/39.6 & 34.2/37.2/37.2 & 52.3/54.3/52.5 & 56.8/60.6/58.8\\
 \jpc{} 2D $3{\times}10^{-6}$ (collapse at 500) & 30.0 & 29.5 & 38.9 & 41.9\\
 loop rounds 1/2/3/4 (from scalar policy 55.2) & 46.7/49.8/52.6/52.7 & 45.7/48.6/51.0/51.8 & 55.0/56.0/57.9/57.2 & 56.4/56.0/57.0/58.3\\
@@ -290,6 +292,23 @@ Figure~\ref{fig:frozen} shows the exploit directly on Game24 (2D critic, $10^{-6
 
 \subsection{Negative results on stabilising the large-learning-rate regime}
 Against the collapse of 2D-critic runs at $3\times10^{-6}$ we tried: a lower critic learning rate; an EMA target critic for the actor objective; both; a 16k buffer; resuming the critic together with the actor at a lower learning rate; and refining a 2D-explored actor with a scalar critic. The 16k buffer keeps the first 750 iterations stable; every continuation beyond about 1000 total iterations collapses ($-14$ to $-19$ at $\gamma28/\gamma56$ on Countdown). The learning rate of $10^{-6}$ is the change that made the 2D critic usable, and it too collapses eventually (Countdown at 1000--1250 iterations, Sudoku at about 900, Game24 not within 1500), which is why the held-out peak is part of the recipe. Earlier in the Countdown campaign we also compared the one-step update with back-propagating through five to eight consecutive transitions (critic refreshed between updates, training at $\gamma4$@16): the multi-step form was never better than the one-step form at the same iteration count and degraded the heavier samplers within 600 iterations, so all reported runs use one random step (Appendix~\ref{app:pw_derivation}).
+
+\subsection{Hyper-parameter sweep of the 2D critic on Knights-and-Knaves}
+\label{app:kk_sweep}
+K\&K is the one task on which the 2D critic does not lead (Table~\ref{tab:main}). To test whether its $70.5$ is limited by the recipe's settings rather than by the task, we varied one setting at a time from the reference configuration (actor $10^{-6}$, 32 prompts per iteration, 2 critic steps per iteration, flow-step window $8$--$40$ of 64), one seed each, and evaluated every 250 iterations (Table~\ref{tab:kk_sweep}). No variant exceeds the reference seeds' $70.3$--$70.8$ by more than evaluation jitter, every variant is past its peak by 500 iterations, and the higher actor rate collapses; the two runs that were still in progress were stopped once their curves had turned down. Table~\ref{tab:main} therefore reports the reference configuration.
+
+\begin{table}[H]\centering\small
+\caption{K\&K, 2D critic: deployment-sampler accuracy by iteration for one-at-a-time changes to the reference configuration (base 67.5; ODE-64 in parentheses at the peak). ``--'': not run to that point.}\label{tab:kk_sweep}
+\begin{tabular}{@{}lcccc@{}}\toprule
+variant & @250 & @500 & @750 & @1000\\\midrule
+reference, seeds 1/2/3 & 70.3/70.3/70.8 (62.3/62.7/61.6) & 67.7/67.9/67.8 & --- & ---\\
+actor $5\times10^{-7}$ & 68.1 & 69.5 (61.6) & 68.7 & 65.8\\
+64 prompts per iteration & 69.3 (62.4) & 63.0 & --- & ---\\
+4 critic steps per iteration & 71.0 (62.6) & 69.0 & 69.0 & 68.0\\
+window $16$--$48$ & 68.8 (60.6) & 66.5 & 64.8 & 62.5\\
+window $4$--$32$ & 71.2 (63.8) & 69.2 & 65.1 & 66.0\\
+64 prompts, actor $2\times10^{-6}$ & 65.0 (63.0) & 53.6 & --- & ---\\
+\bottomrule\end{tabular}\end{table}
 
 \subsection{Critic quality metrics}
 \label{app:critic_quality}
