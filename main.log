@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024 - Spack) (preloaded format=pdflatex 2025.6.12)  12 SEP 2026 23:28
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024 - Spack) (preloaded format=pdflatex 2025.6.12)  13 SEP 2026 03:23
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1049,14 +1049,14 @@ put line 30.
 File: figures/fig1_mechanism.pdf Graphic file (type pdf)
 <use figures/fig1_mechanism.pdf>
 Package pdftex.def Info: figures/fig1_mechanism.pdf  used on input line 47.
-(pdftex.def)             Requested size: 317.9892pt x 212.51451pt.
+(pdftex.def)             Requested size: 310.0378pt x 207.20067pt.
 ) (./sections/4_loop.tex)
 (./sections/5_experiments.tex [6 <./figures/fig1_mechanism.pdf>] [7]
-<figures/fig_dynamics_loop.pdf, id=468, 520.34402pt x 166.22101pt>
+<figures/fig_dynamics_loop.pdf, id=467, 520.34402pt x 166.22101pt>
 File: figures/fig_dynamics_loop.pdf Graphic file (type pdf)
 <use figures/fig_dynamics_loop.pdf>
-Package pdftex.def Info: figures/fig_dynamics_loop.pdf  used on input line 55.
-(pdftex.def)             Requested size: 278.23827pt x 88.8855pt.
+Package pdftex.def Info: figures/fig_dynamics_loop.pdf  used on input line 56.
+(pdftex.def)             Requested size: 262.34154pt x 83.80777pt.
 )
 (./sections/6_ablations.tex [8 <./figures/fig_dynamics_loop.pdf>])
 (./sections/7_related.tex) (./sections/8_conclusion.tex)
@@ -1084,7 +1084,7 @@ mr/m/n/10 23\OML/cmm/m/it/10 :\OT1/cmr/m/n/10 1\OML/cmm/m/it/10 =\OT1/cmr/m/n/1
 /cmm/m/it/10 :\OT1/cmr/m/n/10 2$ \OT1/ptm/m/n/10 at
  []
 
-<figures/fig_results.pdf, id=738, 404.712pt x 158.99399pt>
+<figures/fig_results.pdf, id=735, 404.712pt x 158.99399pt>
 File: figures/fig_results.pdf Graphic file (type pdf)
 <use figures/fig_results.pdf>
 Package pdftex.def Info: figures/fig_results.pdf  used on input line 49.
@@ -1103,19 +1103,19 @@ Overfull \hbox (88.4971pt too wide) in paragraph at lines 70--80
 Underfull \vbox (badness 6961) has occurred while \output is active []
 
  [20]
-<figures/fig_critic_maps.pdf, id=793, 557.62288pt x 369.781pt>
+<figures/fig_critic_maps.pdf, id=790, 557.62288pt x 369.781pt>
 File: figures/fig_critic_maps.pdf Graphic file (type pdf)
 <use figures/fig_critic_maps.pdf>
-Package pdftex.def Info: figures/fig_critic_maps.pdf  used on input line 196.
+Package pdftex.def Info: figures/fig_critic_maps.pdf  used on input line 200.
 (pdftex.def)             Requested size: 389.53358pt x 258.32582pt.
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [21]
-<figures/fig_dynamics_cd_kk.pdf, id=805, 462.52798pt x 166.22101pt>
+<figures/fig_dynamics_cd_kk.pdf, id=802, 462.52798pt x 166.22101pt>
 File: figures/fig_dynamics_cd_kk.pdf Graphic file (type pdf)
 <use figures/fig_dynamics_cd_kk.pdf>
-Package pdftex.def Info: figures/fig_dynamics_cd_kk.pdf  used on input line 219
+Package pdftex.def Info: figures/fig_dynamics_cd_kk.pdf  used on input line 223
 .
 (pdftex.def)             Requested size: 337.86465pt x 121.42654pt.
 
@@ -1124,17 +1124,17 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
  [22 <./figures/fig_critic_maps.pdf>]
 
 LaTeX Font Warning: Font shape `OT1/ptm/m/scit' undefined
-(Font)              using `OT1/ptm/m/sc' instead on input line 255.
+(Font)              using `OT1/ptm/m/sc' instead on input line 259.
 
 
 LaTeX Font Warning: Font shape `OT1/ptm/m/scit' undefined
-(Font)              using `OT1/ptm/m/sc' instead on input line 255.
+(Font)              using `OT1/ptm/m/sc' instead on input line 259.
 
 [23 <./figures/fig_dynamics_cd_kk.pdf>] [24]
-<figures/fig_frozen.pdf, id=904, 404.712pt x 151.767pt>
+<figures/fig_frozen.pdf, id=901, 404.712pt x 151.767pt>
 File: figures/fig_frozen.pdf Graphic file (type pdf)
 <use figures/fig_frozen.pdf>
-Package pdftex.def Info: figures/fig_frozen.pdf  used on input line 281.
+Package pdftex.def Info: figures/fig_frozen.pdf  used on input line 285.
 (pdftex.def)             Requested size: 357.73405pt x 134.15746pt.
 
 Underfull \vbox (badness 2384) has occurred while \output is active []
@@ -1219,10 +1219,10 @@ linux-broadwell/texlive-20240312-dgaq536nyes3w6rxlnjo2h5z4ljxzg3e/texmf-dist/fo
 nts/type1/urw/times/utmr8a.pfb></cluster/tufts/apps/spack/9/x86_64/apps/linux-b
 roadwell/texlive-20240312-dgaq536nyes3w6rxlnjo2h5z4ljxzg3e/texmf-dist/fonts/typ
 e1/urw/times/utmri8a.pfb>
-Output written on main.pdf (27 pages, 637100 bytes).
+Output written on main.pdf (27 pages, 637553 bytes).
 PDF statistics:
- 1192 PDF objects out of 1200 (max. 8388607)
- 1016 compressed objects within 11 object streams
+ 1189 PDF objects out of 1200 (max. 8388607)
+ 1013 compressed objects within 11 object streams
  200 named destinations out of 1000 (max. 500000)
  299 words of extra memory for PDF output out of 10000 (max. 10000000)
 

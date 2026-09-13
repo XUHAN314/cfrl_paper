@@ -44,7 +44,7 @@ Gains lock to the sampler they were trained under: a policy trained at $\gamma4@
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.80\linewidth]{figures/fig1_mechanism.pdf}
+\includegraphics[width=0.78\linewidth]{figures/fig1_mechanism.pdf}
 \caption{(a) A reward bit attaches to $\sim$30 categorical decisions in an AR model but is spread over $10^{5}$--$10^{6}$ noise coordinates in a flow language model, whose score is the noise itself; the pathwise gradient replaces it with a deterministic per-coordinate signal from a critic on noisy states. (b) \jpc{}: the 2D critic scores every position $i$ of a random intermediate state $y_k$, its pooled value is the actor's objective, and it is trained on the same rollouts as the policy.}
 \label{fig:mechanism}
 \end{figure}

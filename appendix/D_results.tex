@@ -104,6 +104,7 @@ GRPO seeds 1/2/3 (peak 600/500/500; final 46.8/48.0/46.3) & 36.0/36.9/36.5 & 36.
 loop rounds 1/2/3/4 (from scalar policy 55.2) & 46.7/49.8/52.6/52.7 & 45.7/48.6/51.0/51.8 & 55.0/56.0/57.9/57.2 & 56.4/56.0/57.0/58.3\\
 loop started from a 2D-critic policy (57.8) instead, rounds 1/2 (no gain) & 45.4/45.6 & 42.7/44.4 & 52.3/52.0 & 55.8/54.5\\
 gold derivations of the pool orderings (init 55.2) & 40.0 & 39.9 & 52.2 & 53.8\\
+loop from the GRPO policy (48.0), rounds 1/2 & 40.0/42.3 & 39.7/40.8 & 49.3/48.6 & 50.5/49.8\\
 loop from the SFT base, rounds 1/2 (no RL) & 38.2/41.0 & 38.0/39.4 & 43.5/45.7 & 45.8/48.0\\
 AR GPT-2 SFT / + token GRPO-PPO & \multicolumn{4}{c}{26.9 / 32.2 (greedy decoding)}\\\bottomrule\end{tabular}}\end{table}
 
@@ -173,7 +174,7 @@ gold SFT epoch 8 & 99.7 (96.8) & 100.0 (100.0) & 100.0 (98.5) & 99.0 (91.8)\\\bo
 Table~\ref{tab:cd_loop} lists every round of the Countdown loop at all four samplers, together with a three-round loop started from the SFT base without any RL (the earlier no-RL chain; pools sampled at $\gamma28$@32 for the first two rounds and $\gamma56$@64 for the third). Three regularities are visible. (i) The loop transfers the deployment gain of the RL policy to the cheap samplers at once: one round takes the ODE sampler from $35.4$ to $42.7$ and $\gamma4$@16 from $27.4$ to $39.8$ while the deployment sampler stays at the RL level. (ii) Plain self-sampling stalls at the deployment sampler after two rounds ($51.2\to51.1\to51.1$): the pool homogenises and its coverage shrinks (36.5k to 31.1k solved problems). Rounds 3--4 therefore sample the pool with critic-guided sampling (best-of-4 pruning at step 32 by the jointly trained critic, plus classifier guidance in the sense of \citealp{dhariwal2021guidance}: the gradient of the critic's value with respect to the noisy state is added to the velocity), which restores coverage (37.7k problems) and moves the deployment sampler again ($53.8$, $54.4$). (iii) The no-RL chain improves every sampler as well, but saturates about six points lower at the deployment sampler after three rounds ($48.9$ versus $54.4$), and its cheap samplers end where the RL-started loop is after one round.
 
 \begin{table}[H]\centering\small
-\caption{Countdown amortisation loop, held-out accuracy at the end of each round (20 epochs of fine-tuning per round; the number of verifier-accepted sequences and distinct problems in each pool is given). Top: loop started from the \jpc{} scalar policy. Bottom: loop started from the SFT base with no RL.}\label{tab:cd_loop}
+\caption{Countdown amortisation loop, held-out accuracy at the end of each round (20 epochs of fine-tuning per round; the number of verifier-accepted sequences and distinct problems in each pool is given). Top: loop started from the \jpc{} scalar policy. Middle: loop started from the SFT base with no RL. Bottom: loop started from the GRPO policy (round 1 at the checkpoint carried into round 2).}\label{tab:cd_loop}
 \resizebox{\linewidth}{!}{%
 \begin{tabular}{@{}llcccc@{}}\toprule
 round & pool & ODE64 & $\gamma4$@16 & $\gamma28$@32 & $\gamma56$@64\\\midrule
@@ -185,7 +186,10 @@ round 3 & critic-guided sampler, 103.4k / 37.7k & 48.9 & 47.3 & 53.1 & 53.8\\
 round 4 & critic-guided sampler from round 3 & 51.1 & 48.8 & 54.8 & 54.4\\\midrule
 no-RL round 1 & $\gamma28$@32 samples of the base & 39.0 & 36.2 & 44.7 & 46.0\\
 no-RL round 2 & $\gamma28$@32 samples of round 1 & 44.2 & 41.5 & 46.7 & 47.1\\
-no-RL round 3 & $\gamma56$@64 samples of round 2 & 43.3 & 42.5 & 47.1 & 48.9\\\bottomrule\end{tabular}}\end{table}
+no-RL round 3 & $\gamma56$@64 samples of round 2 & 43.3 & 42.5 & 47.1 & 48.9\\\midrule
+GRPO policy (start; seed 3, iteration 500) & & 28.9 & 24.3 & 39.6 & 43.3\\
+GRPO round 1 & deployment sampler, 82.7k / 34.1k & 36.2 & 30.4 & 43.7 & 45.1\\
+GRPO round 2 & deployment sampler, 65.5k / 30.8k & 40.2 & 36.0 & 44.4 & 44.8\\\bottomrule\end{tabular}}\end{table}
 
 \subsection{Per-position critic values as a credit map}
 \label{app:critic_maps}
