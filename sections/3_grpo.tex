@@ -1,0 +1,22 @@
+\section{Stage 1: Transition-Level GRPO}
+\label{sec:grpo}
+The chain in~(\ref{eq:chain}) permits a direct adaptation of process-aware denoising GRPO to continuous flow language models. At flow step $k$, the state is $y_{k-1}$ and the action is the next noised state $y_k$, sampled from the exact Gaussian transition $p_\theta(y_k\mid y_{k-1},c)=\mathcal N\!\left(y_k;\alpha_kD_\theta(y_{k-1}),\sigma_k^2I\right)$. During RL, we sample each readout token as $w_i\sim\mathrm{Cat}\bigl(\mathrm{softmax}(\ell_i/\tau_{\mathrm{dec}})\bigr)$; evaluation instead uses greedy decoding. The resulting augmented rollout has an exact joint density over its Gaussian transitions and categorical readout. This stage examines whether process-aware GRPO, which assigns distinct advantages across denoising steps but shares each advantage across token positions, transfers effectively to continuous flow generation \citep{shao2026papo}.
+
+\paragraph{GRPO on the flow chain.}
+Following GRPO \citep{shao2024deepseekmath}, we sample $G$ rollouts per prompt and form group-relative advantages $A_g=\bigl(r_g-\mathrm{mean}(r_{1:G})\bigr)/\mathrm{std}(r_{1:G})$, with a mean-only variant as an unbiased switch. On policy, with one update per rollout batch, importance ratios are identically one and clipping is inert, so the objective reduces to REINFORCE with the group baseline:
+\begin{equation}
+\mathcal L_{\mathrm{SF}}(\theta)=-\frac1G\sum_{g=1}^{G}A_g\Bigl[w_f\!\!\sum_{k\in\mathcal K}\log p_\theta\bigl(y^g_k\mid y^g_{k-1}\bigr)+w_d\,\frac{1}{|\mathcal G|}\sum_{i\in\mathcal G}\log\pi_\theta\bigl(w^g_i\mid y^g_K\bigr)\Bigr],
+\label{eq:grpo_loss}
+\end{equation}
+where $\mathcal K$ is the set of credited transitions, $\mathcal G$ the generated positions, and $w_f,w_d$ balance the flow and decode terms; at $\theta=\theta_{\mathrm{old}}$ its gradient equals the exact policy gradient of~(\ref{eq:objective}) (Appendix~\ref{app:derivations}). A clipped variant with per-step or per-position ratios supports off-policy reuse; ratio numerics in $L\times d$ dimensions are discussed in Appendix~\ref{app:derivations}.
+
+\paragraph{The credit-assignment design space.}
+Because the advantage placement is the only free design choice, we explore it systematically: broadcasting $A_g$ over all transitions; restricting credit to subsets of steps; per-step and per-position advantage grids computed by running the exact verifier on the decoded intermediate prediction at every step (an oracle unavailable in practice); per-position clipped ratios; and advantages selected by a jointly trained critic. Table~\ref{tab:sf_variants} lists the variants. This sweep brackets the estimator from above: several variants use strictly more information than any practical method could.
+
+\paragraph{What the estimator computes.}
+The gradient of a Gaussian transition's log-density with respect to its mean is the standardised residual, which for a sampled rollout is exactly the noise that was injected:
+\begin{equation}
+\nabla_\theta\log\mathcal N\!\left(y_{k,i};\alpha_kD_\theta(y_{k-1})_i,\sigma_k^2I\right)=\frac{\varepsilon_{k,i}^{\top}}{\sigma_k}\,\alpha_k\,\frac{\partial D_\theta(y_{k-1})_i}{\partial\theta}.
+\label{eq:sf}
+\end{equation}
+Summed over~(\ref{eq:grpo_loss}), the reward therefore multiplies white noise at $K\cdot L\cdot d$ coordinates per rollout ($2.4\times10^{6}$ at the deployment sampler), whereas the AR analogue attaches a bounded, semantically meaningful score to a few dozen sampled tokens. Moreover, the coordinates are almost all nuisance: 86\% of generated positions already decode to their final token after the first network evaluation and never change (Appendix~\ref{app:commit}), so a coordinate's covariance with the reward is typically negligible while its variance contribution is not. Appendix~\ref{app:variance} quantifies the resulting signal-to-noise gap; refining the advantage redistributes weight across coordinates but leaves the ratio of informative to nuisance directions unchanged. Consistent with this account, every variant of Table~\ref{tab:sf_variants} lands in a narrow band of gains, while the same estimator applied to a matched AR model on the same data improves it by substantially more (\S\ref{sec:experiments}). The next stage turns to the property of the chain that this estimator leaves unused: its differentiability.
