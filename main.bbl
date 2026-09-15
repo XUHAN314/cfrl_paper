@@ -1,4 +1,4 @@
-\begin{thebibliography}{45}
+\begin{thebibliography}{46}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
@@ -33,11 +33,6 @@ Kevin Clark, Paul Vicol, Kevin Swersky, and David~J. Fleet.
 \newblock {DeepSeek-R1}: Incentivizing reasoning capability in {LLMs} via
   reinforcement learning.
 \newblock \emph{arXiv preprint arXiv:2501.12948}, 2025.
-
-\bibitem[Dhariwal \& Nichol(2021)Dhariwal and Nichol]{dhariwal2021guidance}
-Prafulla Dhariwal and Alex Nichol.
-\newblock Diffusion models beat {GANs} on image synthesis.
-\newblock \emph{arXiv preprint arXiv:2105.05233}, 2021.
 
 \bibitem[Domingo-Enrich et~al.(2024)Domingo-Enrich, Drozdzal, Karrer, and
   Chen]{domingoenrich2024adjoint}
@@ -126,18 +121,25 @@ Yaron Lipman, Ricky T.~Q. Chen, Heli Ben-Hamu, Maximilian Nickel, and Matt Le.
 \newblock Flow matching for generative modeling.
 \newblock \emph{arXiv preprint arXiv:2210.02747}, 2022.
 
-\bibitem[Liu et~al.(2025)Liu, Liu, Liang, Li, Liu, Wang, Wan, Zhang, and
-  Ouyang]{liu2025flowgrpo}
+\bibitem[Liu et~al.(2025{\natexlab{a}})Liu, Liu, Liang, Li, Liu, Wang, Wan,
+  Zhang, and Ouyang]{liu2025flowgrpo}
 Jie Liu, Gongye Liu, Jiajun Liang, Yangguang Li, Jiaheng Liu, Xintao Wang,
   Pengfei Wan, Di~Zhang, and Wanli Ouyang.
 \newblock Flow-{GRPO}: Training flow matching models via online {RL}.
-\newblock \emph{arXiv preprint arXiv:2505.05470}, 2025.
+\newblock \emph{arXiv preprint arXiv:2505.05470}, 2025{\natexlab{a}}.
 
 \bibitem[Liu et~al.(2022)Liu, Gong, and Liu]{liu2022rectified}
 Xingchao Liu, Chengyue Gong, and Qiang Liu.
 \newblock Flow straight and fast: Learning to generate and transfer data with
   rectified flow.
 \newblock \emph{arXiv preprint arXiv:2209.03003}, 2022.
+
+\bibitem[Liu et~al.(2025{\natexlab{b}})Liu, Chen, Li, Qi, Pang, Du, Lee, and
+  Lin]{liu2025drgrpo}
+Zichen Liu, Changyu Chen, Wenjun Li, Penghui Qi, Tianyu Pang, Chao Du, Wee~Sun
+  Lee, and Min Lin.
+\newblock Understanding r1-zero-like training: A critical perspective.
+\newblock \emph{arXiv preprint arXiv:2503.20783}, 2025{\natexlab{b}}.
 
 \bibitem[Lou et~al.(2023)Lou, Meng, and Ermon]{lou2023sedd}
 Aaron Lou, Chenlin Meng, and Stefano Ermon.
@@ -178,13 +180,6 @@ Mihir Prabhudesai, Anirudh Goyal, Deepak Pathak, and Katerina Fragkiadaki.
 \newblock Aligning text-to-image diffusion models with reward backpropagation.
 \newblock \emph{arXiv preprint arXiv:2310.03739}, 2023.
 
-\bibitem[Radford et~al.(2019)Radford, Wu, Child, Luan, Amodei, and
-  Sutskever]{radford2019gpt2}
-Alec Radford, Jeffrey Wu, Rewon Child, David Luan, Dario Amodei, and Ilya
-  Sutskever.
-\newblock Language models are unsupervised multitask learners.
-\newblock Technical report, OpenAI, 2019.
-
 \bibitem[Raffel et~al.(2020)Raffel, Shazeer, Roberts, Lee, Narang, Matena,
   Zhou, Li, and Liu]{raffel2020t5}
 Colin Raffel, Noam Shazeer, Adam Roberts, Katherine Lee, Sharan Narang, Michael
@@ -193,6 +188,15 @@ Colin Raffel, Noam Shazeer, Adam Roberts, Katherine Lee, Sharan Narang, Michael
   transformer.
 \newblock \emph{Journal of Machine Learning Research}, 21\penalty0
   (140):\penalty0 1--67, 2020.
+
+\bibitem[Rojas et~al.(2026)Rojas, Lin, Rasul, Schneider, Nevmyvaka, Tao, and
+  Deng]{rojas2026improving}
+Kevin Rojas, Jiahe Lin, Kashif Rasul, Anderson Schneider, Yuriy Nevmyvaka,
+  Molei Tao, and Wei Deng.
+\newblock Improving reasoning for diffusion language models via group diffusion
+  policy optimization.
+\newblock In \emph{International Conference on Learning Representations},
+  volume 2026, pp.\  1938--1973, 2026.
 
 \bibitem[Sahoo et~al.(2024)Sahoo, Arriola, Schiff, Gokaslan, Marroquin, Chiu,
   Rush, and Kuleshov]{sahoo2024mdlm}
@@ -220,6 +224,15 @@ Kulin Shah, Nishanth Dikkala, Xin Wang, and Rina Panigrahy.
 \newblock Causal language modeling can elicit search and reasoning capabilities
   on logic puzzles.
 \newblock \emph{arXiv preprint arXiv:2409.10502}, 2024.
+
+\bibitem[Shao et~al.(2026)Shao, Xiao, Zhu, Liu, Luo, Fu, Cao, Zhai, and
+  Zha]{shao2026papo}
+Yawen Shao, Jie Xiao, Kai Zhu, Yu~Liu, Hongchen Luo, Xueyang Fu, Yang Cao, Wei
+  Zhai, and Zheng-Jun Zha.
+\newblock Back on track: Aligning rewards and states for reasoning in diffusion
+  large language models.
+\newblock In \emph{Proceedings of the 2026 Conference on Empirical Methods in
+  Natural Language Processing}, 2026.
 
 \bibitem[Shao et~al.(2024)Shao, Wang, Zhu, Xu, Song, Bi, Zhang, Zhang, Li, Wu,
   and Guo]{shao2024deepseekmath}

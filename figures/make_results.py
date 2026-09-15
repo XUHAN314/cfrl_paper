@@ -5,8 +5,8 @@ tasks=["Countdown","Sudoku","K&K","Game24"]
 base=[42.2,66.2,67.5,45.0]
 grpo=[[43.1,42.8,43.3],[70.1,72.8,66.2],[70.2,70.0,74.6],[46.8,48.6,47.1]]
 scal=[[51.2,49.2,44.3],[53.1,58.1,63.3],[69.5,72.0,72.0],[55.2,43.7,50.6]]
-jpc=[[48.4,47.3,49.3],[69.9,70.1,69.2],[70.3,70.3,70.8],[56.8,60.6,58.8]]
-loop=[54.4,None,94.9,58.3]
+jpc=[[47.2,46.0,47.5],[69.5,69.7,70.7],[79.5,79.1,79.0],[59.3,58.5,58.8]]
+loop=[52.1,71.2,98.8,57.3]
 ar=[53.9,None,None,32.2]
 fig,ax=plt.subplots(figsize=(5.6,2.2))
 w=0.16; x=np.arange(len(tasks))
@@ -19,7 +19,7 @@ bar(-2*w,base,"#bbbbbb","SFT base")
 bar(-1*w,grpo,"#e08a3c","GRPO (score-function)")
 bar(0,scal,"#8fb3e0","JPC, scalar critic")
 bar(1*w,jpc,"#2b6cb0","JPC, 2D critic (ours)")
-bar(2*w,loop,"#1a9c5b","best RL + amortisation loop")
+bar(2*w,loop,"#1a9c5b","2D policy + amortisation loop")
 for xi,v in zip(x,ar):
     if v is not None: ax.plot([xi-2.5*w,xi+2.5*w],[v,v],ls="--",lw=1,color="k"); ax.text(xi+2.5*w,v,"AR+PPO",fontsize=6,va="center",ha="left")
 ax.set_xticks(x); ax.set_xticklabels(tasks); ax.set_ylabel("accuracy at deployment sampler (%)"); ax.set_ylim(20,100)

@@ -1,0 +1,55 @@
+\section{\jpc{}: pathwise updates through a jointly trained two-dimensional critic}
+\label{sec:method}
+Stage 1 left the chain's defining property unused: every transition of~(\ref{eq:chain}) is differentiable. Given a differentiable estimate $V_\phi(y_k,t_k,c)\approx\mathbb E[r\mid y_k,c]$ of success from an intermediate state, reparameterising a single transition, $y_k=\alpha_kD_\theta(y_{k-1})+\sigma_k\varepsilon_k$, yields the pathwise estimator
+\begin{equation}
+\hat g_{\mathrm{PW}}=\sum_{i\in\mathcal G}\frac{\partial V_\phi(y_k)}{\partial y_{k,i}}\,\alpha_k\,\frac{\partial D_\theta(y_{k-1})_i}{\partial\theta},
+\label{eq:pw}
+\end{equation}
+an unbiased estimate of that transition's contribution to $\nabla_\theta J$ when the value is exact (Appendix~\ref{app:pw_derivation}); in place of the injected noise of~(\ref{eq:sf}), each coordinate receives a deterministic signal set by the critic's local slope, which is identically zero on coordinates the value does not depend on. Equation~(\ref{eq:pw}) needs a critic that can score a noisy intermediate state $y_k$. This section builds it. We first make explicit where the two dimensions of the problem come from, then construct the critic in two steps, a critic over the flow-step axis alone and its extension over the token-position axis, which is the \hl{2D critic}, and finally describe how the critic is trained together with the policy and the two choices (sampler, stopping rule) that complete the recipe. Figure~\ref{fig:mechanism}(b) summarises the method and Algorithm~\ref{alg:jpc} gives the loop.
+
+\paragraph{Where the two dimensions come from.}
+In autoregressive post-training the generation process has a single axis: the RL time step \emph{is} the token position $t$, and everything the algorithm manipulates is indexed by it, the actions $w_t$, the per-token advantages $A_t$ and clipped ratios $\rho_t$ of PPO, and the value $V(w_{<t})$ of a prefix. Credit assignment is one-dimensional, along the sequence. A flow language model generates all $L$ positions at once and refines them over $K$ flow steps, so a generation is a $K\times L$ grid of states $y_{k,i}$ (\S\ref{sec:estimators}): the token at position $i$ is decided gradually, along the flow, at that position. Existing ports of RL to flow models keep a single axis but pick the other one: each flow step becomes the RL time step and the whole $L\times d$ state $y_k$ the action \citep{liu2025flowgrpo,xue2025dancegrpo}, which is the signal-starved estimator of \S\ref{sec:grpo} and also discards the token axis on which the semantics live. A critic for a flow language model therefore has to be indexed by both axes, \emph{when} along the flow ($k$) and \emph{where} along the sequence ($i$). We arrive at it in two steps.
+
+\paragraph{Step 1: a critic over flow steps (1D).}
+Treat the flow step $k$ as the time step of a Markov decision process whose state is $y_k$ and whose only reward is $r$ at the end. The value $V(y_k)=\mathbb E[r\mid y_k,c]$ is well defined at every step: at $k{=}0$ it is the success rate of the base model, at $k{=}K$ it is $r$ itself, and in between it rises or falls as the state commits to a right or wrong answer. It can be learned without any per-step labels: roll out the sampler, keep the outcome $r$ and the states at a few steps, and fit $V_\phi(y_k,t_k,c)$ by binary cross-entropy of $\sigma(V_\phi)$ against $r$. For the architecture we reuse the denoiser: a copy of $D_\theta$'s transformer (fine-tuned at a small learning rate) produces per-position features $f_i(y_k,t_k,c)\in\mathbb R^{d'}$, which are averaged over the generated positions and passed to a small MLP head, $V_\phi(y_k)=h_\phi\big(\tfrac1{|\mathcal G|}\sum_{i\in\mathcal G}f_i(y_k,t_k,c),\,t_k\big)$. This is the \emph{scalar} critic of reward back-propagation for image diffusion, transported to intermediate states and to a verifier outcome, and the actor update is the pathwise step~(\ref{eq:pw}): pick a step $k$, recompute $y_k$ with gradients, and ascend $V_\phi(y_k)$. In our experiments this already works, but it is fragile: it needs a larger learning rate to move at all, succeeds on some seeds and collapses on others, and fails outright on Sudoku (\S\ref{sec:ablations}). The signal it sends explains why: $\partial V_\phi/\partial y_{k,i}$ reaches position $i$ only through the pooled feature, so a position whose token is still undecided at step $k$ and one that is already committed receive the same aggregate instruction, and the critic cannot express that the outcome hinges on one of them.
+
+\paragraph{Step 2: a critic over flow steps and token positions (2D).}
+Give every position its own value and pool afterwards,
+\begin{equation}
+R_{k,i}=h_\phi\big(f_i(y_k,t_k,c),\,t_k\big),\qquad V_\phi(y_k)=\frac1{|\mathcal G|}\sum_{i\in\mathcal G}R_{k,i},
+\label{eq:critic2d}
+\end{equation}
+where $\mathcal G$ is the set of generated positions. The critic is now a field over the two axes of the chain~(\ref{eq:chain}): the flow step $k$, i.e.\ \emph{when} along the trajectory the state is evaluated, and the token position $i$, i.e.\ \emph{where} along the sequence the outcome is decided. Training is unchanged, binary cross-entropy of $\sigma(V_\phi)$ against the outcome $r$, so the per-position values are supervised only through their mean and no per-token labels are required. What changes is the function class and the gradient. With a linear head the 1D and 2D critics coincide; with a nonlinear head the 2D critic is additive over positions, and $\partial V_\phi/\partial y_{k,i}$ reaches position $i$ through that position's own head rather than through one pooled bottleneck, so the actor receives a different instruction at every position of the state. The scalar critic of Step 1 is recovered as the ``pool-then-head'' special case. Empirically the 2D form is the one that trains stably at a single learning rate across every task and seed (\S\ref{sec:ablations}); its per-position values $R_{k,i}$ are a by-product used for measurement (Appendix~\ref{app:critic_maps}) and filtering, while the optimisation uses only their mean.
+
+\paragraph{One-step pathwise update.}
+Each iteration samples $B$ prompts, rolls out the deployment sampler~(\ref{eq:chain}) for $K$ steps without gradients, decodes and verifies. For the policy update we draw one flow step $k\sim\mathcal U\{k_0,\dots,k_1\}$ per trajectory, recompute the single transition $y_{k,i}=\alpha_kD_\theta(y_{k-1})_i+\sigma_k\varepsilon_{k,i}$ for all $i$ with gradients, and minimise $-V_\phi(y_k)$ over $\theta$ with the critic fixed. One step suffices because the critic scores a state rather than a return (Appendix~\ref{app:pw_derivation}), and memory stays independent of $K$. We use the middle window $[8,40]$ of 64 steps ($[4,20]$ of 32): the earliest steps are pure noise and the last ones already committed.
+
+\paragraph{Joint training.}
+Rollouts (states at several $k$, their outcomes) are pushed into a replay buffer of $N$ trajectories; after every policy step the critic takes $m$ gradient steps on minibatches from the buffer with the BCE loss on the verifier outcome. The critic therefore sees the current policy's states within one iteration, which is what removes the exploit: with the critic frozen at its pre-trained weights, the same update raises $V_\phi$ while the true success stays flat or falls (\S\ref{sec:ablations}). We use $m{=}2$; $N$ between $4$k and $16$k trajectories is within noise.
+
+\paragraph{Deployment sampler and early stopping.}
+Gains lock to the sampler they were trained under: a policy trained at $\gamma4@16$ improves $\gamma4@16$ and barely moves $\gamma56@64$, and vice versa (\S\ref{sec:ablations}, Appendix~\ref{app:results}), so training runs under the sampler that will be deployed; the amortisation stage of \S\ref{sec:loop} is what later carries deployment gains down to cheap samplers. Every run, on every task, eventually enters a regime in which the critic's value keeps rising while the true success rate falls (Figure~\ref{fig:curves}); a smaller learning rate delays this without removing it, so we evaluate checkpoints on held-out prompts and keep the peak. On Game24 the replay-buffer success rate is \emph{not} a proxy for held-out accuracy (training sets versus unseen sets), so the held-out evaluation is part of the recipe.
+
+
+\begin{algorithm}[t]
+\caption{\jpc{} (one round of joint training)}
+\label{alg:jpc}
+\small
+\begin{algorithmic}[1]
+\STATE Pre-train the 2D critic $\phi$ on base-policy rollouts (BCE of $\sigma(V_\phi)$ on the verifier outcome).
+\FOR{iteration $=1,\dots,T$}
+  \STATE Roll out $B$ prompts with the deployment sampler~(\ref{eq:chain}); decode; verify $r$.
+  \STATE Push $(y_k,t_k,c,r)$ for $k$ in the stored set into the replay buffer (capacity $N$).
+  \STATE Draw one $k$ per trajectory; recompute $y_k$ with gradients; $\theta\leftarrow\theta-\eta\,\nabla_\theta\big[-V_\phi(y_k)\big]$ with $V_\phi$ from~(\ref{eq:critic2d}).
+  \STATE Take $m$ critic steps on buffer minibatches: $\phi\leftarrow\phi-\eta_\phi\nabla_\phi\,\mathrm{BCE}\big(\sigma(V_\phi),r\big)$.
+  \STATE Every $S$ iterations: checkpoint $(\theta,\phi)$, evaluate on held-out prompts, keep the best.
+\ENDFOR
+\end{algorithmic}
+\end{algorithm}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.78\linewidth]{figures/flow-rl-figure1.pdf}
+\caption{(a) A reward bit attaches to $\sim$30 categorical decisions in an AR model but is spread over $10^{5}$--$10^{6}$ noise coordinates in a flow language model, whose score is the noise itself; the pathwise gradient replaces it with a deterministic per-coordinate signal from a critic on noisy states. (b) \jpc{}: the 2D critic scores every position $i$ of a random intermediate state $y_k$, its pooled value is the actor's objective, and it is trained on the same rollouts as the policy.}
+\label{fig:mechanism}
+\end{figure}
