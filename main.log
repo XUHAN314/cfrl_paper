@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024 - Spack) (preloaded format=pdflatex 2025.6.12)  14 SEP 2026 23:55
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024 - Spack) (preloaded format=pdflatex 2025.6.12)  15 SEP 2026 00:29
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1033,10 +1033,7 @@ File: figures/flow-rl-figure1.pdf Graphic file (type pdf)
 Package pdftex.def Info: figures/flow-rl-figure1.pdf  used on input line 50.
 (pdftex.def)             Requested size: 310.0378pt x 158.62323pt.
 ) (./sections/4_loop.tex)
-(./sections/5_experiments.tex [5] [6 <./figures/flow-rl-figure1.pdf>]
-Underfull \vbox (badness 1048) has occurred while \output is active []
-
- [7]
+(./sections/5_experiments.tex [5] [6 <./figures/flow-rl-figure1.pdf>] [7]
 <figures/fig_dynamics_loop.pdf, id=418, 520.34402pt x 166.22101pt>
 File: figures/fig_dynamics_loop.pdf Graphic file (type pdf)
 <use figures/fig_dynamics_loop.pdf>
@@ -1044,8 +1041,8 @@ Package pdftex.def Info: figures/fig_dynamics_loop.pdf  used on input line 57.
 (pdftex.def)             Requested size: 262.34154pt x 83.80777pt.
 )
 (./sections/6_ablations.tex [8 <./figures/fig_dynamics_loop.pdf>])
-(./sections/7_related.tex) (./sections/8_conclusion.tex)
-(./sections/9_statements.tex [9]) (./main.bbl [10]
+(./sections/7_related.tex) (./sections/8_conclusion.tex) [9]
+(./sections/9_statements.tex) (./main.bbl [10]
 Underfull \hbox (badness 1577) in paragraph at lines 210--215
 \OT1/ptm/m/n/10 dimensional con-tin-u-ous con-trol us-ing gen-er-al-ized ad-van
 -tage es-ti-ma-tion.  \OT1/ptm/m/it/10 arXiv preprint
@@ -1189,7 +1186,7 @@ ps/linux-broadwell/texlive-20240312-dgaq536nyes3w6rxlnjo2h5z4ljxzg3e/texmf-dist
 /fonts/type1/urw/times/utmr8a.pfb></cluster/tufts/apps/spack/9/x86_64/apps/linu
 x-broadwell/texlive-20240312-dgaq536nyes3w6rxlnjo2h5z4ljxzg3e/texmf-dist/fonts/
 type1/urw/times/utmri8a.pfb>
-Output written on main.pdf (27 pages, 1337161 bytes).
+Output written on main.pdf (27 pages, 1337207 bytes).
 PDF statistics:
  1154 PDF objects out of 1200 (max. 8388607)
  983 compressed objects within 10 object streams

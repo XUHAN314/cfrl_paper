@@ -8,7 +8,7 @@ Every run starts from ELF-B (105M) fine-tuned on the task with the ELF recipe, a
 
 \begin{table}[t]
 \centering\small
-\caption{Main results (accuracy \%) at the deployment sampler ($\gamma56$@64; $\gamma28$@32 on Sudoku) and at the cheap 64-step ODE sampler. ELF-B RL rows are means over three seeds of the per-seed peak over evaluated checkpoints, every seed counted (per-seed values in Appendices~\ref{app:details} and~\ref{app:results}); bold marks the best of the three RL levels in a column, both when within evaluation jitter. 2D critic: Algorithm~\ref{alg:jpc}; scalar critic: two-phase $3{\times}10^{-6}\!\to\!10^{-6}$ (on Sudoku every seed peaks below the base and collapses). Loop rows start from the best 2D-critic seed of each task (1 round on Sudoku, 4 on Countdown and Game24, 5 on K\&K; Countdown's rounds 3--4 use the jointly trained 2D critic to guide the pool); the gold-label control uses the same fresh K\&K pools with gold labels. GPT-2: greedy decoding; LLaDA: d1's recipe at 256 tokens (Appendix~\ref{app:d1}). ``--'': not run or in progress.}
+\caption{Main results (accuracy \%) at the deployment sampler ($\gamma56$@64; $\gamma28$@32 on Sudoku) and at the cheap 64-step ODE sampler. ELF-B RL rows are means over three seeds of the per-seed peak over evaluated checkpoints, every seed counted (per-seed values in Appendices~\ref{app:details} and~\ref{app:results}); bold marks the best of the three RL levels in a column (both when within evaluation jitter) and, in the last row, the best value of the whole ELF-B block. 2D critic: Algorithm~\ref{alg:jpc}; scalar critic: two-phase $3{\times}10^{-6}\!\to\!10^{-6}$ (on Sudoku every seed peaks below the base and collapses). Loop rows start from the best 2D-critic seed of each task (1 round on Sudoku, 4 on Countdown and Game24, 5 on K\&K; Countdown's rounds 3--4 use the jointly trained 2D critic to guide the pool); the gold-label control uses the same fresh K\&K pools with gold labels. GPT-2: greedy decoding; LLaDA: d1's recipe at 256 tokens (Appendix~\ref{app:d1}). ``--'': not run or in progress.}
 \label{tab:main}
 \resizebox{\linewidth}{!}{%
 \begin{tabular}{@{}l cccc c cccc@{}}
@@ -32,10 +32,10 @@ task SFT (base) & 42.2 & 66.2 & 67.5 & 45.0 & & 28.1 & 62.3 & 57.8 & 35.2 \\
 + \hl{\jpc{}, 2D critic} & 46.9 & \textbf{70.0} & \textbf{79.2} & \textbf{58.9} & & \textbf{33.3} & 65.2 & \textbf{69.1} & \textbf{41.2} \\
 \midrule
 \multicolumn{10}{@{}l}{\emph{ELF-B, amortisation stage}}\\
-2D-critic policy + loop & \pendA & 71.2 & 98.8 & 57.3 & & \pendA & 66.6 & 95.2 & 47.6 \\
-\; same loop from the SFT base (no RL) & 44.1 & --- & 82.3 & 48.0 & & 34.4 & --- & 75.8 & 41.0 \\
-\; same loop from the GRPO policy (2 rounds) & 44.8 & --- & --- & 49.8 & & 40.2 & --- & --- & 42.3 \\
-\; gold labels for the loop's problems & --- & --- & 96.7 & --- & & --- & --- & 91.0 & --- \\
+loop from the SFT base (no RL) & 44.1 & --- & 82.3 & 48.0 & & 34.4 & --- & 75.8 & 41.0 \\
+loop from the GRPO policy (2 rounds) & 44.8 & --- & --- & 49.8 & & 40.2 & --- & --- & 42.3 \\
+gold labels for the loop's problems & --- & --- & 96.7 & --- & & --- & --- & 91.0 & --- \\
+\hl{2D-critic policy + loop} & \pendA & \textbf{71.2} & \textbf{98.8} & 57.3 & & \pendA & \textbf{66.6} & \textbf{95.2} & \textbf{47.6} \\
 \bottomrule
 \end{tabular}}
 \end{table}
