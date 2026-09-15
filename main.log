@@ -1041,8 +1041,8 @@ Package pdftex.def Info: figures/fig_dynamics_loop.pdf  used on input line 57.
 (pdftex.def)             Requested size: 262.34154pt x 83.80777pt.
 )
 (./sections/6_ablations.tex [8 <./figures/fig_dynamics_loop.pdf>])
-(./sections/7_related.tex) (./sections/8_conclusion.tex) [9]
-(./sections/9_statements.tex) (./main.bbl [10]
+(./sections/7_related.tex) (./sections/8_conclusion.tex)
+(./sections/9_statements.tex [9]) (./main.bbl [10]
 Underfull \hbox (badness 1577) in paragraph at lines 210--215
 \OT1/ptm/m/n/10 dimensional con-tin-u-ous con-trol us-ing gen-er-al-ized ad-van
 -tage es-ti-ma-tion.  \OT1/ptm/m/it/10 arXiv preprint
@@ -1186,7 +1186,7 @@ ps/linux-broadwell/texlive-20240312-dgaq536nyes3w6rxlnjo2h5z4ljxzg3e/texmf-dist
 /fonts/type1/urw/times/utmr8a.pfb></cluster/tufts/apps/spack/9/x86_64/apps/linu
 x-broadwell/texlive-20240312-dgaq536nyes3w6rxlnjo2h5z4ljxzg3e/texmf-dist/fonts/
 type1/urw/times/utmri8a.pfb>
-Output written on main.pdf (27 pages, 1337207 bytes).
+Output written on main.pdf (27 pages, 1337205 bytes).
 PDF statistics:
  1154 PDF objects out of 1200 (max. 8388607)
  983 compressed objects within 10 object streams
