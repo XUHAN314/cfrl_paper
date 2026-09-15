@@ -180,12 +180,12 @@ cell AUC, within incorrect samples & 0.63 & 0.61 & 0.56 & 0.60 & 0.60 & 0.61 & 0
 
 \subsection{Training dynamics on Countdown and Knights-and-Knaves}
 \label{app:dynamics_cd_kk}
-Figure~\ref{fig:dynamics_cd_kk} completes Figure~\ref{fig:curves} with the two remaining tasks, for the same recipe (2D critic, $10^{-6}$, joint training). The pattern is the one described in \S\ref{sec:ablations}: held-out accuracy at the deployment sampler rises to a peak (Countdown $+6.2$ at 750 iterations, K\&K $+2.8$ at 250) while the replay-buffer success rate and the critic's value on the training batch move together; past the peak the held-out accuracy declines slowly and, on Countdown, collapses between 1250 and 1500 iterations ($45.4\to25.2$) before the training-side signals show a comparable drop (the buffer success rate is still $47$--$49\%$ at 1250), which is why the held-out set, not the training batch, decides the early-stopping point. K\&K is the task with the smallest RL gain for both \jpc{} and GRPO (Table~\ref{tab:full_kk}); its peak is early and shallow, and the fresh-problem loop, not RL, is what moves it (Appendix~\ref{app:kk_by_n}).
+Figure~\ref{fig:dynamics_cd_kk} completes Figure~\ref{fig:curves} with the two remaining tasks, for the same Algorithm~\ref{alg:jpc} runs (2D critic, cosine $10^{-6}\!\to\!10^{-7}$). Countdown (seed 3) rises to $47.1$ by 500 iterations and holds a plateau of $47.1$--$47.5$ to 1250 before dipping to $45.9$ at 1500, while the replay-buffer success rate keeps climbing from $46\%$ to $48$--$50\%$: the training batch improves after the held-out set has stopped, which is why the held-out set decides the reported checkpoint. K\&K (seed 1) rises monotonically ($75.2$, $78.4$, $79.3$, $79.5$) and is still at its peak when the schedule ends at 1000 iterations; its buffer success rate and critic value rise together over the whole run. Under the cosine schedule no run reaches the collapse that constant-learning-rate runs showed (Appendix~\ref{app:frozen}); the four seeds of Figures~\ref{fig:curves} and~\ref{fig:dynamics_cd_kk} end $0.0$--$5.2$ points below their peaks (Sudoku's seed 3 is the one that falls below its base, to $65.5$ at 1000 iterations).
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.85\linewidth]{figures/fig_dynamics_cd_kk.pdf}
-\caption{Training dynamics of \jpc{} (2D critic, $10^{-6}$) on Countdown (left) and K\&K (right): held-out accuracy at the deployment sampler per checkpoint (blue), replay-buffer success rate (grey), and the critic's value on the training batch (red, right axis); dotted line: SFT base.}
+\caption{Training dynamics of Algorithm~\ref{alg:jpc} (2D critic) on Countdown (left) and K\&K (right): held-out accuracy at the deployment sampler per checkpoint (blue), replay-buffer success rate (grey), and the critic's value on the training batch (red, right axis); dotted line: SFT base.}
 \label{fig:dynamics_cd_kk}
 \end{figure}
 

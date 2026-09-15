@@ -84,6 +84,6 @@ Sudoku's loop is null from every start ($70.7\!\to\!70.8$ on 50k fresh puzzles f
 \begin{figure}[t]
 \centering
 \includegraphics[width=\linewidth]{figures/fig_dynamics_loop.pdf}
-\caption{Left, middle: replay-buffer success (grey), critic value (red) and held-out accuracy (blue) for two \jpc{} runs; every run eventually enters a regime where the critic's value drifts while held-out accuracy falls, and the recipe keeps the held-out peak. Right: the Game24 loop and its controls at the deployment and ODE-64 samplers (base; 2D-critic policy; four rounds from that policy, from the base, from the GRPO policy, and on gold labels).}
+\caption{Left, middle: two Algorithm~\ref{alg:jpc} runs (2D critic, cosine $10^{-6}\!\to\!10^{-7}$): replay-buffer success (grey), critic value on the training batch (red) and held-out accuracy at the deployment sampler (blue). Held-out accuracy peaks while the training-side signals are still rising and then drifts (Sudoku) or holds (Game24); the checkpoint with the best held-out accuracy is the one reported. Right: the Game24 loop and its controls at the deployment and ODE-64 samplers (base; 2D-critic policy; four rounds from that policy, from the base, from the GRPO policy, and on gold labels).}
 \label{fig:curves}
 \end{figure}

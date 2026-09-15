@@ -19,8 +19,8 @@ def evals(prefix,key):
                 out.append((ck,float(a)*100 if a<=1 else float(a)))
     return np.array(sorted(out))
 fig,axes=plt.subplots(1,3,figsize=(7.6,3.0),gridspec_kw=dict(width_ratios=[1,1,1.6]))
-panels=[("Sudoku, 2D critic, lr 1e-6","slurm/logs/cd-pathwise-3390784.out","eval_sd_sd_jpc_tok_lr1e6","gamma28",66.2,(120,-11)),
-        ("Game24, 2D critic, lr 1e-6","slurm/logs/cd-pathwise-3402644.out","eval_g24_g24_jpc_tok_lr1e6_s2","gamma56",45.0,(-430,3))]
+panels=[("Sudoku (Algorithm 1, seed 3)","slurm/logs/sd_U_s3-3686414.out","eval_sd_sd_U_s3","gamma28",66.2,(120,-2.2)),
+        ("Game24 (Algorithm 1, seed 1)","slurm/logs/g24_U_s1-3686818.out","eval_g24_g24_U_s1","gamma56",45.0,(-560,2.5))]
 H={}
 for ax,(title,log,pref,key,base,off) in zip(axes[:2],panels):
     v,b=parse(f"{R}/{log}"); e=evals(pref,key); ax2=ax.twinx(); ax2.spines["top"].set_visible(False)
