@@ -41,67 +41,26 @@ scalar, $10^{-6}$ & --- & --- & $+3.4$ & $+2.6$ \\
 \end{tabular}}
 \end{table}
 
-\subsection{Four-sampler tables}
-Figure~\ref{fig:results} in the main text plots the deployment-sampler results of Table~\ref{tab:main} with seed error bars.
-
-Tables~\ref{tab:full_cd}--\ref{tab:full_g24} give the rows of Tables~\ref{tab:main} and~\ref{tab:ode} at all four samplers (ODE64 / $\gamma4$@16 / $\gamma28$@32 / $\gamma56$@64; Sudoku: ODE64 / $\gamma4$@16 / $\gamma14$@16 / $\gamma28$@32). RL rows are means over three seeds of the per-seed peak (the per-seed deployment values are listed in Appendix~\ref{app:details}); loop rows are the final round.
-
-\begin{table}[H]\centering\small
-\caption{Countdown at all four samplers.}\label{tab:full_cd}
-\begin{tabular}{@{}lcccc@{}}\toprule
- & ODE64 & $\gamma4$@16 & $\gamma28$@32 & $\gamma56$@64\\\midrule
-task SFT (base) & 28.1 & 23.1 & 38.0 & 42.2\\
-+ GRPO & 28.9 & 23.6 & 39.9 & 43.1\\
-+ \jpc{}, scalar critic & 33.5 & 25.2 & 40.6 & 48.5\\
-+ \jpc{}, 2D critic & 33.3 & 23.3 & 38.8 & 46.9\\
-\; buffer steps drawn uniformly at random & 34.1 & 23.9 & 40.0 & 47.6\\\midrule
-loop from the SFT base & 44.1 & 41.9 & 46.4 & 46.2\\
-loop from the GRPO policy & 42.1 & 41.6 & 44.4 & 45.1\\
-gold labels (oracle) & 27.5 & 23.2 & 38.2 & 43.1\\
-2D-critic policy + loop & 49.5 & 45.5 & 51.5 & 52.3\\\bottomrule\end{tabular}\end{table}
+\subsection{Cheap samplers after the loop}
+\label{app:samplers}
+Table~\ref{tab:samplers} reads Tables~\ref{tab:main} and~\ref{tab:ode} across sampler cost. RL alone moves the cheap samplers little: the 2D-critic policy gains $0$--$10$ points at $\gamma4$@16 against $+5$ to $+14$ at the deployment sampler. One loop moves the rest: after it, the 16-step sampler reaches or passes the accuracy the 64-step deployment sampler had before RL on Countdown, K\&K and Game24 ($45.5$ vs $42.2$, $93.1$ vs $67.5$, $50.3$ vs $45.0$), and on K\&K it passes the deployment accuracy of the RL policy itself ($93.1$ vs $79.2$). Sudoku, whose loop is null, is unchanged at every sampler.
 
 \begin{table}[H]\centering\small
-\caption{Sudoku at all four samplers.}\label{tab:full_sd}
-\begin{tabular}{@{}lcccc@{}}\toprule
- & ODE64 & $\gamma4$@16 & $\gamma14$@16 & $\gamma28$@32\\\midrule
-task SFT (base) & 62.3 & 55.3 & 62.0 & 66.2\\
-+ GRPO & 66.0 & 56.0 & 64.5 & 69.7\\
-+ \jpc{}, scalar critic & 64.3 & 54.5 & 63.1 & 67.4\\
-+ \jpc{}, 2D critic & 65.2 & 57.8 & 66.0 & 70.0\\
-\; buffer steps drawn uniformly at random & 64.5 & 55.6 & 63.7 & 69.4\\\midrule
-loop from the SFT base & 62.0 & 54.2 & 61.7 & 65.5\\
-loop from the GRPO policy & 68.5 & 60.0 & 66.2 & 71.9\\
-gold labels (oracle) & 66.5 & 56.5 & 65.3 & 70.5\\
-2D-critic policy + loop & 66.1 & 56.1 & 66.4 & 70.8\\\bottomrule\end{tabular}\end{table}
-
-\begin{table}[H]\centering\small
-\caption{Knights-and-Knaves at all four samplers.}\label{tab:full_kk}
-\begin{tabular}{@{}lcccc@{}}\toprule
- & ODE64 & $\gamma4$@16 & $\gamma28$@32 & $\gamma56$@64\\\midrule
-task SFT (base) & 57.8 & 58.1 & 65.8 & 67.5\\
-+ GRPO & 63.7 & 64.4 & 70.7 & 71.6\\
-+ \jpc{}, scalar critic & 69.1 & 68.5 & 75.8 & 78.2\\
-+ \jpc{}, 2D critic & 69.1 & 68.2 & 76.5 & 79.2\\
-\; buffer steps drawn uniformly at random & 69.6 & 68.2 & 76.3 & 78.8\\
-\; critic pre-trained on 16k rollouts for 6 epochs & 63.1 & 64.6 & 69.2 & 71.3\\\midrule
-loop from the SFT base & 97.2 & 94.1 & 99.1 & 99.6\\
-loop from the GRPO policy & 94.7 & 92.2 & 97.9 & 98.3\\
-gold labels (oracle) & 97.7 & 95.7 & 99.5 & 99.8\\
-2D-critic policy + loop & 95.2 & 93.1 & 98.2 & 98.8\\\bottomrule\end{tabular}\end{table}
-
-\begin{table}[H]\centering\small
-\caption{Game24 (set-split evaluation) at all four samplers.}\label{tab:full_g24}
-\begin{tabular}{@{}lcccc@{}}\toprule
- & ODE64 & $\gamma4$@16 & $\gamma28$@32 & $\gamma56$@64\\\midrule
-task SFT (base) & 35.2 & 35.4 & 42.6 & 45.0\\
-+ GRPO & 36.5 & 36.7 & 45.8 & 47.5\\
-+ \jpc{}, scalar critic & 38.6 & 33.9 & 48.1 & 51.9\\
-+ \jpc{}, 2D critic & 41.2 & 38.7 & 54.7 & 58.9\\
-\; buffer steps drawn uniformly at random & 41.8 & 38.9 & 54.8 & 59.0\\\midrule
-loop from the SFT base & 40.2 & 38.8 & 45.2 & 46.1\\
-loop from the GRPO policy & 43.5 & 41.8 & 49.3 & 50.5\\
-gold labels (oracle) & 39.4 & 35.9 & 46.2 & 49.5\\
-2D-critic policy + loop & 50.9 & 50.3 & 58.2 & 58.1\\\bottomrule\end{tabular}\end{table}
+\caption{The loop moves what the policy can do to the cheap samplers. Held-out accuracy (\%) at samplers of increasing cost: the SFT base, the 2D-critic policy (mean of three seeds) and that policy after the loop (final round). $^\dagger$Sudoku: $\gamma14$@16, and its deployment sampler is $\gamma28$@32.}\label{tab:samplers}
+\begin{tabular}{@{}llcccc@{}}\toprule
+ & & $\gamma4$@16 & $\gamma28$@32$^\dagger$ & ODE-64 & deployment\\\midrule
+\multirow{3}{*}{Countdown} & SFT base & 23.1 & 38.0 & 28.1 & 42.2\\
+ & 2D-critic policy & 23.3 & 38.8 & 33.3 & 46.9\\
+ & \hl{+ loop} & \textbf{45.5} & \textbf{51.5} & \textbf{49.5} & \textbf{52.3}\\\midrule
+\multirow{3}{*}{Sudoku} & SFT base & 55.3 & 62.0 & 62.3 & 66.2\\
+ & 2D-critic policy & \textbf{57.8} & 66.0 & 65.2 & 70.0\\
+ & \hl{+ loop} & 56.1 & \textbf{66.4} & \textbf{66.1} & \textbf{70.8}\\\midrule
+\multirow{3}{*}{K\&K} & SFT base & 58.1 & 65.8 & 57.8 & 67.5\\
+ & 2D-critic policy & 68.2 & 76.5 & 69.1 & 79.2\\
+ & \hl{+ loop} & \textbf{93.1} & \textbf{98.2} & \textbf{95.2} & \textbf{98.8}\\\midrule
+\multirow{3}{*}{Game24} & SFT base & 35.4 & 42.6 & 35.2 & 45.0\\
+ & 2D-critic policy & 38.7 & 54.7 & 41.2 & \textbf{58.9}\\
+ & \hl{+ loop} & \textbf{50.3} & \textbf{58.2} & \textbf{50.9} & 58.1\\\bottomrule\end{tabular}\end{table}
 
 \subsection{Sampler sweep on the Countdown base model}
 \label{app:sampler_sweep}
