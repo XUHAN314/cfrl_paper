@@ -8,7 +8,7 @@ Every run starts from ELF-B (105M) fine-tuned on the task with the ELF recipe, a
 
 \begin{table}[t]
 \centering\small
-\caption{Main results (accuracy \%) at the deployment sampler ($\gamma56$@64; $\gamma28$@32 on Sudoku) and at the cheap 64-step ODE sampler. ELF-B RL rows are means over three seeds of the per-seed peak over evaluated checkpoints, every seed counted (per-seed values in Appendices~\ref{app:details} and~\ref{app:results}); bold: best of the three RL levels (ties within jitter both bold); in the last row, best of the ELF-B block. 2D critic: Algorithm~\ref{alg:jpc}; scalar critic: two-phase $3{\times}10^{-6}\!\to\!10^{-6}$ (on Sudoku every seed peaks below the base and collapses). Loop rows start from the best 2D-critic seed of each task (1 round on Sudoku, 4 on Countdown and Game24, 5 on K\&K; Countdown's rounds 3--4 use the jointly trained 2D critic to guide the pool); the gold-label control uses the same fresh K\&K pools with gold labels. GPT-2: greedy decoding; LLaDA: d1's recipe at 256 tokens (Appendix~\ref{app:d1}). ``--'': not run or in progress.}
+\caption{Held-out accuracy (\%) at the deployment sampler ($\gamma56$@64; $\gamma28$@32 on Sudoku) and at the cheap 64-step ODE sampler: the autoregressive and masked-diffusion baselines, and the flow model at the three RL levels and after the amortisation loop. Bold: best RL level per column; last row: best of the ELF-B block.}
 \label{tab:main}
 \resizebox{\linewidth}{!}{%
 \begin{tabular}{@{}l cccc c cccc@{}}
