@@ -2,7 +2,7 @@
 \label{sec:estimators}
 
 \paragraph{Continuous flow language modeling.}
-We study ELF \citep{hu2026elf}, a continuous flow language model that generates text in embedding space. Given a token sequence $w=(w_1,\dots,w_L)$, a frozen T5 encoder \citep{raffel2020t5} produces clean embeddings $x=\mathrm{Enc}(w)\in\mathbb R^{L\times d}$, with one vector $x_i\in\mathbb R^d$ per position. ELF defines the linear interpolation $z_t=(1-t)c_\sigma\varepsilon+t x$, where $\varepsilon\sim\mathcal N(0,I)$, $t\in[0,1]$, and $c_\sigma$ is a fixed noise scale. A prompt-conditioned denoiser defines a velocity field $v_\theta(z,t,c)$ that jointly updates all position embeddings without selecting tokens. At the endpoint, a decoder maps each embedding to vocabulary logits $\ell_i\in\mathbb R^{|\mathcal V|}$, yielding $w_i=\arg\max\ell_i$. 
+We study ELF \citep{hu2026elf}, a continuous flow language model that generates text in embedding space. Given a token sequence $w=(w_1,\dots,w_L)$, a frozen T5 encoder \citep{raffel2020t5} produces clean embeddings $x=\mathrm{Enc}(w)\in\mathbb R^{L\times d}$, with one vector $x_i\in\mathbb R^d$ per position. The $L$ positions include a fixed prompt prefix $c$ and $\mathcal G$ generated positions. ELF defines the linear interpolation $z_t=(1-t)c_\sigma\varepsilon+t x$, where $\varepsilon\sim\mathcal N(0,I)$, $t\in[0,1]$, and $c_\sigma$ is a fixed noise scale. A prompt-conditioned denoiser defines a velocity field $v_\theta(z,t,c)$ that jointly updates all position embeddings without selecting tokens. At the endpoint, a decoder maps each embedding to vocabulary logits $\ell_i\in\mathbb R^{|\mathcal V|}$, yielding $w_i=\arg\max\ell_i$. 
 % Prompt embeddings occupy a fixed prefix of the sequence state and remain clean throughout the trajectory.
 
 \emph{ODE sampler.} Generation begins from Gaussian noise, $z_0=c_\sigma\varepsilon_0$ with $\varepsilon_0\sim\mathcal N(0,I)$, and integrates the learned velocity field over a grid $0=t_0<\cdots<t_K=1$. Using Euler integration with step size $h_k=t_k-t_{k-1}$ gives a trajectory that is a deterministic function of the initial noise $\varepsilon_0$:
@@ -13,9 +13,9 @@ z_k=z_{k-1}+h_k\,v_\theta(z_{k-1},t_{k-1},c).
 \begin{equation}
 y_k=\alpha_k z_{k-1}+(1-\alpha_k)c_\sigma\varepsilon_k,\quad z_k=y_k+(t_k-\tilde t_k)v_\theta(y_k,\tilde t_k,c)=:D_\theta(y_k) ,
 \end{equation}
-where $\tilde t_k=\alpha_k t_{k-1}, \alpha_k=1-\gamma h_k$, and $\varepsilon_k=(\varepsilon_{k,i})_{i=1}^{L}$ with $\varepsilon_{k,i}\overset{\mathrm{iid}}{\sim}\mathcal N(0,I_d)$. Indexing the sampler by its noised state $y_k=(y_{k,i})_{i=1}^{L}$, the sampler induces a Markov chain with trajectory $\tau=(y_k)_{k=1}^{K}$ and exact Gaussian density:
+where $\tilde t_k=\alpha_k t_{k-1}, \alpha_k=1-\gamma h_k$, and $\varepsilon_k=(\varepsilon_{k,i})_{i=1}^{|\mathcal G|}$ with $\varepsilon_{k,i}\overset{\mathrm{iid}}{\sim}\mathcal N(0,I_d)$. Indexing the sampler by its noised state $y_k=(y_{k,i})_{i=1}^{|\mathcal G|}$, the sampler induces a Markov chain with trajectory $\tau=(y_k)_{k=1}^{K}$ and exact Gaussian density:
 \begin{equation}
-y_{k,i}=\alpha_kD_\theta(y_{k-1})_i+\sigma_k\varepsilon_{k,i}, \quad p_\theta(\tau\mid c)=\prod_{k=1}^{K}\prod_{i=1}^{L}\mathcal N\!\left(y_{k,i};\alpha_kD_\theta(y_{k-1})_i,\sigma_k^2I_d\right),  
+y_{k,i}=\alpha_kD_\theta(y_{k-1})_i+\sigma_k\varepsilon_{k,i}, \quad p_\theta(\tau\mid c)=\prod_{k=1}^{K}\prod_{i=1}^{|\mathcal G|}\mathcal N\!\left(y_{k,i};\alpha_kD_\theta(y_{k-1})_i,\sigma_k^2I_d\right),  
 \label{eq:chain}
 \end{equation}
 where $\sigma_k=(1-\alpha_k)c_\sigma$; the indices $k$ and $i$ denote the flow step and token position, respectively. The final transition uses a deterministic ODE update, while setting $\gamma=0$ recovers the ODE sampler.
