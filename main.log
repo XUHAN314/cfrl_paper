@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024 - Spack) (preloaded format=pdflatex 2025.6.12)  15 SEP 2026 12:45
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024 - Spack) (preloaded format=pdflatex 2025.6.12)  15 SEP 2026 12:48
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1075,48 +1075,55 @@ mr/m/n/10 23\OML/cmm/m/it/10 :\OT1/cmr/m/n/10 1\OML/cmm/m/it/10 =\OT1/cmr/m/n/1
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [18]
-[19]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [20]
+ [19]
+[20]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [21]
-<figures/fig_critic_maps.pdf, id=774, 557.62288pt x 369.781pt>
+[22]
+<figures/fig_critic_maps.pdf, id=773, 557.62288pt x 369.781pt>
 File: figures/fig_critic_maps.pdf Graphic file (type pdf)
 <use figures/fig_critic_maps.pdf>
-Package pdftex.def Info: figures/fig_critic_maps.pdf  used on input line 208.
+Package pdftex.def Info: figures/fig_critic_maps.pdf  used on input line 205.
 (pdftex.def)             Requested size: 389.53358pt x 258.32582pt.
-
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
- [22]
-<figures/fig_dynamics_cd_kk.pdf, id=786, 462.52798pt x 166.22101pt>
+ [23 <./figures/fig_critic_maps.pdf>]
+<figures/fig_dynamics_cd_kk.pdf, id=823, 462.52798pt x 166.22101pt>
 File: figures/fig_dynamics_cd_kk.pdf Graphic file (type pdf)
 <use figures/fig_dynamics_cd_kk.pdf>
-Package pdftex.def Info: figures/fig_dynamics_cd_kk.pdf  used on input line 231
+Package pdftex.def Info: figures/fig_dynamics_cd_kk.pdf  used on input line 228
 .
 (pdftex.def)             Requested size: 337.86465pt x 121.42654pt.
 
+
+LaTeX Font Warning: Font shape `OT1/ptm/m/scit' undefined
+(Font)              using `OT1/ptm/m/sc' instead on input line 264.
+
+
+LaTeX Font Warning: Font shape `OT1/ptm/m/scit' undefined
+(Font)              using `OT1/ptm/m/sc' instead on input line 264.
+
+
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [23 <./figures/fig_critic_maps.pdf>]
+ [24 <./figures/fig_dynamics_cd_kk.pdf>]
+Underfull \vbox (badness 10000) has occurred while \output is active []
 
-LaTeX Font Warning: Font shape `OT1/ptm/m/scit' undefined
-(Font)              using `OT1/ptm/m/sc' instead on input line 267.
-
-
-LaTeX Font Warning: Font shape `OT1/ptm/m/scit' undefined
-(Font)              using `OT1/ptm/m/sc' instead on input line 267.
-
-[24 <./figures/fig_dynamics_cd_kk.pdf>] [25]
-<figures/fig_frozen.pdf, id=886, 404.712pt x 151.767pt>
+ [25]
+<figures/fig_frozen.pdf, id=878, 404.712pt x 151.767pt>
 File: figures/fig_frozen.pdf Graphic file (type pdf)
 <use figures/fig_frozen.pdf>
-Package pdftex.def Info: figures/fig_frozen.pdf  used on input line 293.
+Package pdftex.def Info: figures/fig_frozen.pdf  used on input line 290.
 (pdftex.def)             Requested size: 357.73405pt x 134.15746pt.
- [26 <./figures/fig_frozen.pdf>])
-(./appendix/E_related.tex [27]) [28] (./main.aux)
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [26]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [27 <./figures/fig_frozen.pdf>]) (./appendix/E_related.tex [28]) [29] (./main.
+aux)
  ***********
 LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2024-02-20>
@@ -1125,9 +1132,9 @@ Package rerunfilecheck Info: File `main.out' has not changed.
 (rerunfilecheck)             Checksum: 25EE550F2A01FBFA321159AD971E7117;7587.
  ) 
 Here is how much of TeX's memory you used:
- 24999 strings out of 474116
- 491984 string characters out of 5702434
- 1963187 words of memory out of 5000000
+ 25000 strings out of 474116
+ 491991 string characters out of 5702434
+ 1956187 words of memory out of 5000000
  46646 multiletter control sequences out of 15000+600000
  596879 words of font info for 109 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
@@ -1185,10 +1192,10 @@ ps/linux-broadwell/texlive-20240312-dgaq536nyes3w6rxlnjo2h5z4ljxzg3e/texmf-dist
 /fonts/type1/urw/times/utmr8a.pfb></cluster/tufts/apps/spack/9/x86_64/apps/linu
 x-broadwell/texlive-20240312-dgaq536nyes3w6rxlnjo2h5z4ljxzg3e/texmf-dist/fonts/
 type1/urw/times/utmri8a.pfb>
-Output written on main.pdf (28 pages, 1340936 bytes).
+Output written on main.pdf (29 pages, 1340761 bytes).
 PDF statistics:
- 1164 PDF objects out of 1200 (max. 8388607)
- 995 compressed objects within 10 object streams
- 204 named destinations out of 1000 (max. 500000)
+ 1162 PDF objects out of 1200 (max. 8388607)
+ 992 compressed objects within 10 object streams
+ 205 named destinations out of 1000 (max. 500000)
  299 words of extra memory for PDF output out of 10000 (max. 10000000)
 
