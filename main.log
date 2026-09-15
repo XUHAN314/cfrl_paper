@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024 - Spack) (preloaded format=pdflatex 2025.6.12)  15 SEP 2026 12:52
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024 - Spack) (preloaded format=pdflatex 2025.6.12)  15 SEP 2026 13:45
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1026,28 +1026,35 @@ File: ts1ptm.fd 2001/06/04 font definitions for TS1/ptm.
 (./sections/2_estimators.tex [2]) (./sections/3_grpo.tex [3])
 (./sections/3_method.tex [4]
 Package hyperref Info: bookmark level for unknown algorithm defaults to 0 on in
-put line 31.
-<figures/flow-rl-figure1.pdf, id=293, 1726.45pt x 883.3pt>
+put line 28.
+<figures/flow-rl-figure1.pdf, id=295, 1726.45pt x 883.3pt>
 File: figures/flow-rl-figure1.pdf Graphic file (type pdf)
 <use figures/flow-rl-figure1.pdf>
-Package pdftex.def Info: figures/flow-rl-figure1.pdf  used on input line 50.
+Package pdftex.def Info: figures/flow-rl-figure1.pdf  used on input line 47.
 (pdftex.def)             Requested size: 310.0378pt x 158.62323pt.
 ) (./sections/4_loop.tex)
 (./sections/5_experiments.tex [5] [6 <./figures/flow-rl-figure1.pdf>]
-<figures/fig_results.pdf, id=394, 549.25201pt x 209.58301pt>
+<figures/fig_results.pdf, id=396, 549.25201pt x 209.58301pt>
 File: figures/fig_results.pdf Graphic file (type pdf)
 <use figures/fig_results.pdf>
 Package pdftex.def Info: figures/fig_results.pdf  used on input line 67.
 (pdftex.def)             Requested size: 397.48499pt x 151.67035pt.
  [7 <./figures/fig_results.pdf>]
-<figures/fig_dynamics_loop.pdf, id=423, 549.25201pt x 216.81pt>
+<figures/fig_dynamics_loop.pdf, id=426, 549.25201pt x 216.81pt>
 File: figures/fig_dynamics_loop.pdf Graphic file (type pdf)
 <use figures/fig_dynamics_loop.pdf>
 Package pdftex.def Info: figures/fig_dynamics_loop.pdf  used on input line 86.
 (pdftex.def)             Requested size: 397.48499pt x 156.90036pt.
 ) (./sections/6_ablations.tex [8])
-(./sections/7_related.tex) (./sections/8_conclusion.tex [9 <./figures/fig_dynam
-ics_loop.pdf>]) (./sections/9_statements.tex) (./main.bbl [10] [11]
+(./sections/7_related.tex) (./sections/8_conclusion.tex
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [9 <./figures/fig_dynamics_loop.pdf>]) (./sections/9_statements.tex) (./main.b
+bl
+Underfull \vbox (badness 3826) has occurred while \output is active []
+
+ [10]
+[11]
 Underfull \hbox (badness 1577) in paragraph at lines 210--215
 \OT1/ptm/m/n/10 dimensional con-tin-u-ous con-trol us-ing gen-er-al-ized ad-van
 -tage es-ti-ma-tion.  \OT1/ptm/m/it/10 arXiv preprint
@@ -1071,10 +1078,7 @@ mr/m/n/10 23\OML/cmm/m/it/10 :\OT1/cmr/m/n/10 1\OML/cmm/m/it/10 =\OT1/cmr/m/n/1
 /cmm/m/it/10 :\OT1/cmr/m/n/10 2$ \OT1/ptm/m/n/10 at
  []
 
-
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
- [18]
+[18]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [19]
@@ -1084,7 +1088,7 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [21]
-<figures/fig_critic_maps.pdf, id=762, 557.62288pt x 369.781pt>
+<figures/fig_critic_maps.pdf, id=764, 557.62288pt x 369.781pt>
 File: figures/fig_critic_maps.pdf Graphic file (type pdf)
 <use figures/fig_critic_maps.pdf>
 Package pdftex.def Info: figures/fig_critic_maps.pdf  used on input line 164.
@@ -1093,7 +1097,7 @@ Package pdftex.def Info: figures/fig_critic_maps.pdf  used on input line 164.
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [22]
-<figures/fig_dynamics_cd_kk.pdf, id=775, 520.34402pt x 209.58301pt>
+<figures/fig_dynamics_cd_kk.pdf, id=777, 520.34402pt x 209.58301pt>
 File: figures/fig_dynamics_cd_kk.pdf Graphic file (type pdf)
 <use figures/fig_dynamics_cd_kk.pdf>
 Package pdftex.def Info: figures/fig_dynamics_cd_kk.pdf  used on input line 187
@@ -1112,7 +1116,7 @@ LaTeX Font Warning: Font shape `OT1/ptm/m/scit' undefined
 (Font)              using `OT1/ptm/m/sc' instead on input line 223.
 
 [24 <./figures/fig_dynamics_cd_kk.pdf>] [25]
-<figures/fig_frozen.pdf, id=876, 404.712pt x 151.767pt>
+<figures/fig_frozen.pdf, id=879, 404.712pt x 151.767pt>
 File: figures/fig_frozen.pdf Graphic file (type pdf)
 <use figures/fig_frozen.pdf>
 Package pdftex.def Info: figures/fig_frozen.pdf  used on input line 249.
@@ -1127,8 +1131,8 @@ Package rerunfilecheck Info: File `main.out' has not changed.
 (rerunfilecheck)             Checksum: 6A8F62943E548EC3A87A2451C35A32C8;7646.
  ) 
 Here is how much of TeX's memory you used:
- 24994 strings out of 474116
- 491911 string characters out of 5702434
+ 24993 strings out of 474116
+ 491900 string characters out of 5702434
  1955187 words of memory out of 5000000
  46644 multiletter control sequences out of 15000+600000
  596879 words of font info for 109 fonts, out of 8000000 for 9000
@@ -1187,10 +1191,10 @@ ps/linux-broadwell/texlive-20240312-dgaq536nyes3w6rxlnjo2h5z4ljxzg3e/texmf-dist
 /fonts/type1/urw/times/utmr8a.pfb></cluster/tufts/apps/spack/9/x86_64/apps/linu
 x-broadwell/texlive-20240312-dgaq536nyes3w6rxlnjo2h5z4ljxzg3e/texmf-dist/fonts/
 type1/urw/times/utmri8a.pfb>
-Output written on main.pdf (28 pages, 1340378 bytes).
+Output written on main.pdf (28 pages, 1339693 bytes).
 PDF statistics:
- 1155 PDF objects out of 1200 (max. 8388607)
- 984 compressed objects within 10 object streams
- 201 named destinations out of 1000 (max. 500000)
+ 1157 PDF objects out of 1200 (max. 8388607)
+ 986 compressed objects within 10 object streams
+ 200 named destinations out of 1000 (max. 500000)
  299 words of extra memory for PDF output out of 10000 (max. 10000000)
 

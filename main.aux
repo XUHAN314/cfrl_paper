@@ -30,7 +30,6 @@
 \@writefile{toc}{\contentsline {section}{\numberline {3}Stage 1: Score-Function RL for Continuous Flows}{3}{section.3}\protected@file@percent }
 \newlabel{sec:grpo}{{3}{3}{Stage 1: Score-Function RL for Continuous Flows}{section.3}{}}
 \citation{liu2025drgrpo}
-\citation{liu2025flowgrpo,xue2025dancegrpo}
 \@writefile{toc}{\contentsline {paragraph}{GRPO on the flow chain.}{4}{section*.3}\protected@file@percent }
 \newlabel{eq:grpo_loss}{{5}{4}{GRPO on the flow chain}{equation.3.5}{}}
 \@writefile{toc}{\contentsline {paragraph}{The credit-assignment design space.}{4}{section*.4}\protected@file@percent }
@@ -39,42 +38,42 @@
 \@writefile{toc}{\contentsline {section}{\numberline {4}Stage 2: \textsc  {JPC}{}, pathwise RL with a jointly trained critic}{4}{section.4}\protected@file@percent }
 \newlabel{sec:method}{{4}{4}{Stage 2: \jpc {}, pathwise RL with a jointly trained critic}{section.4}{}}
 \newlabel{eq:pw}{{7}{4}{Stage 2: \jpc {}, pathwise RL with a jointly trained critic}{equation.4.7}{}}
+\citation{liu2025flowgrpo,xue2025dancegrpo}
 \citation{yuan2023rft,singh2023restem,zelikman2022star}
+\@writefile{toc}{\contentsline {paragraph}{Choice 1: a critic on noisy states, indexed by the flow step.}{5}{section*.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Choice 2: a critic over both axes (the 2D critic).}{5}{section*.7}\protected@file@percent }
+\newlabel{eq:critic2d}{{8}{5}{Choice 2: a critic over both axes (the 2D critic)}{equation.4.8}{}}
+\@writefile{toc}{\contentsline {paragraph}{Choice 3: train the critic with the policy.}{5}{section*.8}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Sampler and stopping rule.}{5}{section*.9}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {5}Amortising the RL policy into the model}{5}{section.5}\protected@file@percent }
+\newlabel{sec:loop}{{5}{5}{Amortising the RL policy into the model}{section.5}{}}
 \citation{gandhi2024sos}
 \citation{shah2024sudoku}
 \citation{xie2024kk}
 \citation{yao2023tot}
-\@writefile{toc}{\contentsline {paragraph}{Two axes of credit.}{5}{section*.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Step 1: a scalar critic over flow steps.}{5}{section*.7}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Step 2: the 2D critic.}{5}{section*.8}\protected@file@percent }
-\newlabel{eq:critic2d}{{8}{5}{Step 2: the 2D critic}{equation.4.8}{}}
-\@writefile{toc}{\contentsline {paragraph}{Training the critic with the policy.}{5}{section*.9}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Sampler and stopping rule.}{5}{section*.10}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {5}Amortising the RL policy into the model}{5}{section.5}\protected@file@percent }
-\newlabel{sec:loop}{{5}{5}{Amortising the RL policy into the model}{section.5}{}}
 \@writefile{loa}{\contentsline {algorithm}{\numberline {1}{\ignorespaces \textsc  {JPC}{}: pathwise RL with a jointly trained critic (scalar or 2D)}}{6}{algorithm.1}\protected@file@percent }
 \providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
 \newlabel{alg:jpc}{{1}{6}{\jpc {}: pathwise RL with a jointly trained critic (scalar or 2D)}{algorithm.1}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces (a) A reward bit attaches to $\sim $30 categorical decisions in an AR model but is spread over $10^{5}$--$10^{6}$ noise coordinates in a flow language model, whose score is the noise itself; the pathwise gradient replaces it with a deterministic per-coordinate signal from a critic on noisy states. (b) \textsc  {JPC}{}: the 2D critic scores every position $i$ of a random intermediate state $y_k$, its pooled value is the actor's objective, and it is trained on the same rollouts as the policy.}}{6}{figure.caption.11}\protected@file@percent }
-\newlabel{fig:mechanism}{{1}{6}{(a) A reward bit attaches to $\sim $30 categorical decisions in an AR model but is spread over $10^{5}$--$10^{6}$ noise coordinates in a flow language model, whose score is the noise itself; the pathwise gradient replaces it with a deterministic per-coordinate signal from a critic on noisy states. (b) \jpc {}: the 2D critic scores every position $i$ of a random intermediate state $y_k$, its pooled value is the actor's objective, and it is trained on the same rollouts as the policy}{figure.caption.11}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces (a) A reward bit attaches to $\sim $30 categorical decisions in an AR model but is spread over $10^{5}$--$10^{6}$ noise coordinates in a flow language model, whose score is the noise itself; the pathwise gradient replaces it with a deterministic per-coordinate signal from a critic on noisy states. (b) \textsc  {JPC}{}: the 2D critic scores every position $i$ of a random intermediate state $y_k$, its pooled value is the actor's objective, and it is trained on the same rollouts as the policy.}}{6}{figure.caption.10}\protected@file@percent }
+\newlabel{fig:mechanism}{{1}{6}{(a) A reward bit attaches to $\sim $30 categorical decisions in an AR model but is spread over $10^{5}$--$10^{6}$ noise coordinates in a flow language model, whose score is the noise itself; the pathwise gradient replaces it with a deterministic per-coordinate signal from a critic on noisy states. (b) \jpc {}: the 2D critic scores every position $i$ of a random intermediate state $y_k$, its pooled value is the actor's objective, and it is trained on the same rollouts as the policy}{figure.caption.10}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {6}Experiments}{6}{section.6}\protected@file@percent }
 \newlabel{sec:experiments}{{6}{6}{Experiments}{section.6}{}}
-\@writefile{toc}{\contentsline {paragraph}{Tasks.}{6}{section*.12}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Models and protocol.}{6}{section*.13}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Held-out accuracy (\%) at the deployment sampler.}}{7}{table.caption.14}\protected@file@percent }
-\newlabel{tab:main}{{1}{7}{Held-out accuracy (\%) at the deployment sampler}{table.caption.14}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces ELF-B at the cheap 64-step ODE sampler (\%).}}{7}{table.caption.14}\protected@file@percent }
-\newlabel{tab:ode}{{2}{7}{ELF-B at the cheap 64-step ODE sampler (\%)}{table.caption.14}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Table~\ref {tab:main} as a picture: accuracy at the deployment sampler on the four tasks (bars: mean over three seeds, error bars: standard deviation over seeds; single runs for the base and the loop). Dashed lines: GPT-2 with token-level GRPO/PPO on the same data.}}{7}{figure.caption.15}\protected@file@percent }
-\newlabel{fig:results}{{2}{7}{Table~\ref {tab:main} as a picture: accuracy at the deployment sampler on the four tasks (bars: mean over three seeds, error bars: standard deviation over seeds; single runs for the base and the loop). Dashed lines: GPT-2 with token-level GRPO/PPO on the same data}{figure.caption.15}{}}
-\@writefile{toc}{\contentsline {paragraph}{Three levels of RL on the flow model.}{7}{section*.16}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Tasks.}{6}{section*.11}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Held-out accuracy (\%) at the deployment sampler.}}{7}{table.caption.13}\protected@file@percent }
+\newlabel{tab:main}{{1}{7}{Held-out accuracy (\%) at the deployment sampler}{table.caption.13}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces ELF-B at the cheap 64-step ODE sampler (\%).}}{7}{table.caption.13}\protected@file@percent }
+\newlabel{tab:ode}{{2}{7}{ELF-B at the cheap 64-step ODE sampler (\%)}{table.caption.13}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Table~\ref {tab:main} as a picture: accuracy at the deployment sampler on the four tasks (bars: mean over three seeds, error bars: standard deviation over seeds; single runs for the base and the loop). Dashed lines: GPT-2 with token-level GRPO/PPO on the same data.}}{7}{figure.caption.14}\protected@file@percent }
+\newlabel{fig:results}{{2}{7}{Table~\ref {tab:main} as a picture: accuracy at the deployment sampler on the four tasks (bars: mean over three seeds, error bars: standard deviation over seeds; single runs for the base and the loop). Dashed lines: GPT-2 with token-level GRPO/PPO on the same data}{figure.caption.14}{}}
+\@writefile{toc}{\contentsline {paragraph}{Models and protocol.}{7}{section*.12}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Three levels of RL on the flow model.}{7}{section*.15}\protected@file@percent }
 \citation{zhao2025d1}
-\@writefile{toc}{\contentsline {paragraph}{The AR control.}{8}{section*.17}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{The loop and its controls.}{8}{section*.18}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Where it does not help.}{8}{section*.19}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{The AR control.}{8}{section*.16}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{The loop and its controls.}{8}{section*.17}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Where it does not help.}{8}{section*.18}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {7}Ablations and boundaries}{8}{section.7}\protected@file@percent }
 \newlabel{sec:ablations}{{7}{8}{Ablations and boundaries}{section.7}{}}
-\@writefile{toc}{\contentsline {paragraph}{Critic quality is the lever.}{8}{section*.21}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Critic quality is the lever.}{8}{section*.20}\protected@file@percent }
 \citation{li2022diffusionlm}
 \citation{hu2026elf}
 \citation{lipman2022flow,liu2022rectified,albergo2023stochastic}
@@ -89,19 +88,19 @@
 \citation{zhao2025d1}
 \citation{zhu2025llada15}
 \citation{shao2026papo}
-\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Left, middle: two Algorithm~\ref {alg:jpc} runs (2D critic, cosine $10^{-6}\!\to \!10^{-7}$): replay-buffer success (grey), critic value on the training batch (red) and held-out accuracy at the deployment sampler (blue). Held-out accuracy peaks while the training-side signals are still rising and then drifts (Sudoku) or holds (Game24); the checkpoint with the best held-out accuracy is the one reported. Right: the Game24 loop and its controls at the deployment and ODE-64 samplers (base; 2D-critic policy; four rounds from that policy, from the base, from the GRPO policy, and on gold labels).}}{9}{figure.caption.20}\protected@file@percent }
-\newlabel{fig:curves}{{3}{9}{Left, middle: two Algorithm~\ref {alg:jpc} runs (2D critic, cosine $10^{-6}\!\to \!10^{-7}$): replay-buffer success (grey), critic value on the training batch (red) and held-out accuracy at the deployment sampler (blue). Held-out accuracy peaks while the training-side signals are still rising and then drifts (Sudoku) or holds (Game24); the checkpoint with the best held-out accuracy is the one reported. Right: the Game24 loop and its controls at the deployment and ODE-64 samplers (base; 2D-critic policy; four rounds from that policy, from the base, from the GRPO policy, and on gold labels)}{figure.caption.20}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Game24 ablations of joint training (2D critic, $10^{-6}$, single-stored-step variant of the recipe): held-out accuracy at $\gamma 56$@64 by iteration (base 45.0) and ODE-64 accuracy at the best checkpoint (base 35.2); reference row = mean of three seeds.}}{9}{table.caption.23}\protected@file@percent }
-\newlabel{tab:g24_abl}{{3}{9}{Game24 ablations of joint training (2D critic, $10^{-6}$, single-stored-step variant of the recipe): held-out accuracy at $\gamma 56$@64 by iteration (base 45.0) and ODE-64 accuracy at the best checkpoint (base 35.2); reference row = mean of three seeds}{table.caption.23}{}}
-\@writefile{toc}{\contentsline {paragraph}{Joint training is necessary.}{9}{section*.22}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {8}Related work}{9}{section.8}\protected@file@percent }
-\newlabel{sec:related}{{8}{9}{Related work}{section.8}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Left, middle: two Algorithm~\ref {alg:jpc} runs (2D critic, cosine $10^{-6}\!\to \!10^{-7}$): replay-buffer success (grey), critic value on the training batch (red) and held-out accuracy at the deployment sampler (blue). Held-out accuracy peaks while the training-side signals are still rising and then drifts (Sudoku) or holds (Game24); the checkpoint with the best held-out accuracy is the one reported. Right: the Game24 loop and its controls at the deployment and ODE-64 samplers (base; 2D-critic policy; four rounds from that policy, from the base, from the GRPO policy, and on gold labels).}}{9}{figure.caption.19}\protected@file@percent }
+\newlabel{fig:curves}{{3}{9}{Left, middle: two Algorithm~\ref {alg:jpc} runs (2D critic, cosine $10^{-6}\!\to \!10^{-7}$): replay-buffer success (grey), critic value on the training batch (red) and held-out accuracy at the deployment sampler (blue). Held-out accuracy peaks while the training-side signals are still rising and then drifts (Sudoku) or holds (Game24); the checkpoint with the best held-out accuracy is the one reported. Right: the Game24 loop and its controls at the deployment and ODE-64 samplers (base; 2D-critic policy; four rounds from that policy, from the base, from the GRPO policy, and on gold labels)}{figure.caption.19}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Game24 ablations of joint training (2D critic, $10^{-6}$, single-stored-step variant of the recipe): held-out accuracy at $\gamma 56$@64 by iteration (base 45.0) and ODE-64 accuracy at the best checkpoint (base 35.2); reference row = mean of three seeds.}}{9}{table.caption.22}\protected@file@percent }
+\newlabel{tab:g24_abl}{{3}{9}{Game24 ablations of joint training (2D critic, $10^{-6}$, single-stored-step variant of the recipe): held-out accuracy at $\gamma 56$@64 by iteration (base 45.0) and ODE-64 accuracy at the best checkpoint (base 35.2); reference row = mean of three seeds}{table.caption.22}{}}
+\@writefile{toc}{\contentsline {paragraph}{Joint training is necessary.}{9}{section*.21}\protected@file@percent }
 \bibdata{refs}
 \bibcite{albergo2023stochastic}{{1}{2023}{{Albergo et~al.}}{{Albergo, Boffi, and Vanden-Eijnden}}}
+\@writefile{toc}{\contentsline {section}{\numberline {8}Related work}{10}{section.8}\protected@file@percent }
+\newlabel{sec:related}{{8}{10}{Related work}{section.8}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {9}Conclusion}{10}{section.9}\protected@file@percent }
 \bibcite{anthony2017exit}{{2}{2017}{{Anthony et~al.}}{{Anthony, Tian, and Barber}}}
 \bibcite{black2023ddpo}{{3}{2023}{{Black et~al.}}{{Black, Janner, Du, Kostrikov, and Levine}}}
 \bibcite{clark2023draft}{{4}{2023}{{Clark et~al.}}{{Clark, Vicol, Swersky, and Fleet}}}
-\@writefile{toc}{\contentsline {section}{\numberline {9}Conclusion}{10}{section.9}\protected@file@percent }
 \bibcite{deepseek2025r1}{{5}{2025}{{DeepSeek-AI}}{{}}}
 \bibcite{domingoenrich2024adjoint}{{6}{2024}{{Domingo-Enrich et~al.}}{{Domingo-Enrich, Drozdzal, Karrer, and Chen}}}
 \bibcite{fan2023dpok}{{7}{2023}{{Fan et~al.}}{{Fan, Watkins, Du, Liu, Ryu, Boutilier, Abbeel, Ghavamzadeh, Lee, and Lee}}}
@@ -147,111 +146,111 @@
 \bibstyle{iclr2027_conference}
 \citation{gandhi2024sos}
 \citation{xie2024kk}
-\citation{yao2023tot}
 \@writefile{toc}{\contentsline {section}{\numberline {A}Datasets and verifiers}{13}{appendix.A}\protected@file@percent }
 \newlabel{app:datasets}{{A}{13}{Datasets and verifiers}{appendix.A}{}}
-\@writefile{toc}{\contentsline {paragraph}{Countdown.}{13}{section*.27}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Sudoku.}{13}{section*.28}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Knights-and-Knaves.}{13}{section*.29}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Game24.}{13}{section*.30}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Countdown.}{13}{section*.26}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Sudoku.}{13}{section*.27}\protected@file@percent }
+\citation{yao2023tot}
 \citation{hu2026elf}
 \citation{prabhudesai2023alignprop,clark2023draft}
-\@writefile{toc}{\contentsline {paragraph}{Samplers.}{14}{section*.31}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Knights-and-Knaves.}{14}{section*.28}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Game24.}{14}{section*.29}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Samplers.}{14}{section*.30}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {B}Derivations}{14}{appendix.B}\protected@file@percent }
 \newlabel{app:derivations}{{B}{14}{Derivations}{appendix.B}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {B.1}Exact transition kernels of the SDE sampler}{14}{subsection.B.1}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {B.2}Score-function and pathwise gradients}{14}{subsection.B.2}\protected@file@percent }
 \newlabel{app:variance}{{B.2}{14}{Score-function and pathwise gradients}{subsection.B.2}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {B.3}Why the pathwise update ascends the reward: derivation of~(\ref {eq:pw})}{14}{subsection.B.3}\protected@file@percent }
-\newlabel{app:pw_derivation}{{B.3}{14}{Why the pathwise update ascends the reward: derivation of~(\ref {eq:pw})}{subsection.B.3}{}}
-\@writefile{toc}{\contentsline {paragraph}{Value functions.}{15}{section*.32}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {B.3}Why the pathwise update ascends the reward: derivation of~(\ref {eq:pw})}{15}{subsection.B.3}\protected@file@percent }
+\newlabel{app:pw_derivation}{{B.3}{15}{Why the pathwise update ascends the reward: derivation of~(\ref {eq:pw})}{subsection.B.3}{}}
+\@writefile{toc}{\contentsline {paragraph}{Value functions.}{15}{section*.31}\protected@file@percent }
 \newlabel{eq:valuedef}{{9}{15}{Value functions}{equation.B.9}{}}
 \newlabel{eq:bellman}{{10}{15}{Value functions}{equation.B.10}{}}
-\@writefile{toc}{\contentsline {paragraph}{Step 1: the policy gradient is a sum over transitions.}{15}{section*.33}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Step 1: the policy gradient is a sum over transitions.}{15}{section*.32}\protected@file@percent }
 \newlabel{eq:sumover}{{11}{15}{Step 1: the policy gradient is a sum over transitions}{equation.B.11}{}}
 \newlabel{eq:sfterm}{{12}{15}{Step 1: the policy gradient is a sum over transitions}{equation.B.12}{}}
-\@writefile{toc}{\contentsline {paragraph}{Step 2: the pathwise form of the same term.}{15}{section*.34}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Step 2: the pathwise form of the same term.}{15}{section*.33}\protected@file@percent }
 \newlabel{eq:pwterm}{{13}{15}{Step 2: the pathwise form of the same term}{equation.B.13}{}}
-\@writefile{toc}{\contentsline {paragraph}{Step 3: (\ref {eq:pw}) is~(\ref {eq:sf}) with the noise integrated out.}{15}{section*.35}\protected@file@percent }
-\newlabel{eq:stein}{{14}{15}{Step 3: (\ref {eq:pw}) is~(\ref {eq:sf}) with the noise integrated out}{equation.B.14}{}}
 \citation{hu2026elf}
 \citation{raffel2020t5}
-\@writefile{toc}{\contentsline {paragraph}{Step 4: one random flow step.}{16}{section*.36}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Step 3: (\ref {eq:pw}) is~(\ref {eq:sf}) with the noise integrated out.}{16}{section*.34}\protected@file@percent }
+\newlabel{eq:stein}{{14}{16}{Step 3: (\ref {eq:pw}) is~(\ref {eq:sf}) with the noise integrated out}{equation.B.14}{}}
+\@writefile{toc}{\contentsline {paragraph}{Step 4: one random flow step.}{16}{section*.35}\protected@file@percent }
 \newlabel{eq:window}{{15}{16}{Step 4: one random flow step}{equation.B.15}{}}
-\@writefile{toc}{\contentsline {paragraph}{Step 5: the learned critic, and why it must be trained jointly.}{16}{section*.37}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Step 5: the learned critic, and why it must be trained jointly.}{16}{section*.36}\protected@file@percent }
 \newlabel{eq:bias}{{16}{16}{Step 5: the learned critic, and why it must be trained jointly}{equation.B.16}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {B.4}Token commitment along the trajectory}{16}{subsection.B.4}\protected@file@percent }
 \newlabel{app:commit}{{B.4}{16}{Token commitment along the trajectory}{subsection.B.4}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {C}Experimental details}{16}{appendix.C}\protected@file@percent }
 \newlabel{app:details}{{C}{16}{Experimental details}{appendix.C}{}}
-\@writefile{toc}{\contentsline {paragraph}{Base models.}{16}{section*.38}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Critic.}{17}{section*.39}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Critic pre-training per task (Algorithm~\ref {alg:jpc}, line 1).}}{17}{table.caption.40}\protected@file@percent }
-\newlabel{tab:critic_pretrain}{{4}{17}{Critic pre-training per task (Algorithm~\ref {alg:jpc}, line 1)}{table.caption.40}{}}
-\@writefile{toc}{\contentsline {paragraph}{\textsc  {JPC}{} (Algorithm~\ref {alg:jpc}).}{17}{section*.41}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{GRPO.}{17}{section*.42}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{AR control.}{17}{section*.43}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Amortisation loop.}{17}{section*.44}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Evaluation and seeds.}{18}{section*.45}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Compute.}{18}{section*.46}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Base models.}{16}{section*.37}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Critic.}{17}{section*.38}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Critic pre-training per task (Algorithm~\ref {alg:jpc}, line 1).}}{17}{table.caption.39}\protected@file@percent }
+\newlabel{tab:critic_pretrain}{{4}{17}{Critic pre-training per task (Algorithm~\ref {alg:jpc}, line 1)}{table.caption.39}{}}
+\@writefile{toc}{\contentsline {paragraph}{\textsc  {JPC}{} (Algorithm~\ref {alg:jpc}).}{17}{section*.40}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{GRPO.}{17}{section*.41}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{AR control.}{17}{section*.42}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Amortisation loop.}{18}{section*.43}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Evaluation and seeds.}{18}{section*.44}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Compute.}{18}{section*.45}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {D}Additional results}{18}{appendix.D}\protected@file@percent }
 \newlabel{app:results}{{D}{18}{Additional results}{appendix.D}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {D.1}Score-function variants and critic form versus learning rate}{18}{subsection.D.1}\protected@file@percent }
 \newlabel{app:sf_variants}{{D.1}{18}{Score-function variants and critic form versus learning rate}{subsection.D.1}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces Score-function variants on Countdown (ELF-B, base $28.1/23.1/38.0/42.2$ at ODE64/$\gamma 4$@16/$\gamma 28$@32/$\gamma 56$@64). Every variant caps at $+3$--$+5$ at the deployment sampler; the AR control with the same estimator gains $+9.7$.}}{18}{table.caption.47}\protected@file@percent }
-\newlabel{tab:sf_variants}{{5}{18}{Score-function variants on Countdown (ELF-B, base $28.1/23.1/38.0/42.2$ at ODE64/$\gamma 4$@16/$\gamma 28$@32/$\gamma 56$@64). Every variant caps at $+3$--$+5$ at the deployment sampler; the AR control with the same estimator gains $+9.7$}{table.caption.47}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces Critic form $\times $ learning rate: $\Delta $ over the base at the per-seed peak, deployment sampler, one entry per seed.}}{19}{table.caption.48}\protected@file@percent }
-\newlabel{tab:critic_lr}{{6}{19}{Critic form $\times $ learning rate: $\Delta $ over the base at the per-seed peak, deployment sampler, one entry per seed}{table.caption.48}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces Score-function variants on Countdown (ELF-B, base $28.1/23.1/38.0/42.2$ at ODE64/$\gamma 4$@16/$\gamma 28$@32/$\gamma 56$@64). Every variant caps at $+3$--$+5$ at the deployment sampler; the AR control with the same estimator gains $+9.7$.}}{18}{table.caption.46}\protected@file@percent }
+\newlabel{tab:sf_variants}{{5}{18}{Score-function variants on Countdown (ELF-B, base $28.1/23.1/38.0/42.2$ at ODE64/$\gamma 4$@16/$\gamma 28$@32/$\gamma 56$@64). Every variant caps at $+3$--$+5$ at the deployment sampler; the AR control with the same estimator gains $+9.7$}{table.caption.46}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces Critic form $\times $ learning rate: $\Delta $ over the base at the per-seed peak, deployment sampler, one entry per seed.}}{19}{table.caption.47}\protected@file@percent }
+\newlabel{tab:critic_lr}{{6}{19}{Critic form $\times $ learning rate: $\Delta $ over the base at the per-seed peak, deployment sampler, one entry per seed}{table.caption.47}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {D.2}Cheap samplers after the loop}{19}{subsection.D.2}\protected@file@percent }
 \newlabel{app:samplers}{{D.2}{19}{Cheap samplers after the loop}{subsection.D.2}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces The loop moves what the policy can do to the cheap samplers. Held-out accuracy (\%) at samplers of increasing cost: the SFT base, the 2D-critic policy (mean of three seeds) and that policy after the loop (final round). $^\dagger $Sudoku: $\gamma 14$@16, and its deployment sampler is $\gamma 28$@32.}}{19}{table.caption.49}\protected@file@percent }
-\newlabel{tab:samplers}{{7}{19}{The loop moves what the policy can do to the cheap samplers. Held-out accuracy (\%) at samplers of increasing cost: the SFT base, the 2D-critic policy (mean of three seeds) and that policy after the loop (final round). $^\dagger $Sudoku: $\gamma 14$@16, and its deployment sampler is $\gamma 28$@32}{table.caption.49}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces The loop moves what the policy can do to the cheap samplers. Held-out accuracy (\%) at samplers of increasing cost: the SFT base, the 2D-critic policy (mean of three seeds) and that policy after the loop (final round). $^\dagger $Sudoku: $\gamma 14$@16, and its deployment sampler is $\gamma 28$@32.}}{19}{table.caption.48}\protected@file@percent }
+\newlabel{tab:samplers}{{7}{19}{The loop moves what the policy can do to the cheap samplers. Held-out accuracy (\%) at samplers of increasing cost: the SFT base, the 2D-critic policy (mean of three seeds) and that policy after the loop (final round). $^\dagger $Sudoku: $\gamma 14$@16, and its deployment sampler is $\gamma 28$@32}{table.caption.48}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {D.3}Sampler sweep on the Countdown base model}{19}{subsection.D.3}\protected@file@percent }
 \newlabel{app:sampler_sweep}{{D.3}{19}{Sampler sweep on the Countdown base model}{subsection.D.3}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {8}{\ignorespaces Countdown held-out accuracy of the SFT model under different samplers (classifier-free guidance 2 unless stated). Left: the base checkpoint used in the paper (epoch 60). Right: an earlier checkpoint (epoch 42) on which the wider grid was run.}}{20}{table.caption.50}\protected@file@percent }
-\newlabel{tab:sampler_sweep}{{8}{20}{Countdown held-out accuracy of the SFT model under different samplers (classifier-free guidance 2 unless stated). Left: the base checkpoint used in the paper (epoch 60). Right: an earlier checkpoint (epoch 42) on which the wider grid was run}{table.caption.50}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {8}{\ignorespaces Countdown held-out accuracy of the SFT model under different samplers (classifier-free guidance 2 unless stated). Left: the base checkpoint used in the paper (epoch 60). Right: an earlier checkpoint (epoch 42) on which the wider grid was run.}}{20}{table.caption.49}\protected@file@percent }
+\newlabel{tab:sampler_sweep}{{8}{20}{Countdown held-out accuracy of the SFT model under different samplers (classifier-free guidance 2 unless stated). Left: the base checkpoint used in the paper (epoch 60). Right: an earlier checkpoint (epoch 42) on which the wider grid was run}{table.caption.49}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {D.4}Autoregressive control: learning curves}{20}{subsection.D.4}\protected@file@percent }
 \newlabel{app:ar_curves}{{D.4}{20}{Autoregressive control: learning curves}{subsection.D.4}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {9}{\ignorespaces AR control (GPT-2, 124M), held-out accuracy with greedy decoding. Top: supervised fine-tuning by epoch (Sudoku: epochs 2, 4, \dots  , 20, scored by the SFT script's solved-grid metric; the verifier gives 1.2 at epoch 20). Bottom: token-level PPO by iteration (32 prompts $\times $ 8 samples per iteration).}}{20}{table.caption.51}\protected@file@percent }
-\newlabel{tab:ar_curves}{{9}{20}{AR control (GPT-2, 124M), held-out accuracy with greedy decoding. Top: supervised fine-tuning by epoch (Sudoku: epochs 2, 4, \dots , 20, scored by the SFT script's solved-grid metric; the verifier gives 1.2 at epoch 20). Bottom: token-level PPO by iteration (32 prompts $\times $ 8 samples per iteration)}{table.caption.51}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {9}{\ignorespaces AR control (GPT-2, 124M), held-out accuracy with greedy decoding. Top: supervised fine-tuning by epoch (Sudoku: epochs 2, 4, \dots  , 20, scored by the SFT script's solved-grid metric; the verifier gives 1.2 at epoch 20). Bottom: token-level PPO by iteration (32 prompts $\times $ 8 samples per iteration).}}{20}{table.caption.50}\protected@file@percent }
+\newlabel{tab:ar_curves}{{9}{20}{AR control (GPT-2, 124M), held-out accuracy with greedy decoding. Top: supervised fine-tuning by epoch (Sudoku: epochs 2, 4, \dots , 20, scored by the SFT script's solved-grid metric; the verifier gives 1.2 at epoch 20). Bottom: token-level PPO by iteration (32 prompts $\times $ 8 samples per iteration)}{table.caption.50}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {D.5}Choice of the Game24 base checkpoint}{20}{subsection.D.5}\protected@file@percent }
 \newlabel{app:g24_sft}{{D.5}{20}{Choice of the Game24 base checkpoint}{subsection.D.5}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {10}{\ignorespaces Game24 held-out (set-split) accuracy of the SFT model by epoch and sampler.}}{21}{table.caption.52}\protected@file@percent }
-\newlabel{tab:g24_sft}{{10}{21}{Game24 held-out (set-split) accuracy of the SFT model by epoch and sampler}{table.caption.52}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {10}{\ignorespaces Game24 held-out (set-split) accuracy of the SFT model by epoch and sampler.}}{21}{table.caption.51}\protected@file@percent }
+\newlabel{tab:g24_sft}{{10}{21}{Game24 held-out (set-split) accuracy of the SFT model by epoch and sampler}{table.caption.51}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {D.6}Knights-and-Knaves by number of people}{21}{subsection.D.6}\protected@file@percent }
 \newlabel{app:kk_by_n}{{D.6}{21}{Knights-and-Knaves by number of people}{subsection.D.6}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {11}{\ignorespaces K\&K held-out accuracy by number of people (deployment sampler $\gamma 56$@64; ODE-64 in parentheses for the SFT rows).}}{21}{table.caption.53}\protected@file@percent }
-\newlabel{tab:kk_by_n}{{11}{21}{K\&K held-out accuracy by number of people (deployment sampler $\gamma 56$@64; ODE-64 in parentheses for the SFT rows)}{table.caption.53}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {11}{\ignorespaces K\&K held-out accuracy by number of people (deployment sampler $\gamma 56$@64; ODE-64 in parentheses for the SFT rows).}}{21}{table.caption.52}\protected@file@percent }
+\newlabel{tab:kk_by_n}{{11}{21}{K\&K held-out accuracy by number of people (deployment sampler $\gamma 56$@64; ODE-64 in parentheses for the SFT rows)}{table.caption.52}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {D.7}Countdown loop round by round}{21}{subsection.D.7}\protected@file@percent }
 \newlabel{app:cd_loop}{{D.7}{21}{Countdown loop round by round}{subsection.D.7}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {12}{\ignorespaces Countdown amortisation loop, held-out accuracy at the end of each round (20 epochs of fine-tuning per round; verifier-accepted sequences and distinct problems in each pool). From top: loop from the 2D-critic policy (Table~\ref {tab:main}); from the SFT base with no RL; from the GRPO policy; from the 2D-critic policy on the gold labels of the same pools.}}{22}{table.caption.54}\protected@file@percent }
-\newlabel{tab:cd_loop}{{12}{22}{Countdown amortisation loop, held-out accuracy at the end of each round (20 epochs of fine-tuning per round; verifier-accepted sequences and distinct problems in each pool). From top: loop from the 2D-critic policy (Table~\ref {tab:main}); from the SFT base with no RL; from the GRPO policy; from the 2D-critic policy on the gold labels of the same pools}{table.caption.54}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {12}{\ignorespaces Countdown amortisation loop, held-out accuracy at the end of each round (20 epochs of fine-tuning per round; verifier-accepted sequences and distinct problems in each pool). From top: loop from the 2D-critic policy (Table~\ref {tab:main}); from the SFT base with no RL; from the GRPO policy; from the 2D-critic policy on the gold labels of the same pools.}}{22}{table.caption.53}\protected@file@percent }
+\newlabel{tab:cd_loop}{{12}{22}{Countdown amortisation loop, held-out accuracy at the end of each round (20 epochs of fine-tuning per round; verifier-accepted sequences and distinct problems in each pool). From top: loop from the 2D-critic policy (Table~\ref {tab:main}); from the SFT base with no RL; from the GRPO policy; from the 2D-critic policy on the gold labels of the same pools}{table.caption.53}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {D.8}Per-position critic values as a credit map}{22}{subsection.D.8}\protected@file@percent }
 \newlabel{app:critic_maps}{{D.8}{22}{Per-position critic values as a credit map}{subsection.D.8}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Per-position critic values $\sigma (R_i)$ (colour) along the deployment-sampler trajectory (rows: denoising step $k$; columns: generated positions, labelled by the decoded token for Game24 and by Sudoku row) for one correct and one incorrect held-out sample per task. The correct samples are the median-valued correct rollout; the incorrect Game24 sample is the median-valued failed rollout and the incorrect Sudoku sample the failed rollout with the fewest wrong cells (dotted lines and markers).}}{23}{figure.caption.55}\protected@file@percent }
-\newlabel{fig:critic_maps}{{4}{23}{Per-position critic values $\sigma (R_i)$ (colour) along the deployment-sampler trajectory (rows: denoising step $k$; columns: generated positions, labelled by the decoded token for Game24 and by Sudoku row) for one correct and one incorrect held-out sample per task. The correct samples are the median-valued correct rollout; the incorrect Game24 sample is the median-valued failed rollout and the incorrect Sudoku sample the failed rollout with the fewest wrong cells (dotted lines and markers)}{figure.caption.55}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {13}{\ignorespaces What the critic maps contain (96 held-out rollouts per task, jointly trained critics). Sequence AUC: pooled $\sigma (R_i)$ against the final outcome. Sudoku cell AUC: $\sigma (R_i)$ against per-cell correctness, over all cells and within incorrect samples only.}}{23}{table.caption.56}\protected@file@percent }
-\newlabel{tab:critic_maps}{{13}{23}{What the critic maps contain (96 held-out rollouts per task, jointly trained critics). Sequence AUC: pooled $\sigma (R_i)$ against the final outcome. Sudoku cell AUC: $\sigma (R_i)$ against per-cell correctness, over all cells and within incorrect samples only}{table.caption.56}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Per-position critic values $\sigma (R_i)$ (colour) along the deployment-sampler trajectory (rows: denoising step $k$; columns: generated positions, labelled by the decoded token for Game24 and by Sudoku row) for one correct and one incorrect held-out sample per task. The correct samples are the median-valued correct rollout; the incorrect Game24 sample is the median-valued failed rollout and the incorrect Sudoku sample the failed rollout with the fewest wrong cells (dotted lines and markers).}}{23}{figure.caption.54}\protected@file@percent }
+\newlabel{fig:critic_maps}{{4}{23}{Per-position critic values $\sigma (R_i)$ (colour) along the deployment-sampler trajectory (rows: denoising step $k$; columns: generated positions, labelled by the decoded token for Game24 and by Sudoku row) for one correct and one incorrect held-out sample per task. The correct samples are the median-valued correct rollout; the incorrect Game24 sample is the median-valued failed rollout and the incorrect Sudoku sample the failed rollout with the fewest wrong cells (dotted lines and markers)}{figure.caption.54}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {13}{\ignorespaces What the critic maps contain (96 held-out rollouts per task, jointly trained critics). Sequence AUC: pooled $\sigma (R_i)$ against the final outcome. Sudoku cell AUC: $\sigma (R_i)$ against per-cell correctness, over all cells and within incorrect samples only.}}{23}{table.caption.55}\protected@file@percent }
+\newlabel{tab:critic_maps}{{13}{23}{What the critic maps contain (96 held-out rollouts per task, jointly trained critics). Sequence AUC: pooled $\sigma (R_i)$ against the final outcome. Sudoku cell AUC: $\sigma (R_i)$ against per-cell correctness, over all cells and within incorrect samples only}{table.caption.55}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {D.9}Training dynamics on Countdown and Knights-and-Knaves}{23}{subsection.D.9}\protected@file@percent }
 \newlabel{app:dynamics_cd_kk}{{D.9}{23}{Training dynamics on Countdown and Knights-and-Knaves}{subsection.D.9}{}}
 \citation{zhao2025d1}
 \citation{nie2025llada}
-\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Training dynamics of Algorithm~\ref {alg:jpc} (2D critic) on Countdown (left) and K\&K (right): held-out accuracy at the deployment sampler per checkpoint (blue), replay-buffer success rate (grey), and the critic's value on the training batch (red, right axis); dotted line: SFT base.}}{24}{figure.caption.57}\protected@file@percent }
-\newlabel{fig:dynamics_cd_kk}{{5}{24}{Training dynamics of Algorithm~\ref {alg:jpc} (2D critic) on Countdown (left) and K\&K (right): held-out accuracy at the deployment sampler per checkpoint (blue), replay-buffer success rate (grey), and the critic's value on the training batch (red, right axis); dotted line: SFT base}{figure.caption.57}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Training dynamics of Algorithm~\ref {alg:jpc} (2D critic) on Countdown (left) and K\&K (right): held-out accuracy at the deployment sampler per checkpoint (blue), replay-buffer success rate (grey), and the critic's value on the training batch (red, right axis); dotted line: SFT base.}}{24}{figure.caption.56}\protected@file@percent }
+\newlabel{fig:dynamics_cd_kk}{{5}{24}{Training dynamics of Algorithm~\ref {alg:jpc} (2D critic) on Countdown (left) and K\&K (right): held-out accuracy at the deployment sampler per checkpoint (blue), replay-buffer success rate (grey), and the critic's value on the training batch (red, right axis); dotted line: SFT base}{figure.caption.56}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {D.10}What the policy gradient changes: failure modes and examples}{24}{subsection.D.10}\protected@file@percent }
 \newlabel{app:failure_modes}{{D.10}{24}{What the policy gradient changes: failure modes and examples}{subsection.D.10}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {14}{\ignorespaces Failure-mode breakdown of held-out samples at the deployment sampler (\% of samples; ``arithmetic'' = at least one false equation; ``number use'' = an operand that is not available; ``format'' = unparsable). No sample in any run ends on a result different from the target.}}{24}{table.caption.58}\protected@file@percent }
-\newlabel{tab:failure_modes}{{14}{24}{Failure-mode breakdown of held-out samples at the deployment sampler (\% of samples; ``arithmetic'' = at least one false equation; ``number use'' = an operand that is not available; ``format'' = unparsable). No sample in any run ends on a result different from the target}{table.caption.58}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {15}{\ignorespaces Held-out examples (deployment sampler). \text  {$\mathsurround \z@ \mathchar "458$}/\texttimes : verifier verdict. The Game24 gold derivation is one of several valid ones; the models are not asked to reproduce it.}}{24}{table.caption.59}\protected@file@percent }
-\newlabel{tab:examples}{{15}{24}{Held-out examples (deployment sampler). \checkmark /\texttimes : verifier verdict. The Game24 gold derivation is one of several valid ones; the models are not asked to reproduce it}{table.caption.59}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {14}{\ignorespaces Failure-mode breakdown of held-out samples at the deployment sampler (\% of samples; ``arithmetic'' = at least one false equation; ``number use'' = an operand that is not available; ``format'' = unparsable). No sample in any run ends on a result different from the target.}}{24}{table.caption.57}\protected@file@percent }
+\newlabel{tab:failure_modes}{{14}{24}{Failure-mode breakdown of held-out samples at the deployment sampler (\% of samples; ``arithmetic'' = at least one false equation; ``number use'' = an operand that is not available; ``format'' = unparsable). No sample in any run ends on a result different from the target}{table.caption.57}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {15}{\ignorespaces Held-out examples (deployment sampler). \text  {$\mathsurround \z@ \mathchar "458$}/\texttimes : verifier verdict. The Game24 gold derivation is one of several valid ones; the models are not asked to reproduce it.}}{24}{table.caption.58}\protected@file@percent }
+\newlabel{tab:examples}{{15}{24}{Held-out examples (deployment sampler). \checkmark /\texttimes : verifier verdict. The Game24 gold derivation is one of several valid ones; the models are not asked to reproduce it}{table.caption.58}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {D.11}A masked-diffusion baseline: d1 on our tasks}{25}{subsection.D.11}\protected@file@percent }
 \newlabel{app:d1}{{D.11}{25}{A masked-diffusion baseline: d1 on our tasks}{subsection.D.11}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {16}{\ignorespaces d1 (LLaDA-8B-Instruct, masked diffusion) versus this paper (ELF-B, 105M, continuous flow) on our held-out sets, exact success (\%), 256 generated tokens for LLaDA, deployment sampler for ELF-B. LLaDA's supervised stage uses the same training data as ELF-B's (Countdown 500k examples, Sudoku 400k, K\&K 300k, Game24 13k; LoRA rank 128 on all projections; 3, 3, 4 and 20 epochs); ``best ckpt'' = best of the checkpoints evaluated every 960 inner steps of diffu-GRPO on four GPUs. Sudoku for LLaDA also reports the fraction of correctly filled empty cells in parentheses. ELF-B rows are the three-seed means of Table~\ref {tab:main}.}}{25}{table.caption.60}\protected@file@percent }
-\newlabel{tab:d1}{{16}{25}{d1 (LLaDA-8B-Instruct, masked diffusion) versus this paper (ELF-B, 105M, continuous flow) on our held-out sets, exact success (\%), 256 generated tokens for LLaDA, deployment sampler for ELF-B. LLaDA's supervised stage uses the same training data as ELF-B's (Countdown 500k examples, Sudoku 400k, K\&K 300k, Game24 13k; LoRA rank 128 on all projections; 3, 3, 4 and 20 epochs); ``best ckpt'' = best of the checkpoints evaluated every 960 inner steps of diffu-GRPO on four GPUs. Sudoku for LLaDA also reports the fraction of correctly filled empty cells in parentheses. ELF-B rows are the three-seed means of Table~\ref {tab:main}}{table.caption.60}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {16}{\ignorespaces d1 (LLaDA-8B-Instruct, masked diffusion) versus this paper (ELF-B, 105M, continuous flow) on our held-out sets, exact success (\%), 256 generated tokens for LLaDA, deployment sampler for ELF-B. LLaDA's supervised stage uses the same training data as ELF-B's (Countdown 500k examples, Sudoku 400k, K\&K 300k, Game24 13k; LoRA rank 128 on all projections; 3, 3, 4 and 20 epochs); ``best ckpt'' = best of the checkpoints evaluated every 960 inner steps of diffu-GRPO on four GPUs. Sudoku for LLaDA also reports the fraction of correctly filled empty cells in parentheses. ELF-B rows are the three-seed means of Table~\ref {tab:main}.}}{25}{table.caption.59}\protected@file@percent }
+\newlabel{tab:d1}{{16}{25}{d1 (LLaDA-8B-Instruct, masked diffusion) versus this paper (ELF-B, 105M, continuous flow) on our held-out sets, exact success (\%), 256 generated tokens for LLaDA, deployment sampler for ELF-B. LLaDA's supervised stage uses the same training data as ELF-B's (Countdown 500k examples, Sudoku 400k, K\&K 300k, Game24 13k; LoRA rank 128 on all projections; 3, 3, 4 and 20 epochs); ``best ckpt'' = best of the checkpoints evaluated every 960 inner steps of diffu-GRPO on four GPUs. Sudoku for LLaDA also reports the fraction of correctly filled empty cells in parentheses. ELF-B rows are the three-seed means of Table~\ref {tab:main}}{table.caption.59}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {D.12}Frozen versus joint critic}{26}{subsection.D.12}\protected@file@percent }
 \newlabel{app:frozen}{{D.12}{26}{Frozen versus joint critic}{subsection.D.12}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Frozen versus jointly trained critic on Game24 (2D critic, learning rate $10^{-6}$). Red: the critic's value on the training batch; grey: the true success rate of that batch; blue: held-out accuracy at the deployment sampler. With a frozen critic the value is driven to $\approx 90$ while success collapses to zero; with joint training the value stays calibrated and the policy improves.}}{26}{figure.caption.61}\protected@file@percent }
-\newlabel{fig:frozen}{{6}{26}{Frozen versus jointly trained critic on Game24 (2D critic, learning rate $10^{-6}$). Red: the critic's value on the training batch; grey: the true success rate of that batch; blue: held-out accuracy at the deployment sampler. With a frozen critic the value is driven to $\approx 90$ while success collapses to zero; with joint training the value stays calibrated and the policy improves}{figure.caption.61}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Frozen versus jointly trained critic on Game24 (2D critic, learning rate $10^{-6}$). Red: the critic's value on the training batch; grey: the true success rate of that batch; blue: held-out accuracy at the deployment sampler. With a frozen critic the value is driven to $\approx 90$ while success collapses to zero; with joint training the value stays calibrated and the policy improves.}}{26}{figure.caption.60}\protected@file@percent }
+\newlabel{fig:frozen}{{6}{26}{Frozen versus jointly trained critic on Game24 (2D critic, learning rate $10^{-6}$). Red: the critic's value on the training batch; grey: the true success rate of that batch; blue: held-out accuracy at the deployment sampler. With a frozen critic the value is driven to $\approx 90$ while success collapses to zero; with joint training the value stays calibrated and the policy improves}{figure.caption.60}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {D.13}Negative results on stabilising the large-learning-rate regime}{26}{subsection.D.13}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {D.14}Critic quality metrics}{26}{subsection.D.14}\protected@file@percent }
 \newlabel{app:critic_quality}{{D.14}{26}{Critic quality metrics}{subsection.D.14}{}}
@@ -270,20 +269,20 @@
 \citation{schulman2017ppo,schulman2015gae}
 \citation{yu2025dapo,zheng2025gspo}
 \citation{jang2016gumbel,maddison2016concrete,kingma2013vae}
-\@writefile{lot}{\contentsline {table}{\numberline {17}{\ignorespaces Pre-trained 2D critics on held-out rollouts of the base policy (deployment sampler; Countdown critic trained on $\gamma 4$@16 states). pick@$V$ over groups of 8 (random baseline in the header); Pearson correlation of the pooled value with the 0/1 outcome.}}{27}{table.caption.62}\protected@file@percent }
-\newlabel{tab:critic_quality}{{17}{27}{Pre-trained 2D critics on held-out rollouts of the base policy (deployment sampler; Countdown critic trained on $\gamma 4$@16 states). pick@$V$ over groups of 8 (random baseline in the header); Pearson correlation of the pooled value with the 0/1 outcome}{table.caption.62}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {17}{\ignorespaces Pre-trained 2D critics on held-out rollouts of the base policy (deployment sampler; Countdown critic trained on $\gamma 4$@16 states). pick@$V$ over groups of 8 (random baseline in the header); Pearson correlation of the pooled value with the 0/1 outcome.}}{27}{table.caption.61}\protected@file@percent }
+\newlabel{tab:critic_quality}{{17}{27}{Pre-trained 2D critics on held-out rollouts of the base policy (deployment sampler; Countdown critic trained on $\gamma 4$@16 states). pick@$V$ over groups of 8 (random baseline in the header); Pearson correlation of the pooled value with the 0/1 outcome}{table.caption.61}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {E}Extended related work}{27}{appendix.E}\protected@file@percent }
 \newlabel{app:related}{{E}{27}{Extended related work}{appendix.E}{}}
-\@writefile{toc}{\contentsline {paragraph}{Continuous-state and diffusion language models.}{27}{section*.63}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{RL for diffusion and flow models.}{27}{section*.64}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Actor-critic control.}{27}{section*.65}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Continuous-state and diffusion language models.}{27}{section*.62}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{RL for diffusion and flow models.}{27}{section*.63}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Actor-critic control.}{27}{section*.64}\protected@file@percent }
 \citation{zelikman2022star,yuan2023rft,singh2023restem,huang2022selfimprove}
 \citation{anthony2017exit}
 \citation{gandhi2024sos}
 \citation{yao2023tot}
 \citation{shah2024sudoku}
 \citation{xie2024kk}
-\@writefile{toc}{\contentsline {paragraph}{AR post-training.}{28}{section*.66}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Self-training with verifiers.}{28}{section*.67}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Tasks.}{28}{section*.68}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{AR post-training.}{28}{section*.65}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Self-training with verifiers.}{28}{section*.66}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Tasks.}{28}{section*.67}\protected@file@percent }
 \gdef \@abspage@last{28}
