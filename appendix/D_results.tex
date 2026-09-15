@@ -55,19 +55,21 @@ Tables~\ref{tab:full_cd}--\ref{tab:full_g24} give every number behind \S\ref{sec
 
 \begin{table}[H]\centering\small
 \caption{Countdown (base 28.1/23.1/38.0/42.2).}\label{tab:full_cd}
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{@{}lcccc@{}}\toprule
 run & ODE64 & $\gamma4$@16 & $\gamma28$@32 & $\gamma56$@64\\\midrule
 GRPO seeds 1/2/3 (peak 300/100/500; final 42.4/42.2/41.7) & 29.2/28.5/28.9 & 23.2/23.4/24.3 & 40.6/39.4/39.6 & 43.1/42.8/43.3\\
-\jpc{} scalar two-phase, seed 1 & 35.4 & 27.4 & 41.8 & 51.2\\
-\jpc{} scalar two-phase, seed 2 & 34.4 & 29.0 & 44.4 & 49.2\\
-\jpc{} scalar, seed 3 (peak 125; barely leaves the base, final 42.8) & 29.0 & 23.2 & 37.0 & 44.3\\
+\jpc{} scalar critic (Algorithm~\ref{alg:jpc}, pooled head), seeds 1/2/3 (peak 1000) & 33.9/33.2/33.4 & 24.1/26.5/25.0 & 40.1/40.5/41.3 & 48.8/48.6/48.2\\
 \jpc{} 2D (Algorithm~\ref{alg:jpc}), seeds 1/2/3 (peak 750/500/1000) & 33.6/32.0/34.3 & 22.9/23.5/23.4 & 39.2/38.4/38.9 & 47.2/46.0/47.5\\
 \; same, buffer steps drawn uniformly at random (peak 750) & 33.6/34.4/34.3 & 24.8/23.5/23.3 & 39.6/40.4/39.9 & 47.6/47.5/47.7\\
-2D policy + loop, round 3 (Table~\ref{tab:cd_loop}) & 48.4 & 44.8 & 51.3 & 52.1\\
-loop from the SFT base, round 1 (no RL) & 34.4 & 29.3 & 42.9 & 44.1\\\bottomrule\end{tabular}\end{table}
+2D policy + loop, rounds 1/2/3/4 (Table~\ref{tab:cd_loop}) & 41.1/43.9/48.4/49.5 & 37.1/40.2/44.8/45.5 & 46.9/46.9/51.3/51.5 & 48.1/48.1/52.1/52.3\\
+loop from the SFT base, rounds 1/2/3/4 & 39.8/43.2/43.8/\LOOPcdBo & 35.8/40.8/42.7/\LOOPcdBg & 44.7/46.2/45.6/\LOOPcdBt & 46.1/46.5/46.7/\LOOPcdB\\
+loop from the GRPO policy (43.3), rounds 1/2/3/4 & 41.3/43.5/44.5/42.1 & 37.0/39.8/41.1/41.6 & 45.6/45.4/45.4/44.4 & 45.9/46.2/46.2/45.1\\
+gold labels of the same pools from the 2D policy, rounds 1/2/3/4 & 30.4/28.2/28.5/27.5 & 26.6/24.6/24.4/23.2 & 39.4/39.1/38.5/38.2 & 45.2/44.1/43.9/43.1\\\bottomrule\end{tabular}}\end{table}
 
 \begin{table}[H]\centering\small
 \caption{Sudoku (base 62.3/55.3/62.0/66.2).}\label{tab:full_sd}
+\resizebox{\linewidth}{!}{%
 \begin{tabular}{@{}lcccc@{}}\toprule
 run & ODE64 & $\gamma4$@16 & $\gamma14$@16 & $\gamma28$@32\\\midrule
 GRPO seed 1 (peak 600) & 65.9 & 55.5 & 65.0 & 70.1\\
@@ -75,8 +77,11 @@ GRPO seed 2 (peak 500; final 70.5) & 69.7 & 59.1 & 67.1 & 72.8\\
 GRPO seed 3 (peak 100; final 63.0) & 62.4 & 53.3 & 61.4 & 66.2\\
 \jpc{} 2D (Algorithm~\ref{alg:jpc}), seeds 1/2/3 (peak 250/250/500) & 64.5/65.3/65.8 & 58.1/58.9/56.5 & 65.7/66.6/65.6 & 69.5/69.7/70.7\\
 \; same, buffer steps drawn uniformly at random (peak 500) & 64.0/64.3/65.1 & 55.2/56.5/55.1 & 62.9/64.4/63.9 & 69.3/69.2/69.7\\
-\jpc{} scalar, seeds 1/2/3 (peak 250/250/125; all collapse by 500) & 49.8/55.6/60.5 & 42.0/48.9/52.0 & 50.0/55.0/59.0 & 53.1/58.1/63.3\\
-2D policy + loop on 50k fresh puzzles, round 1 & 66.6 & 56.6 & 65.2 & 71.2\\\bottomrule\end{tabular}\end{table}
+\jpc{} scalar critic (Algorithm~\ref{alg:jpc}, pooled head), seeds 1/2/3 (peak 500/250/250; all collapse by 1000) & 65.1/63.7/64.1 & 52.1/55.9/55.6 & 62.3/63.6/63.5 & 68.7/67.8/65.8\\
+2D policy + loop on 50k fresh puzzles, round 1 (final checkpoint) & 66.1 & 56.1 & 66.4 & 70.8\\
+loop from the SFT base & 62.0 & 54.2 & 61.7 & 65.5\\
+loop from the GRPO policy (72.8) & 68.5 & 60.0 & 66.2 & 71.9\\
+gold labels of the same puzzles from the 2D policy & 66.5 & 56.5 & 65.3 & 70.5\\\bottomrule\end{tabular}}\end{table}
 
 \begin{table}[H]\centering\small
 \caption{Knights-and-Knaves (base = SFT epoch 4, 57.8/58.1/65.8/67.5; gold-SFT epoch 8 = 96.8/93.8/99.4/99.7).}\label{tab:full_kk}
@@ -87,10 +92,11 @@ GRPO seeds 1/2/3 (peak = final, 600) & 62.6/61.6/67.0 & 63.8/62.6/66.9 & 69.7/69
 \jpc{} 2D (Algorithm~\ref{alg:jpc}), seeds 1/2/3 (peak 1000/750/750) & 69.5/68.5/69.4 & 68.4/67.8/68.5 & 76.6/76.0/77.0 & 79.5/79.1/79.0\\
 \; same, buffer steps drawn uniformly at random (peak 1000) & 69.6/69.2/70.0 & 68.2/67.7/68.7 & 76.5/75.9/76.6 & 78.6/78.2/79.5\\
 \; same, critic pre-trained on 16k rollouts / 6 epochs (peak 250, collapse by 500) & 63.3/62.9/63.1 & 64.5/64.8/64.5 & 69.2/69.3/69.2 & 71.2/72.0/70.6\\
-\jpc{} scalar $3{\times}10^{-6}\!\to\!10^{-6}$, seeds 1/2/3 (peak) & 64.8/65.3/66.1 & 66.2/66.2/66.1 & 68.6/70.7/70.5 & 69.5/72.0/72.0\\
+\jpc{} scalar critic (Algorithm~\ref{alg:jpc}, pooled head), seeds 1/2/3 (peak 500/500/750) & 68.8/68.1/70.3 & 68.5/67.7/69.3 & 75.5/75.3/76.5 & 77.8/77.5/79.2\\
 2D policy + loop, rounds 1/2/3/4/5 (round 1 on training problems, then fresh 50k pools) & 77.8/84.4/88.8/92.8/95.2 & 74.4/81.0/86.5/89.6/93.1 & 82.5/88.2/93.2/96.2/98.2 & 83.9/89.6/94.0/97.2/98.8\\
-gold-label control on the same fresh pools, rounds 2/3/4/5 (chain started from a 70.5 policy) & 78.1/83.2/87.9/91.0 & 76.2/80.9/84.2/88.5 & 82.3/88.8/92.5/95.7 & 84.0/89.8/93.8/96.7\\
-loop from the SFT base, round 1 (no RL) & 75.8 & 74.0 & 81.0 & 82.3\\\bottomrule\end{tabular}}\end{table}
+gold labels of the same pools from the 2D policy, rounds 1/2/3/4/5 & 80.0/88.4/94.0/96.2/97.7 & 77.2/85.8/90.2/93.1/95.7 & 86.0/93.6/97.7/98.7/99.5 & 88.2/94.9/98.4/99.5/99.8\\
+loop from the SFT base, rounds 1/2/3/4/5 & 77.0/86.7/91.5/95.2/\LOOPkkBo & 75.1/83.7/88.8/93.1/\LOOPkkBg & 83.5/92.5/96.4/98.4/\LOOPkkBt & 83.5/93.2/96.8/98.8/\LOOPkkB\\
+loop from the GRPO policy (74.6), rounds 1/2/3/4/5 & 74.5/81.2/87.0/91.8/\LOOPkkGo & 73.2/78.6/84.3/88.8/\LOOPkkGg & 78.8/86.2/91.5/95.4/\LOOPkkGt & 80.1/86.7/93.1/96.9/\LOOPkkG\\\bottomrule\end{tabular}}\end{table}
 
 \begin{table}[H]\centering\small
 \caption{Game24, set-split evaluation (base = SFT epoch 20, 35.2/35.4/42.6/45.0).}\label{tab:full_g24}
@@ -98,14 +104,13 @@ loop from the SFT base, round 1 (no RL) & 75.8 & 74.0 & 81.0 & 82.3\\\bottomrule
 \begin{tabular}{@{}lcccc@{}}\toprule
 run & ODE64 & $\gamma4$@16 & $\gamma28$@32 & $\gamma56$@64\\\midrule
 GRPO seeds 1/2/3 (peak 600/500/500; final 46.8/48.0/46.3) & 36.0/36.9/36.5 & 36.9/36.7/36.4 & 45.8/46.9/44.8 & 46.8/48.6/47.1\\
-\jpc{} scalar $3{\times}10^{-6}\!\to\!10^{-6}$, seed 1 & 41.2 & 39.9 & 52.2 & 55.2\\
-\jpc{} scalar $3{\times}10^{-6}$, seed 2 (peak 125; collapses to 39.5 at 250) & 32.1 & 32.9 & 39.7 & 43.7\\
-\jpc{} scalar $3{\times}10^{-6}\!\to\!10^{-6}$, seed 3 & 38.4 & 36.3 & 47.0 & 50.6\\
+\jpc{} scalar critic (Algorithm~\ref{alg:jpc}, pooled head), seeds 1/2/3 (peak 750) & 38.7/38.4/38.6 & 33.8/34.5/33.4 & 48.3/48.3/47.7 & 51.6/52.1/52.0\\
 \jpc{} 2D (Algorithm~\ref{alg:jpc}), seeds 1/2/3 (peak 750/1000/750) & 41.1/41.1/41.3 & 38.6/38.5/39.1 & 55.0/54.5/54.7 & 59.3/58.5/58.8\\
 \; same, buffer steps drawn uniformly at random (peak 1000/1000/750) & 41.7/42.0/41.7 & 39.2/39.0/38.4 & 54.7/55.0/54.8 & 59.0/59.0/59.1\\
-2D policy + loop, rounds 1/2/3/4 (best checkpoint of each round) & 42.2/42.9/46.3/47.6 & 39.4/41.0/44.3/47.2 & 54.9/54.8/55.5/55.7 & 58.7/57.8/57.4/57.3\\
-loop from the GRPO policy (48.0), rounds 1/2 & 40.0/42.3 & 39.7/40.8 & 49.3/48.6 & 50.5/49.8\\
-loop from the SFT base, rounds 1/2 (no RL) & 38.2/41.0 & 38.0/39.4 & 43.5/45.7 & 45.8/48.0\\
+2D policy + loop, rounds 1/2/3/4 (final checkpoint of each round) & 46.5/48.4/49.7/50.9 & 44.3/47.6/48.9/50.3 & 54.7/55.3/57.2/58.2 & 56.0/56.8/58.9/58.1\\
+loop from the SFT base, rounds 1/2/3/4 & 37.9/38.5/39.3/40.2 & 36.6/37.2/36.9/38.8 & 43.4/44.0/43.7/45.2 & 45.6/44.3/44.4/46.1\\
+loop from the GRPO policy (48.6), rounds 1/2/3/4 & 40.7/40.7/42.6/43.5 & 40.2/40.0/39.9/41.8 & 46.6/46.8/48.9/49.3 & 49.3/48.1/50.6/50.5\\
+gold labels of the same problems from the 2D policy, rounds 1/2/3/4 & 38.9/38.5/39.7/39.4 & 38.4/37.0/37.0/35.9 & 51.0/48.0/46.8/46.2 & 52.5/50.4/49.4/49.5\\
 AR GPT-2 SFT / + token GRPO-PPO & \multicolumn{4}{c}{26.9 / 32.2 (greedy decoding)}\\\bottomrule\end{tabular}}\end{table}
 
 \subsection{Sampler sweep on the Countdown base model}
@@ -125,21 +130,24 @@ $\gamma112$@128 & 44.9 & $\gamma112$@128 & 37.4\\\bottomrule\end{tabular}}\end{t
 
 \subsection{Autoregressive control: learning curves}
 \label{app:ar_curves}
-Table~\ref{tab:ar_curves} gives the full curves behind the AR control of \S\ref{sec:experiments}. Supervised fine-tuning of GPT-2 on Countdown peaks at epoch 8 (44.2) and on Game24 at epoch 2 (26.9, from the Countdown-trained model; from vanilla GPT-2 the same data reaches only 12.4 at epoch 4). Token-level PPO at $10^{-5}$ then climbs monotonically on Countdown ($+9.7$ at iteration 550) and, after an initial dip, on Game24 ($+5.3$ at iteration 600); at $3\times10^{-6}$ the Countdown curve saturates at $+6.6$. The AR policy sees exactly the same problems, verifier and number of rollouts per iteration as the flow policies; the only difference is the estimator its action space admits.
+Table~\ref{tab:ar_curves} gives the full curves behind the AR control of \S\ref{sec:experiments}. Supervised fine-tuning of GPT-2 peaks at epoch 8 on Countdown (44.2), at epoch 10 on K\&K (92.9), at epoch 20 on Sudoku (1.2) and at epoch 2 on Game24 (26.9, from the Countdown-trained model; from vanilla GPT-2 the same data reaches only 12.4 at epoch 4). Token-level PPO at $10^{-5}$ then climbs monotonically on Countdown ($+9.7$ at iteration 550) and, after an initial dip, on Game24 ($+5.3$ at iteration 600); at $3\times10^{-6}$ the Countdown curve saturates at $+6.6$. On K\&K the supervised policy is already sharp: at $10^{-5}$ the importance ratios explode and accuracy falls from 92.9 to 7.2 within 50 iterations, and at $3\times10^{-6}$ (with the log-ratio clamped to $\pm10$) the curve stays flat at $92.7$--$93.2$; on Sudoku, where the supervised model solves one puzzle in a hundred, the reward signal is too sparse to move it. The AR policy sees exactly the same problems, verifier and number of rollouts per iteration as the flow policies; the only difference is the estimator its action space admits.
 
 \begin{table}[H]\centering\small
-\caption{AR control (GPT-2, 124M), held-out accuracy with greedy decoding. Top: supervised fine-tuning by epoch. Bottom: token-level PPO by iteration (32 prompts $\times$ 8 samples per iteration).}\label{tab:ar_curves}
+\caption{AR control (GPT-2, 124M), held-out accuracy with greedy decoding. Top: supervised fine-tuning by epoch (Sudoku: epochs 2, 4, \dots, 20, scored by the SFT script's solved-grid metric; the verifier gives 1.2 at epoch 20). Bottom: token-level PPO by iteration (32 prompts $\times$ 8 samples per iteration).}\label{tab:ar_curves}
 \resizebox{\linewidth}{!}{%
 \begin{tabular}{@{}lcccccccccc@{}}\toprule
 SFT epoch & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10\\\midrule
 Countdown & 26.5 & 30.8 & 38.1 & 38.8 & 41.1 & 43.9 & 42.4 & \textbf{44.2} & 43.6 & 42.8\\
+Sudoku (epochs 2--20) & \phantom{0}0.6 & \phantom{0}0.9 & \phantom{0}1.1 & \phantom{0}1.3 & \phantom{0}1.3 & \phantom{0}1.4 & \phantom{0}1.4 & \phantom{0}1.4 & \textbf{\phantom{0}1.7} & \textbf{\phantom{0}1.7}\\
+K\&K & 28.2 & 46.6 & 68.7 & 82.8 & 87.1 & 88.5 & 91.4 & 92.3 & 92.8 & \textbf{92.9}\\
 Game24 (init.\ from the Countdown model) & 19.6 & \textbf{26.9} & 22.1 & 21.3 & 19.9 & 21.7 & 21.0 & 20.8 & 20.7 & 21.6\\
 Game24 (init.\ from vanilla GPT-2) & \phantom{0}1.1 & \phantom{0}9.8 & 11.4 & \textbf{12.4} & \phantom{0}9.0 & \phantom{0}9.5 & 10.3 & 11.2 & \phantom{0}9.7 & \phantom{0}9.7\\
 \midrule
-PPO iteration & 0 & 100 & 200 & 300 & 400 & 450 & 500 & 550 & 600 & \\\midrule
-Countdown, $10^{-5}$ & 44.2 & 48.7 & 51.1 & 51.0 & 53.0 & 52.8 & 53.1 & \textbf{53.9} & 53.6 & \\
-Countdown, $3\times10^{-6}$ & 44.2 & 47.3 & 49.5 & 49.8 & 48.9 & 49.9 & \textbf{50.8} & 49.6 & 50.6 & \\
-Game24, $10^{-5}$ & 26.9 & 20.5 & 25.0 & 25.8 & 26.8 & 26.9 & 30.1 & 28.9 & \textbf{32.2} & \\\bottomrule\end{tabular}}\end{table}
+PPO iteration & 0 & 100 & 150 & 200 & 300 & 400 & 500 & 550 & 600 & \\\midrule
+Countdown, $10^{-5}$ & 44.2 & 48.7 & 50.1 & 51.1 & 51.0 & 53.1 & 53.1 & \textbf{53.9} & 53.7 & \\
+Sudoku, $10^{-5}$ & \phantom{0}1.2 & \textbf{\phantom{0}1.4} & \phantom{0}1.1 & \phantom{0}1.2 & \phantom{0}1.2 & \phantom{0}1.1 & \phantom{0}1.2 & \phantom{0}1.2 & \phantom{0}1.3 & \\
+K\&K, $3\times10^{-6}$ & 92.9 & 93.0 & \textbf{93.2} & 93.1 & 92.9 & 92.8 & 92.7 & 92.8 & 92.7 & \\
+Game24, $10^{-5}$ & 26.9 & 20.5 & 23.8 & 25.0 & 25.8 & 26.8 & 30.1 & 28.9 & \textbf{32.2} & \\\bottomrule\end{tabular}}\end{table}
 
 \subsection{Choice of the Game24 base checkpoint}
 \label{app:g24_sft}
@@ -171,10 +179,10 @@ gold SFT epoch 8 & 99.7 (96.8) & 100.0 (100.0) & 100.0 (98.5) & 99.0 (91.8)\\\bo
 
 \subsection{Countdown loop round by round}
 \label{app:cd_loop}
-Table~\ref{tab:cd_loop} lists every round of the Countdown loop at all four samplers, together with a three-round loop started from the SFT base without any RL and a two-round loop from the GRPO policy. Three regularities are visible. (i) The loop transfers the policy's ability to the cheap samplers at once: one round takes the ODE sampler from $34.3$ to $41.1$ and $\gamma4$@16 from $23.4$ to $37.1$ while the deployment sampler stays within a point. (ii) Plain self-sampling stalls at the deployment sampler ($48.1\to48.1$) and the pool's coverage shrinks (35.0k to 31.1k solved problems). (iii) Sampling the pool with the jointly trained 2D critic (best-of-4 pruning at the window's midpoint plus gradient guidance, Appendix~\ref{app:details}) restores coverage (37.8k) and lifts the deployment sampler ($52.1$ after round 3).
+Table~\ref{tab:cd_loop} lists every round of the Countdown loop at all four samplers, together with the three controls of Table~\ref{tab:main}, which run the same four rounds from the SFT base, from the GRPO policy, and from the 2D policy on the gold labels of the same pools. Three regularities are visible. (i) The loop transfers the policy's ability to the cheap samplers at once: one round takes the ODE sampler from $34.3$ to $41.1$ and $\gamma4$@16 from $23.4$ to $37.1$ while the deployment sampler stays within a point. (ii) Plain self-sampling stalls at the deployment sampler ($48.1\to48.1$) and the pool's coverage shrinks (35.0k to 31.1k solved problems). (iii) Sampling the pool with the jointly trained 2D critic (best-of-4 pruning at the window's midpoint plus gradient guidance, Appendix~\ref{app:details}) restores coverage (37.8k, 38.3k) and lifts the deployment sampler ($52.1$ after round 3, $52.3$ after round 4). The plain chains from the base and from the GRPO policy show the first two regularities and stop at $46$--$47$; the gold-label chain loses two points per round at every sampler, since the RL policy's derivations have moved away from the gold style it is being pulled back to.
 
 \begin{table}[H]\centering\small
-\caption{Countdown amortisation loop, held-out accuracy at the end of each round (20 epochs of fine-tuning per round; verifier-accepted sequences and distinct problems in each pool). Top: loop from the 2D-critic policy (Table~\ref{tab:main}). Middle: loop from the SFT base with no RL. Bottom: loop from the GRPO policy.}\label{tab:cd_loop}
+\caption{Countdown amortisation loop, held-out accuracy at the end of each round (20 epochs of fine-tuning per round; verifier-accepted sequences and distinct problems in each pool). From top: loop from the 2D-critic policy (Table~\ref{tab:main}); from the SFT base with no RL; from the GRPO policy; from the 2D-critic policy on the gold labels of the same pools.}\label{tab:cd_loop}
 \resizebox{\linewidth}{!}{%
 \begin{tabular}{@{}llcccc@{}}\toprule
 round & pool & ODE64 & $\gamma4$@16 & $\gamma28$@32 & $\gamma56$@64\\\midrule
@@ -183,13 +191,20 @@ SFT base (epoch 60) & & 28.1 & 23.1 & 38.0 & 42.2\\
 round 1 & deployment sampler, 86.2k sequences / 35.0k problems & 41.1 & 37.1 & 46.9 & 48.1\\
 round 2 & deployment sampler, 56.2k / 31.1k & 43.9 & 40.2 & 46.9 & 48.1\\
 round 3 & 2D-critic-guided sampler, 93.1k / 37.8k & 48.4 & 44.8 & 51.3 & 52.1\\
-round 4 & 2D-critic-guided sampler from round 3 & \pendA & \pendA & \pendA & \pendA\\\midrule
-no-RL round 1 & $\gamma28$@32 samples of the base & 39.0 & 36.2 & 44.7 & 46.0\\
-no-RL round 2 & $\gamma28$@32 samples of round 1 & 44.2 & 41.5 & 46.7 & 47.1\\
-no-RL round 3 & $\gamma56$@64 samples of round 2 & 43.3 & 42.5 & 47.1 & 48.9\\\midrule
+round 4 & 2D-critic-guided sampler, 93.4k / 38.3k & 49.5 & 45.5 & 51.5 & 52.3\\\midrule
+no-RL round 1 & deployment sampler, 82.4k / 34.2k & 39.8 & 35.8 & 44.7 & 46.1\\
+no-RL round 2 & 59.1k / 30.8k & 43.2 & 40.8 & 46.2 & 46.5\\
+no-RL round 3 & 52.2k / 30.8k & 43.8 & 42.7 & 45.6 & 46.7\\
+no-RL round 4 & 48.5k / 31.2k & \LOOPcdBo & \LOOPcdBg & \LOOPcdBt & \LOOPcdB\\\midrule
 GRPO policy (start; seed 3, iteration 500) & & 28.9 & 24.3 & 39.6 & 43.3\\
-GRPO round 1 & deployment sampler, 82.7k / 34.1k & 36.2 & 30.4 & 43.7 & 45.1\\
-GRPO round 2 & deployment sampler, 65.5k / 30.8k & 40.2 & 36.0 & 44.4 & 44.8\\\bottomrule\end{tabular}}\end{table}
+GRPO round 1 & deployment sampler, 82.7k / 34.1k & 41.3 & 37.0 & 45.6 & 45.9\\
+GRPO round 2 & 58.3k / 30.5k & 43.5 & 39.8 & 45.4 & 46.2\\
+GRPO round 3 & 51.3k / 30.4k & 44.5 & 41.1 & 45.4 & 46.2\\
+GRPO round 4 & 47.2k / 30.9k & 42.1 & 41.6 & 44.4 & 45.1\\\midrule
+gold round 1 & gold derivations, 50k / 50k & 30.4 & 26.6 & 39.4 & 45.2\\
+gold round 2 & & 28.2 & 24.6 & 39.1 & 44.1\\
+gold round 3 & & 28.5 & 24.4 & 38.5 & 43.9\\
+gold round 4 & & 27.5 & 23.2 & 38.2 & 43.1\\\bottomrule\end{tabular}}\end{table}
 
 \subsection{Per-position critic values as a credit map}
 \label{app:critic_maps}
@@ -271,7 +286,7 @@ LLaDA-8B-Instruct & + task SFT & \PENDScd & \PENDSsd & \PENDSkk & \PENDSgt\\
 LLaDA-8B-Instruct & + task SFT + diffu-GRPO (best ckpt) & \PENDcd & \PENDsd & \PENDkk & \PENDgt\\\midrule
 ELF-B (105M) & task SFT (base) & 42.2 & 66.2 & 67.5 & 45.0\\
 ELF-B (105M) & + GRPO & 43.1 & 69.7 & 71.6 & 47.5\\
-ELF-B (105M) & + \jpc{}, scalar critic & 48.2 & 58.2 & 71.2 & 49.8\\
+ELF-B (105M) & + \jpc{}, scalar critic & 48.5 & 67.4 & 78.2 & 51.9\\
 ELF-B (105M) & + \jpc{}, 2D critic & 46.9 & 70.0 & 79.2 & 58.9\\\bottomrule\end{tabular}}\end{table}
 
 The 8B masked-diffusion model is far below the 105M flow model on every task, before and after RL; diffu-GRPO adds at most $+1$ to $+3$ points over its starting point on any task in either arm, and on Sudoku it never produces a solved grid. Two caveats apply. The comparison is across architectures \emph{and} training histories: LLaDA-8B-Instruct was never trained on these tasks, and our supervised stage for it is small (about two GPU-hours per task), whereas ELF-B was fine-tuned on the full training sets; a larger supervised budget would raise the LLaDA rows, and we make no claim about the ceiling of masked diffusion models. What the table does show is the behaviour of the estimator: diffu-GRPO moves the zero-shot model little on the arithmetic tasks within d1's own budget and lifts K\&K by a few points, consistent with d1's own results on its easier three-number Countdown and $4{\times}4$ Sudoku, where the reported gains are largest when the base already solves a sizeable fraction of problems.

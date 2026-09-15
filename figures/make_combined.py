@@ -32,8 +32,8 @@ for ax,(title,log,pref,key,base,off) in zip(axes[:2],panels):
     pk=e[np.argmax(e[:,1])]; ax.annotate("peak (early-stop)",xy=(pk[0],pk[1]),xytext=(pk[0]+off[0],pk[1]+off[1]),fontsize=6,arrowprops=dict(arrowstyle="->",lw=0.6))
     for a in (ax,ax2):
         for h,l in zip(*a.get_legend_handles_labels()): H.setdefault(l,h)
-ax=axes[2]; labels=["SFT\nbase","2D-critic\npolicy","loop\nfrom it\n(4 rounds)","loop\nfrom base\n(2 rounds)"]
-dep=[45.0,59.3,57.3,48.0]; ode=[35.2,41.1,47.6,41.0]; xx=np.arange(4)
+ax=axes[2]; labels=["SFT\nbase","2D-critic\npolicy","loop\nfrom it\n(4 rounds)","loop\nfrom base\n(4 rounds)"]
+dep=[45.0,59.3,58.1,46.1]; ode=[35.2,41.1,50.9,40.2]; xx=np.arange(4)
 ax.bar(xx-0.19,dep,0.38,color="#1a9c5b",label="deployment ($\\gamma$56@64)"); ax.bar(xx+0.19,ode,0.38,color="#7fc9a5",label="cheap (ODE-64)")
 for xi,d_,o in zip(xx,dep,ode): ax.text(xi-0.19,d_+0.6,f"{d_:.1f}",ha="center",fontsize=5.5); ax.text(xi+0.19,o+0.6,f"{o:.1f}",ha="center",fontsize=5.5)
 ax.set_xticks(xx); ax.set_xticklabels(labels,fontsize=5.6); ax.set_ylim(30,67); ax.set_ylabel("Game24 accuracy (%)"); ax.set_title("Loop attribution (Game24)",fontsize=7.5); ax.legend(fontsize=6,frameon=False,loc="upper left")
