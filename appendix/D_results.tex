@@ -42,14 +42,7 @@ scalar, $10^{-6}$ & --- & --- & $+3.4$ & $+2.6$ \\
 \end{table}
 
 \subsection{Four-sampler tables}
-Figure~\ref{fig:results} plots the deployment-sampler results of Table~\ref{tab:main} with seed error bars.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.9\linewidth]{figures/fig_results.pdf}
-\caption{Accuracy at the deployment sampler on the four tasks (mean over seeds, error bars = standard deviation over seeds). Dashed lines: an AR GPT-2 with token-level GRPO/PPO on the same data. The 2D-critic \jpc{} is the only recipe that improves on every task with every seed; the loop adds the most where RL changed what the policy can solve.}
-\label{fig:results}
-\end{figure}
+Figure~\ref{fig:results} in the main text plots the deployment-sampler results of Table~\ref{tab:main} with seed error bars.
 
 Tables~\ref{tab:full_cd}--\ref{tab:full_g24} give every number behind \S\ref{sec:experiments} at all four samplers (ODE64 / $\gamma4$@16 / $\gamma28$@32 / $\gamma56$@64; Sudoku: ODE64 / $\gamma4$@16 / $\gamma14$@16 / $\gamma28$@32).
 
