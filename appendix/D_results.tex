@@ -157,25 +157,25 @@ gold round 4 & & 27.3 & 21.9 & 37.6 & 42.6\\\bottomrule\end{tabular}}\end{table}
 
 \subsection{Per-position critic values as a credit map}
 \label{app:critic_maps}
-The 2D critic produces one value per generated position at every step of the trajectory. Figure~\ref{fig:critic_maps} shows $\sigma(R_i)$ for held-out rollouts of the jointly trained critics (Game24: seed-2 critic after 1000 iterations; Sudoku: after 500), and Table~\ref{tab:critic_maps} quantifies what these maps contain on 96 held-out rollouts per task. Two things are visible. First, the pooled value separates successful from failed trajectories progressively along the trajectory: the area under the ROC curve (AUC) of the pooled value against the final outcome rises from $0.60$ at $k{=}4$ to $0.998$ at $k{=}56$ of 64 on Game24, and from $0.78$ at $k{=}2$ to $1.00$ at $k{=}30$ of 32 on Sudoku, i.e.\ the critic has learned when the trajectory commits. Second, the per-position values carry \emph{some} localisation but are dominated by the sequence-level signal: on Sudoku, ranking all $7{,}776$ cells of the 96 samples by $\sigma(R_i)$ at the last step separates wrong from right cells with AUC $0.92$, but most of that comes from wrong samples being uniformly low; restricted to the cells \emph{within} incorrect samples the AUC is $0.56$--$0.63$ at every $k$. On Game24 the maps are organised by equation (values change at equation boundaries, and in the failed sample the low values concentrate on one equation), but they are not a step verifier. We therefore use the per-position values only as a measurement and filtering tool, as stated in \S\ref{sec:method}; the optimisation uses their mean.
+The 2D critic produces one value per generated position at every step of the trajectory. Figure~\ref{fig:critic_maps} shows $\mathrm{sig}(R_i)$ for held-out rollouts of the jointly trained critics (Game24: seed-2 critic after 1000 iterations; Sudoku: after 500), and Table~\ref{tab:critic_maps} quantifies what these maps contain on 96 held-out rollouts per task. Two things are visible. First, the pooled value separates successful from failed trajectories progressively along the trajectory: the area under the ROC curve (AUC) of the pooled value against the final outcome rises from $0.60$ at $k{=}4$ to $0.998$ at $k{=}56$ of 64 on Game24, and from $0.78$ at $k{=}2$ to $1.00$ at $k{=}30$ of 32 on Sudoku, i.e.\ the critic has learned when the trajectory commits. Second, the per-position values carry \emph{some} localisation but are dominated by the sequence-level signal: on Sudoku, ranking all $7{,}776$ cells of the 96 samples by $\mathrm{sig}(R_i)$ at the last step separates wrong from right cells with AUC $0.92$, but most of that comes from wrong samples being uniformly low; restricted to the cells \emph{within} incorrect samples the AUC is $0.56$--$0.63$ at every $k$. On Game24 the maps are organised by equation (values change at equation boundaries, and in the failed sample the low values concentrate on one equation), but they are not a step verifier. We therefore use the per-position values only as a measurement and filtering tool, as stated in \S\ref{sec:method}; the optimisation uses their mean.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.98\linewidth]{figures/fig_critic_maps.pdf}
-\caption{Per-position critic values $\sigma(R_i)$ (colour) along the deployment-sampler trajectory (rows: denoising step $k$; columns: generated positions, labelled by the decoded token for Game24 and by Sudoku row) for one correct and one incorrect held-out sample per task. The correct samples are the median-valued correct rollout; the incorrect Game24 sample is the median-valued failed rollout and the incorrect Sudoku sample the failed rollout with the fewest wrong cells (dotted lines and markers).}
+\caption{Per-position critic values $\mathrm{sig}(R_i)$ (colour) along the deployment-sampler trajectory (rows: denoising step $k$; columns: generated positions, labelled by the decoded token for Game24 and by Sudoku row) for one correct and one incorrect held-out sample per task. The correct samples are the median-valued correct rollout; the incorrect Game24 sample is the median-valued failed rollout and the incorrect Sudoku sample the failed rollout with the fewest wrong cells (dotted lines and markers).}
 \label{fig:critic_maps}
 \end{figure}
 
 \begin{table}[H]\centering\small
-\caption{What the critic maps contain (96 held-out rollouts per task, jointly trained critics). Sequence AUC: pooled $\sigma(R_i)$ against the final outcome. Sudoku cell AUC: $\sigma(R_i)$ against per-cell correctness, over all cells and within incorrect samples only.}\label{tab:critic_maps}
+\caption{What the critic maps contain (96 held-out rollouts per task, jointly trained critics). Sequence AUC: pooled $\mathrm{sig}(R_i)$ against the final outcome. Sudoku cell AUC: $\mathrm{sig}(R_i)$ against per-cell correctness, over all cells and within incorrect samples only.}\label{tab:critic_maps}
 \resizebox{\linewidth}{!}{%
 \begin{tabular}{@{}lcccccccc@{}}\toprule
 Game24, step $k$ of 64 & 4 & 8 & 16 & 24 & 32 & 40 & 48 & 56\\\midrule
 sequence AUC & 0.60 & 0.57 & 0.65 & 0.78 & 0.86 & 0.94 & 0.98 & 1.00\\
-mean $\sigma(R_i)$, correct / incorrect & 0.41/0.37 & 0.45/0.38 & 0.60/0.40 & 0.64/0.39 & 0.68/0.37 & 0.72/0.34 & 0.73/0.32 & 0.73/0.30\\\midrule
+mean $\mathrm{sig}(R_i)$, correct / incorrect & 0.41/0.37 & 0.45/0.38 & 0.60/0.40 & 0.64/0.39 & 0.68/0.37 & 0.72/0.34 & 0.73/0.32 & 0.73/0.30\\\midrule
 Sudoku, step $k$ of 32 & 2 & 4 & 8 & 12 & 16 & 20 & 24 & 30\\\midrule
 sequence AUC & 0.78 & 0.88 & 0.94 & 0.97 & 0.96 & 0.97 & 0.99 & 1.00\\
-mean $\sigma(R_i)$, correct / incorrect & 0.42/0.20 & 0.68/0.18 & 0.78/0.18 & 0.83/0.16 & 0.84/0.15 & 0.84/0.10 & 0.85/0.09 & 0.87/0.07\\
+mean $\mathrm{sig}(R_i)$, correct / incorrect & 0.42/0.20 & 0.68/0.18 & 0.78/0.18 & 0.83/0.16 & 0.84/0.15 & 0.84/0.10 & 0.85/0.09 & 0.87/0.07\\
 cell AUC, within incorrect samples & 0.63 & 0.61 & 0.56 & 0.60 & 0.60 & 0.61 & 0.63 & 0.63\\\bottomrule\end{tabular}}\end{table}
 
 \subsection{Training dynamics on Countdown and Knights-and-Knaves}
