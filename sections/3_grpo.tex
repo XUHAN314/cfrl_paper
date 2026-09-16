@@ -1,6 +1,6 @@
 \section{Stage 1: Score-Function RL for Continuous Flows}
 \label{sec:grpo}
-The chain~(\ref{eq:chain}) enables a direct adaptation of GRPO \citep{shao2024deepseekmath} to continuous flow language models. At step $k$, the action is the re-noised state $y_k\sim\mathcal N(\alpha_kD_\theta(y_{k-1}),\sigma_k^2I)$. During RL, tokens are sampled from the decoder,
+The chain~(\ref{eq:chain}) enables a direct adaptation of GRPO \citep{shao2024deepseekmath} to continuous flow language models. At step $k$, the action is the re-noised state $y_k\sim\mathcal N(\alpha_kD_\theta(s_{k-1}),\sigma_k^2I)$. During RL, tokens are sampled from the decoder,
 $w_i\sim\operatorname{Cat}(\operatorname{softmax}(\ell_i))$,
 giving a joint density over Gaussian transitions and categorical readout. Stage~1 optimizes~(\ref{eq:objective}) using this sampled readout
 
@@ -9,7 +9,7 @@ giving a joint density over Gaussian transitions and categorical readout. Stage~
 \paragraph{GRPO on the flow chain.}
 We sample $G$ rollouts per prompt and form group-normalised advantages $A_g=\frac{r_g-\operatorname{mean}(r_{1:G})}{\operatorname{std}(r_{1:G})+\delta}$; the group mean, taken over all $G$ rollouts of the prompt including $g$, is the baseline. Each rollout batch is used for a single on-policy update, so no importance correction or clipping is required. We minimise the group-relative score-function loss
 \begin{equation}
-\mathcal L_{\mathrm{SF}}(\theta)=-\frac1G\sum_{g=1}^{G}A_g\Bigl[\sum_{k\in\mathcal K}\log\mathcal N\bigl(y^g_k;\alpha_kD_\theta(y^g_{k-1}),\sigma_k^2I\bigr)+\frac{1}{|\mathcal G|}\sum_{i\in\mathcal G}\log p_\theta\bigl(w^g_i\mid z^g_K\bigr)\Bigr],
+\mathcal L_{\mathrm{SF}}(\theta)=-\frac1G\sum_{g=1}^{G}A_g\Bigl[\sum_{k\in\mathcal K}\log\mathcal N\bigl(y^g_k;\alpha_kD_\theta(s^g_{k-1}),\sigma_k^2I\bigr)+\frac{1}{|\mathcal G|}\sum_{i\in\mathcal G}\log p_\theta\bigl(w^g_i\mid z^g_K\bigr)\Bigr],
 \label{eq:grpo_loss}
 \end{equation}
 where $\mathcal K\subseteq\{2,\dots,K-1\}$ is a random subset of the transitions with a denoiser call, drawn per update to bound its cost, and the readout term is a per-token mean so that it does not grow with the response length. Transition subsampling and token averaging scale the two gradient channels by $|\mathcal K|/(K-2)$ and $1/|\mathcal G|$, respectively; stored rollout states are treated as constants during recomputation. Mean-centred group advantages introduce the standard finite-group factor $1-1/G$, while standard-deviation normalization trades this proportionality for prompt-wise scale invariance \citep{liu2025drgrpo}. Full derivations appear in Appendix~\ref{app:derivations}.
@@ -21,17 +21,17 @@ where $\mathcal K\subseteq\{2,\dots,K-1\}$ is a random subset of the transitions
 
 \paragraph{Estimator analysis.}
 The categorical-readout term in~(\ref{eq:grpo_loss}) has the usual token-level score, whereas each flow-transition term differentiates a Gaussian density over continuous embeddings. Because
-$y_{k,i}=\alpha_kD_\theta(y_{k-1})_i+\sigma_k\varepsilon_{k,i}$, its score is
+$y_{k,i}=\alpha_kD_\theta(s_{k-1})_i+\sigma_k\varepsilon_{k,i}$, its score is
 \begin{equation}
 \nabla_\theta\log\mathcal N\!\left(
 y_{k,i};
-\alpha_kD_\theta(y_{k-1})_i,
+\alpha_kD_\theta(s_{k-1})_i,
 \sigma_k^2I_d
 \right)
 =
 \frac{\varepsilon_{k,i}^{\top}}{\sigma_k}
 \alpha_k
-\frac{\partial D_\theta(y_{k-1})_i}{\partial\theta}.
+\frac{\partial D_\theta(s_{k-1})_i}{\partial\theta}.
 \label{eq:sf}
 \end{equation}
 Thus, the advantage scales the injected noise before it is propagated through the denoiser Jacobian. Unlike the categorical score of an AR action, an individual noise coordinate does not correspond to a discrete semantic decision. A coordinate contributes useful expected gradient only through its covariance with the advantage, yet it contributes sampling variance even when that covariance is negligible. Summing these terms across flow steps, generated positions, and embedding dimensions therefore produces an estimate whose signal comes from few coordinates and whose variance comes from all of them. A finer advantage, per step or per position, changes the weights of the terms but not the noise factor $\varepsilon_{k,i}^{\top}/\sigma_k$. The next stage removes that factor by differentiating the trajectory itself.
