@@ -15,7 +15,7 @@ The head is refitted on the state at the top of the window only. An earlier vers
 At an actor learning rate of $3\times10^{-6}$ the 2D critic reaches the level of Table~\ref{tab:main} within 250 iterations and then collapses, on Countdown from $50.1$ to $28.5$ and on Game24 from $58.0$ to $30.3$ by iteration 1000; the scalar critic at the same rate is seed-fragile (Appendix~\ref{app:lr_regime}). At $10^{-6}$ every 2D run of Table~\ref{tab:main} holds, and with the cosine decay none declines before its last checkpoint. The bias~(\ref{eq:biasm}) is paid per step, and the step is the one setting that separates a run that holds from one that collapses.
 
 \paragraph{The rest changes speed, not level.}
-With the pooled loss term alone, or without the AUC safeguard, single Game24 runs peak at $59.0$ and $58.7$ against $58.9$ for the full recipe but sit $2$--$4$ points lower at 500 iterations (Appendix~\ref{app:details}).
+With the pooled loss term alone, or without the AUC safeguard, single Game24 runs reach $59.0$ and $58.7$ against $58.9$ for the full recipe but sit $2$--$4$ points lower at 500 iterations (Appendix~\ref{app:details}).
 
 \begin{figure}[t]
 \centering
