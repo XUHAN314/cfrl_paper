@@ -1,0 +1,59 @@
+\documentclass{article}
+\usepackage{iclr2027_conference,times}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{amsmath,amssymb,amsthm,bm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc,decorations.pathmorphing,fit,backgrounds}
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage{textcomp}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{wrapfig}
+\input{math_commands.tex}
+\newcommand{\jpc}{\textsc{JPC}}
+\newcommand{\dep}{\gamma56@64}
+\newcommand{\hl}[1]{\textcolor{blue!70!black}{#1}}
+% Loop-control cells still training when this version was written (filled by the final round's evaluation)
+\newcommand{\LOOPcdB}{46.2}\newcommand{\LOOPcdBo}{44.1}\newcommand{\LOOPcdBg}{41.9}\newcommand{\LOOPcdBt}{46.4}
+\newcommand{\LOOPkkB}{99.6}\newcommand{\LOOPkkBo}{97.2}\newcommand{\LOOPkkBg}{94.1}\newcommand{\LOOPkkBt}{99.1}
+\newcommand{\LOOPkkG}{98.3}\newcommand{\LOOPkkGo}{94.7}\newcommand{\LOOPkkGg}{92.2}\newcommand{\LOOPkkGt}{97.9}
+% d1 baseline pending cells (filled by baselines/d1 results)
+\newcommand{\PENDcd}{14.2}\newcommand{\PENDsd}{0.7}\newcommand{\PENDkk}{62.5}\newcommand{\PENDgt}{19.5}\newcommand{\PENDScd}{13.1}\newcommand{\PENDSsd}{0.7}\newcommand{\PENDSkk}{61.0}\newcommand{\PENDSgt}{16.1}
+\newtheorem{proposition}{Proposition}
+\newtheorem{remark}{Remark}
+
+\title{Reinforcement Learning for Continuous Flow Language Models with 2D Critic}
+\author{Anonymous authors\\ Paper under double-blind review}
+
+\begin{document}
+\maketitle
+\input{sections/0_abstract}
+\input{sections/1_intro}
+\input{sections/2_estimators}
+\input{sections/3_grpo}
+\input{sections/3_JPC}
+\input{sections/4_amortisation}
+\input{sections/5_experiments}
+\input{sections/6_ablations}
+\input{sections/7_related}
+\input{sections/8_conclusion}
+
+\subsubsection*{Reproducibility statement}
+\input{sections/9_statements}
+
+\bibliography{refs}
+\bibliographystyle{iclr2027_conference}
+
+\appendix
+\input{appendix/A_datasets}
+\input{appendix/B_derivations}
+\input{appendix/C_details}
+\input{appendix/D_results}
+\input{appendix/E_related}
+\end{document}
