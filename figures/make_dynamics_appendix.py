@@ -20,8 +20,8 @@ def evals(prefix,key):
                 out.append((ck,float(a)*100 if a<=1 else float(a)))
     return np.array(sorted(out))
 fig,axes=plt.subplots(1,2,figsize=(7.2,2.9))
-panels=[("Countdown (Algorithm 1, seed 3)","slurm/logs/cd5_U_s3-3686411.out","eval_cd5_cd5_U_s3","gamma56",42.2,(-450,-3)),
-        ("K&K (Algorithm 1, seed 1)","slurm/logs/kk_U_s1-3686821.out","eval_kk_kk_U_s1","gamma56",67.5,(-330,-3))]
+panels=[("Countdown (Algorithm 1, seed 3)","slurm/logs/cd5_K40_s3-3729236.out","eval_cd5_cd5_K40_s3","gamma56",42.2,(-450,-3)),
+        ("K&K (Algorithm 1, seed 3)","slurm/logs/kk_T_s3-3730403.out","eval_kk_kk_T_s3","gamma56",67.5,(-330,-3))]
 H={}
 for ax,(title,log,pref,key,base,off) in zip(axes,panels):
     v,b=parse(f"{R}/{log}"); e=evals(pref,key); ax2=ax.twinx(); ax2.spines["top"].set_visible(False)

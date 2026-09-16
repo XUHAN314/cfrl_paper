@@ -43,24 +43,24 @@ scalar, $10^{-6}$ & --- & --- & $+3.4$ & $+2.6$ \\
 
 \subsection{Cheap samplers after the loop}
 \label{app:samplers}
-Table~\ref{tab:samplers} reads Tables~\ref{tab:main} and~\ref{tab:ode} across sampler cost. RL alone moves the cheap samplers little: the 2D-critic policy gains $0$--$10$ points at $\gamma4$@16 against $+5$ to $+14$ at the deployment sampler. One loop moves the rest: after it, the 16-step sampler reaches or passes the accuracy the 64-step deployment sampler had before RL on Countdown, K\&K and Game24 ($45.5$ vs $42.2$, $93.1$ vs $67.5$, $50.3$ vs $45.0$), and on K\&K it passes the deployment accuracy of the RL policy itself ($93.1$ vs $79.2$). Sudoku, whose loop is null, is unchanged at every sampler.
+Table~\ref{tab:samplers} reads Tables~\ref{tab:main} and~\ref{tab:ode} across sampler cost. RL alone moves the cheap samplers little: the 2D-critic policy gains $0$--$11$ points at $\gamma4$@16 against $+5$ to $+14$ at the deployment sampler. One loop moves the rest: after it, the 16-step sampler reaches or passes the accuracy the 64-step deployment sampler had before RL on Countdown, K\&K and Game24 ($\OURScdg$ vs $42.2$, $\OURSkkg$ vs $67.5$, $49.0$ vs $45.0$), and on K\&K it passes the deployment accuracy of the RL policy itself ($\OURSkkg$ vs $79.6$). Sudoku, whose loop is null, is unchanged at every sampler.
 
 \begin{table}[H]\centering\small
 \caption{The loop moves what the policy can do to the cheap samplers. Held-out accuracy (\%) at samplers of increasing cost: the SFT base, the 2D-critic policy (mean of three seeds) and that policy after the loop (final round). $^\dagger$Sudoku: $\gamma14$@16, and its deployment sampler is $\gamma28$@32.}\label{tab:samplers}
 \begin{tabular}{@{}llcccc@{}}\toprule
  & & $\gamma4$@16 & $\gamma28$@32$^\dagger$ & ODE-64 & deployment\\\midrule
 \multirow{3}{*}{Countdown} & SFT base & 23.1 & 38.0 & 28.1 & 42.2\\
- & 2D-critic policy & 23.3 & 38.8 & 33.3 & 46.9\\
- & \hl{+ loop} & \textbf{45.5} & \textbf{51.5} & \textbf{49.5} & \textbf{52.3}\\\midrule
+ & 2D-critic policy & 23.5 & 43.9 & 34.4 & \textbf{50.2}\\
+ & \hl{+ loop} & \textbf{\OURScdg} & \textbf{\OURScdt} & \textbf{\OURScdo} & \textbf{\OURScd}\\\midrule
 \multirow{3}{*}{Sudoku} & SFT base & 55.3 & 62.0 & 62.3 & 66.2\\
- & 2D-critic policy & \textbf{57.8} & 66.0 & 65.2 & 70.0\\
- & \hl{+ loop} & 56.1 & \textbf{66.4} & \textbf{66.1} & \textbf{70.8}\\\midrule
+ & 2D-critic policy & 56.0 & 65.0 & 66.7 & 71.0\\
+ & \hl{+ loop} & \textbf{56.2} & \textbf{65.5} & \textbf{67.3} & \textbf{71.4}\\\midrule
 \multirow{3}{*}{K\&K} & SFT base & 58.1 & 65.8 & 57.8 & 67.5\\
- & 2D-critic policy & 68.2 & 76.5 & 69.1 & 79.2\\
- & \hl{+ loop} & \textbf{93.1} & \textbf{98.2} & \textbf{95.2} & \textbf{98.8}\\\midrule
+ & 2D-critic policy & 68.7 & 76.5 & 69.9 & 79.6\\
+ & \hl{+ loop} & \textbf{\OURSkkg} & \textbf{\OURSkkt} & \textbf{\OURSkko} & \textbf{\OURSkk}\\\midrule
 \multirow{3}{*}{Game24} & SFT base & 35.4 & 42.6 & 35.2 & 45.0\\
- & 2D-critic policy & 38.7 & 54.7 & 41.2 & \textbf{58.9}\\
- & \hl{+ loop} & \textbf{50.3} & \textbf{58.2} & \textbf{50.9} & 58.1\\\bottomrule\end{tabular}\end{table}
+ & 2D-critic policy & 38.6 & 54.5 & 41.8 & \textbf{58.8}\\
+ & \hl{+ loop} & \textbf{49.0} & \textbf{55.7} & \textbf{50.5} & 56.0\\\bottomrule\end{tabular}\end{table}
 
 \subsection{Sampler sweep on the Countdown base model}
 \label{app:sampler_sweep}
@@ -113,22 +113,22 @@ $\gamma56$@64 & 4.2 & 37.4 & 41.0 & 42.8 & \textbf{45.0} & 39.8 & 34.7\\\bottomr
 
 \subsection{Knights-and-Knaves by number of people}
 \label{app:kk_by_n}
-Table~\ref{tab:kk_by_n} splits K\&K accuracy by the number of people in the puzzle. The base model is near-perfect on 4-person puzzles and weakest on 6-person ones; RL (GRPO and \jpc{}) improves all sizes by similar absolute amounts, and the fresh-problem loop closes most of the remaining gap on 6-person puzzles ($51.8\to88.4$), approaching the gold-supervised model (99.0) without ever seeing a gold label.
+Table~\ref{tab:kk_by_n} splits K\&K accuracy by the number of people in the puzzle. The base model is near-perfect on 4-person puzzles and weakest on 6-person ones; RL (GRPO and \jpc{}) improves all sizes by similar absolute amounts, and the fresh-problem loop closes the remaining gap on 6-person puzzles ($51.8\to97.6$), within 1.4 points of the gold-supervised model (99.0) without ever seeing a gold label.
 
 \begin{table}[H]\centering\small
-\caption{K\&K held-out accuracy by number of people (deployment sampler $\gamma56$@64; ODE-64 in parentheses for the SFT rows).}\label{tab:kk_by_n}
+\caption{K\&K held-out accuracy by number of people (deployment sampler $\gamma56$@64; ODE-64 in parentheses for the SFT and loop rows).}\label{tab:kk_by_n}
 \begin{tabular}{@{}lcccc@{}}\toprule
 model & all & 4 people & 5 people & 6 people\\\midrule
 SFT epoch 4 (base) & 67.5 (57.8) & 86.8 (80.8) & 63.5 (57.9) & 51.8 (34.2)\\
 GRPO, seed 3 (600 iterations) & 74.6 & 92.7 & 72.6 & 58.2\\
 \jpc{} 2D, seed 1 (250 iterations) & 70.3 & 92.1 & 68.6 & 50.0\\
-fresh-problem loop, round 5 & 94.9 & 99.7 & 96.6 & 88.4\\
+fresh-problem loop, round 5 (Table~\ref{tab:main}) & 99.1 (96.0) & 100.0 (100.0) & 99.7 (97.7) & 97.6 (90.1)\\
 gold SFT epoch 6 & 95.4 (88.8) & 99.9 (99.9) & 96.8 (91.8) & 89.6 (74.8)\\
 gold SFT epoch 8 & 99.7 (96.8) & 100.0 (100.0) & 100.0 (98.5) & 99.0 (91.8)\\\bottomrule\end{tabular}\end{table}
 
 \subsection{Countdown loop round by round}
 \label{app:cd_loop}
-Table~\ref{tab:cd_loop} lists every round of the Countdown loop at all four samplers, together with the three controls of Table~\ref{tab:main}, which run the same four rounds from the SFT base, from the GRPO policy, and from the 2D policy on the gold labels of the same pools. Three regularities are visible. (i) The loop transfers the policy's ability to the cheap samplers at once: one round takes the ODE sampler from $34.3$ to $41.1$ and $\gamma4$@16 from $23.4$ to $37.1$ while the deployment sampler stays within a point. (ii) Plain self-sampling stalls at the deployment sampler ($48.1\to48.1$) and the pool's coverage shrinks (35.0k to 31.1k solved problems). (iii) Sampling the pool with the jointly trained 2D critic (best-of-4 pruning at the window's midpoint plus gradient guidance, Appendix~\ref{app:details}) restores coverage (37.8k, 38.3k) and lifts the deployment sampler ($52.1$ after round 3, $52.3$ after round 4). The plain chains from the base and from the GRPO policy show the first two regularities and stop at $46$--$47$; the gold-label chain falls from $47.5$ to $45.2$ in its first round and drifts to $43.1$ by round 4 (ODE-64 from $34.3$ to $27.5$): fine-tuning the RL policy on gold derivations undoes part of what RL changed rather than adding to it.
+Table~\ref{tab:cd_loop} lists every round of the Countdown loop at all four samplers, together with the three controls of Table~\ref{tab:main}, which run the same four rounds from the SFT base, from the GRPO policy, and from the 2D policy on the gold labels of the same pools. Three regularities are visible. (i) The loop transfers the policy's ability to the cheap samplers at once: one round takes the ODE sampler from $34.6$ to $41.0$ and $\gamma4$@16 from $23.9$ to $38.6$ while the deployment sampler gives back two points. (ii) Plain self-sampling loses ground at the deployment sampler ($50.4\to47.9\to46.4$) and the pool's coverage shrinks (35.1k to 31.2k solved problems). (iii) Sampling the pool with the jointly trained 2D critic (best-of-4 pruning at the window's midpoint plus gradient guidance, Appendix~\ref{app:details}) restores coverage and lifts the deployment sampler ($\OURScdthree$ after round 3, $\OURScd$ after round 4). The plain chains from the base and from the GRPO policy show the first two regularities and stop at $45$--$47$; the gold-label chain falls from $50.4$ to $44.5$ in its first round and drifts to $42.6$ by round 4 (ODE-64 from $34.6$ to $27.3$): fine-tuning the RL policy on gold derivations undoes part of what RL changed rather than adding to it.
 
 \begin{table}[H]\centering\small
 \caption{Countdown amortisation loop, held-out accuracy at the end of each round (20 epochs of fine-tuning per round; verifier-accepted sequences and distinct problems in each pool). From top: loop from the 2D-critic policy (Table~\ref{tab:main}); from the SFT base with no RL; from the GRPO policy; from the 2D-critic policy on the gold labels of the same pools.}\label{tab:cd_loop}
@@ -136,24 +136,24 @@ Table~\ref{tab:cd_loop} lists every round of the Countdown loop at all four samp
 \begin{tabular}{@{}llcccc@{}}\toprule
 round & pool & ODE64 & $\gamma4$@16 & $\gamma28$@32 & $\gamma56$@64\\\midrule
 SFT base (epoch 60) & & 28.1 & 23.1 & 38.0 & 42.2\\
-\jpc{} 2D policy (start) & & 34.3 & 23.4 & 38.9 & 47.5\\
-round 1 & deployment sampler, 86.2k sequences / 35.0k problems & 41.1 & 37.1 & 46.9 & 48.1\\
-round 2 & deployment sampler, 56.2k / 31.1k & 43.9 & 40.2 & 46.9 & 48.1\\
-round 3 & 2D-critic-guided sampler, 93.1k / 37.8k & 48.4 & 44.8 & 51.3 & 52.1\\
-round 4 & 2D-critic-guided sampler, 93.4k / 38.3k & 49.5 & 45.5 & 51.5 & 52.3\\\midrule
+\jpc{} 2D policy (start) & & 34.6 & 23.9 & 44.5 & 50.4\\
+round 1 & deployment sampler, 91.9k sequences / 35.1k problems & 41.0 & 38.6 & 46.4 & 47.9\\
+round 2 & deployment sampler, 57.4k / 31.2k & 42.5 & 41.4 & 44.9 & 46.4\\
+round 3 & 2D-critic-guided sampler, \OURSpoolthree & \OURScdthreeo & \OURScdthreeg & \OURScdthreet & \OURScdthree\\
+round 4 & 2D-critic-guided sampler, \OURSpoolfour & \OURScdo & \OURScdg & \OURScdt & \OURScd\\\midrule
 no-RL round 1 & deployment sampler, 82.4k / 34.2k & 39.8 & 35.8 & 44.7 & 46.1\\
 no-RL round 2 & 59.1k / 30.8k & 43.2 & 40.8 & 46.2 & 46.5\\
 no-RL round 3 & 52.2k / 30.8k & 43.8 & 42.7 & 45.6 & 46.7\\
-no-RL round 4 & 48.5k / 31.2k & \LOOPcdBo & \LOOPcdBg & \LOOPcdBt & \LOOPcdB\\\midrule
+no-RL round 4 & 48.5k / 31.2k & 44.1 & 41.9 & 46.4 & 46.2\\\midrule
 GRPO policy (start; seed 3, iteration 500) & & 28.9 & 24.3 & 39.6 & 43.3\\
 GRPO round 1 & deployment sampler, 82.7k / 34.1k & 41.3 & 37.0 & 45.6 & 45.9\\
 GRPO round 2 & 58.3k / 30.5k & 43.5 & 39.8 & 45.4 & 46.2\\
 GRPO round 3 & 51.3k / 30.4k & 44.5 & 41.1 & 45.4 & 46.2\\
 GRPO round 4 & 47.2k / 30.9k & 42.1 & 41.6 & 44.4 & 45.1\\\midrule
-gold round 1 & gold derivations, 50k / 50k & 30.4 & 26.6 & 39.4 & 45.2\\
-gold round 2 & & 28.2 & 24.6 & 39.1 & 44.1\\
-gold round 3 & & 28.5 & 24.4 & 38.5 & 43.9\\
-gold round 4 & & 27.5 & 23.2 & 38.2 & 43.1\\\bottomrule\end{tabular}}\end{table}
+gold round 1 & gold derivations, 50k / 50k & 28.3 & 24.7 & 39.3 & 44.5\\
+gold round 2 & & 28.3 & 23.2 & 39.9 & 42.1\\
+gold round 3 & & 27.0 & 23.2 & 38.8 & 42.0\\
+gold round 4 & & 27.3 & 21.9 & 37.6 & 42.6\\\bottomrule\end{tabular}}\end{table}
 
 \subsection{Per-position critic values as a credit map}
 \label{app:critic_maps}
@@ -235,8 +235,8 @@ LLaDA-8B-Instruct & + task SFT & \PENDScd & \PENDSsd & \PENDSkk & \PENDSgt\\
 LLaDA-8B-Instruct & + task SFT + diffu-GRPO (best ckpt) & \PENDcd & \PENDsd & \PENDkk & \PENDgt\\\midrule
 ELF-B (105M) & task SFT (base) & 42.2 & 66.2 & 67.5 & 45.0\\
 ELF-B (105M) & + GRPO & 43.1 & 69.7 & 71.6 & 47.5\\
-ELF-B (105M) & + \jpc{}, scalar critic & 48.5 & 67.4 & 78.2 & 51.9\\
-ELF-B (105M) & + \jpc{}, 2D critic & 46.9 & 70.0 & 79.2 & 58.9\\\bottomrule\end{tabular}}\end{table}
+ELF-B (105M) & + \jpc{}, scalar critic & 48.2 & 66.3 & 77.6 & 51.4\\
+ELF-B (105M) & + \jpc{}, 2D critic & 50.2 & 71.0 & 79.6 & 58.8\\\bottomrule\end{tabular}}\end{table}
 
 The 8B masked-diffusion model is far below the 105M flow model on every task, before and after RL; diffu-GRPO adds at most $+1$ to $+3$ points over its starting point on any task in either arm, and on Sudoku it never produces a solved grid. Two caveats apply. The comparison is across architectures \emph{and} training histories: LLaDA-8B-Instruct was never trained on these tasks, and our supervised stage for it is small (about two GPU-hours per task), whereas ELF-B was fine-tuned on the full training sets; a larger supervised budget would raise the LLaDA rows, and we make no claim about the ceiling of masked diffusion models. What the table does show is the behaviour of the estimator: diffu-GRPO moves the zero-shot model little on the arithmetic tasks within d1's own budget and lifts K\&K by a few points, consistent with d1's own results on its easier three-number Countdown and $4{\times}4$ Sudoku, where the reported gains are largest when the base already solves a sizeable fraction of problems.
 

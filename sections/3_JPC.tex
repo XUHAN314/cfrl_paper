@@ -14,7 +14,12 @@ When $V_\phi$ equals the true value, this is an unbiased estimate of the $k$-th 
 
 \subsection{Stage 2: Scalar critic over flow steps}
 \label{sec:jpc_scalar}
-We first instantiate \jpc{} with a scalar critic over flow steps. Viewing the flow index as the time step of an MDP, each intermediate state has value $V(y_k,t_k,c)=\mathbb E[r\mid y_k,t_k,c]$ under the current policy. This value requires no intermediate supervision: we retain several states from each rollout and train $V_\phi$ against their shared terminal outcome using binary cross-entropy (BCE). The critic reuses a copy of the denoiser trunk to produce per-position features $f_i(y_k,t_k,c)$, pools them over generated positions, and applies a scalar head,
+We first instantiate \jpc{} with a scalar critic over flow steps. Viewing the flow index as the time step of an MDP, each intermediate state has value $V(y_k,t_k,c)=\mathbb E[r\mid y_k,t_k,c]$ under the current policy. This value requires no intermediate supervision: we retain several states from each rollout and train $V_\phi$ against their shared terminal outcome using binary cross-entropy (BCE). The critic reuses the denoiser: a copy of $D_\theta$'s transformer, fine-tuned as part of $\phi$, is run on the noisy state together with the denoiser's own current guess of the clean sequence (the self-conditioning estimate $\hat x_k$), the time $t_k$ and the prompt $c$, and its final hidden states are the per-position features,
+\begin{equation}
+f(y_k,t_k,c)=\mathrm{Trunk}_\phi\big([y_k;\hat x_k],\,t_k,\,c\big)\in\mathbb R^{L\times d},\qquad f_i=\text{row }i\text{ of }f,
+\label{eq:feat}
+\end{equation}
+so $f_i$ describes position $i$ in the context of the whole state (every position attends to every other and to the prompt). The scalar critic pools the features over the generated positions and applies a small head,
 \[
 V_\phi(y_k,t_k,c)=h_\phi\bigl(\frac{1}{|\mathcal G|}\sum_{i\in\mathcal G}f_i(y_k,t_k,c),t_k\bigr).
 \]
@@ -53,24 +58,21 @@ The position-wise term does not provide local correctness labels; rather, it pre
 
 
 \begin{algorithm}[t]
-\caption{\jpc{}-2D training}
+\caption{\jpc{}: pathwise RL with a jointly trained critic (scalar or 2D)}
 \label{alg:jpc}
 \small
 \begin{algorithmic}[1]
-\REQUIRE policy $D_\theta$; pre-trained critic $V_\phi$; verifier $r$; prompt set $\mathcal C$; update-step window $\mathcal W$; number of updates $T$; critic steps per iteration $m$; replay buffer $\mathcal B$; buffer size $N$; rollout steps $K$; batch size $B$; minibatch size $B'$; learning rates $\eta_\theta,\eta_\phi$
+\REQUIRE policy $D_\theta$ (task-SFT model); pre-trained critic $V_\phi$ (trunk = copy of $D_\theta$, head $h_\phi$; scalar: pool-then-head, 2D: head-then-pool, eq.~\ref{eq:critic2d}); verifier $r$; prompt set $\mathcal C$; deployment sampler with $K$ steps; update window $\mathcal W=[k_{\mathrm{lo}},k_{\mathrm{hi}}]$ ($[8,40]$ of 64, $[4,20]$ of 32); iterations $T$ (1500 on Countdown and Game24, 1000 on Sudoku and K\&K); prompts per iteration $B{=}32$; replay buffer $\mathcal B$ of capacity $N{=}16$k; critic steps $m{=}2$ on minibatches of $B'{=}64$, extra steps $m'{=}8$; learning rates $\eta_\theta{=}10^{-6}$ (cosine to $10^{-7}$), $\eta_\phi{=}10^{-5}$
 \FOR{iteration $=1,\dots,T$}
-  \STATE Sample a batch of prompts $c=\{c^j\}_{j=1}^B \sim \mathcal C$ and a flow step $k\sim\mathcal U(\mathcal W)$
-  \STATE Rollout $\{(y_0, \dots, y_{k-1})^j\}_{j=1}^B$ without gradients up to $k-1$
-  \STATE Compute $y_k^j=\alpha_kD_\theta(y_{k-1}^j)+\sigma_k\varepsilon_k^j,\;\varepsilon_k^j\sim\mathcal N(0,I)$ with gradients, keeping $V_\phi$ fixed
-  \STATE \textbf{Update the policy:}  $\theta\leftarrow\theta+\eta_\theta\nabla_\theta E_B [V_\phi(y_k)]$
-  \STATE Sample a fresh batch of prompts $c'=\{c'^j\}_{j=1}^B \sim \mathcal C$ 
-  \STATE Rollout full K steps $\{(y_0, \dots, y_K)^j\}_{j=1}^B$ from updated policy without gradients
-  \STATE Compute the verifier outcomes $r=\{r(\text{decode}(y_K^j),c'^j)\}_{j=1}^B$
-  \STATE $\mathcal B \leftarrow \mathcal B \cup \{(y_{k'},k',c',r)^j\}_{j=1}^B$ for $\{k'\} \sim \mathcal W$ and keep the newest $N$ states 
+  \STATE Sample $B$ prompts $c\sim\mathcal C$ and one step $k\sim\mathcal U(\mathcal W)$; roll out the chain for all $K$ steps without gradients; decode; verify $r$
+  \STATE Recompute $y_k=\alpha_kD_\theta(y_{k-1})+\sigma_k\varepsilon_k$ with gradients through $D_\theta$, $V_\phi$ fixed
+  \STATE \textbf{Update the policy:} $\theta\leftarrow\theta+\eta_\theta\nabla_\theta\,\mathbb E_B[V_\phi(y_k)]$ (Adam, gradient clipped at 1)
+  \STATE \textbf{Buffer:} from the same rollouts push $(y_{k_{\mathrm{hi}}},k_{\mathrm{hi}},c,r)$ into $\mathcal B$; keep the newest $N$
   \FOR{inner iteration $=1,\dots,m$}
-    \STATE Sample a minibatch of states $\{(y_{k'},k',c',r)^j\}_{j=1}^{B'} \sim \mathcal B$
-    \STATE \textbf{Update the critic:} $\phi\leftarrow\phi-\eta_\phi\nabla_\phi E_{B'}[ \mathrm{BCE}(\sigma(V_\phi(y_{k'})),r)]$
+    \STATE Sample a minibatch of $B'$ states from $\mathcal B$; \textbf{update the critic:} $\phi\leftarrow\phi-\eta_\phi\nabla_\phi\,\mathbb E_{B'}[\mathrm{BCE}(\sigma(V_\phi),r)]$, for the 2D critic averaged with $\tfrac1{|\mathcal G|}\sum_i\mathrm{BCE}(\sigma(R_{k,i}),r)$
   \ENDFOR
+  \STATE Every 10 iterations: if the AUC of $V_\phi$ against $r$ on the newest 256 buffer states is below $0.9$, take $m'$ extra critic steps
+  \STATE Every 250 iterations: save $(\theta,\phi)$; evaluate $\theta$ on held-out prompts; report the peak
 \ENDFOR
 \end{algorithmic}
 \end{algorithm}
