@@ -1,3 +1,32 @@
 \section{Amortising RL Gains Across Samplers}
 \label{sec:loop}
-A pathwise-trained policy realizes its largest gains under the sampler used during RL, and these gains may not transfer fully to cheaper samplers. We amortise them into the model through iterative verified self-training. In each round, the current policy generates multiple candidates for a pool of training problems under the RL sampler. The verifier filters these candidates, and the policy is fine-tuned on the accepted samples using the original supervised objective. Successive rounds begin from the preceding round's checkpoint, allowing verified improvements to accumulate in the model parameters. The 2D critic can also guide candidate generation. At an intermediate flow step, its value field ranks partial states for pruning and supplies a gradient for improving the retained states before generation continues. This guidance helps maintain the coverage of verified samples when unguided sampling saturates. The resulting procedure is a form of rejection-sampling fine-tuning \citep{yuan2023rft,singh2023restem,zelikman2022star} adapted to continuous-state language models, transferring gains obtained with the RL sampler to less expensive deployment samplers.
+A pathwise-trained policy realizes its largest gains under the sampler used during RL, and these gains may not transfer fully to cheaper samplers. We amortise them into the model through iterative verified self-training with Algorithm~\ref{alg:amortisation}. In each round, the current policy generates multiple candidates for a pool of training problems under the RL sampler. The verifier filters these candidates, and the policy is fine-tuned on the accepted samples using the original supervised objective. Successive rounds begin from the preceding round's checkpoint, allowing verified improvements to accumulate in the model parameters. The 2D critic can also guide candidate generation. At an intermediate flow step, its value field ranks partial states for pruning and supplies a gradient for improving the retained states before generation continues. This guidance helps maintain the coverage of verified samples when unguided sampling saturates. The resulting procedure is a form of rejection-sampling fine-tuning \citep{yuan2023rft,singh2023restem,zelikman2022star} adapted to continuous-state language models, transferring gains obtained with the RL sampler to less expensive deployment samplers.
+
+\begin{algorithm}[t]
+\caption{Amortising an RL policy by verified self-training}
+\label{alg:amortisation}
+\small
+\begin{algorithmic}[1]
+\REQUIRE initial RL policy $p_\theta^{(0)}$; verifier $r$; training prompt pools $\{\mathcal C_h\}_{h=1}^H$; RL sampler $\mathcal S$; cheaper sampler $\mathcal S'$; number of rounds $H$; candidates per prompt $N$; prune step $k_p$; pruning width $P$; optional critic $V_\phi$
+\FOR{round $h=1,\dots,H$}
+  \STATE Initialize the accepted set $\mathcal A_h\leftarrow\varnothing$
+  \FOR{each prompt $c\in\mathcal C_h$}
+    \FOR{candidate $n=1,\dots,N$}
+      \IF{critic-guided sampling}
+        \STATE Rollout trajectories up to step $k_p$: $\{\tau^j\}=\{(y_0, \dots, y_{k_p})^j\}_{j=1}^P \sim \mathcal S'(p_{\theta}^{(h-1)}(y\mid c))$ with normalized guidance during refinement: $y_{k} \leftarrow y_{k} \;+\; \lambda\,\sigma_{k}\,\sqrt{L}\,\frac{\nabla_{y}V_\phi(y_{k})}{\bigl\lVert\nabla_{y}V_\phi(y_{k})\bigr\rVert}$
+        \STATE Prune at $k_p$: $\tau^*=\arg\max_j V_\phi(y^j_{k_p})$,  continue guided rollout to $K$, and decode to $w$
+      \ELSE
+        \STATE Draw a trajectory $\tau\sim \mathcal S(p_{\theta}^{(h-1)}(y\mid c))$ and decode to $w$
+      \ENDIF
+      \STATE Add accepted $w$ to $\mathcal A_h$: $\mathcal A_h \leftarrow \mathcal A_h \cup \{(c, w) \mid r(w,c)=1\}$
+    \ENDFOR
+  \ENDFOR
+  \STATE Fine-tune from the current policy: $
+    p_{\theta}^{(h)}
+    \leftarrow
+    \operatorname{SFT}
+    \bigl(p_{\theta}^{(h-1)},\mathcal A_h; \mathcal L_{\mathrm{ELF}} \bigr)$
+\ENDFOR
+\RETURN amortised policy $p_\theta^{(H)}$
+\end{algorithmic}
+\end{algorithm}

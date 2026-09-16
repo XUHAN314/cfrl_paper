@@ -1,16 +1,27 @@
 \section{\jpc{}, pathwise RL with a jointly trained critic}
 \label{sec:method}
-Stage 1 uses the trajectory density but leaves its reparameterisability unexploited. Let $V_\phi(y_k)\approx\mathbb E[r\mid y_k,c]$ be a differentiable estimate of success from an intermediate state. Reparameterising one transition as $y_k=\alpha_kD_\theta(y_{k-1})+\sigma_k\varepsilon_k$ yields the pathwise estimator
+To avoid the high-variance stochastic residual in Stage 1, we exploit the pathwise estimator enabled by the differentiable flow trajectory. Under the stochastic flow sampler, multiple continuations can follow the same intermediate state $y_k$ because subsequent flow steps inject Gaussian noise, producing different final responses. Thus, although the verifier is deterministic for a completed response, its outcome is conditionally random,
+\[
+r\mid y_k,t_k,c\sim\mathrm{Bernoulli}\!\left(q(y_k,t_k,c)\right),
+\qquad
+q(y_k,t_k,c)=\mathbb E_{\tau\sim p_\theta(\cdot\mid y_k,t_k,c)}[r(w(\tau),c)\mid y_k,t_k,c].
+\]
+Let the true value function satisfy $V(y_k,t_k,c)=\mathbb E[r\mid y_k,t_k,c]$. To maximize the expected terminal reward $J(\theta)$ in Eq~\ref{eq:objective}, we reparameterize each flow transition as $y_k=\alpha_kD_\theta(y_{k-1})+\sigma_k\varepsilon_k$, which yields the pathwise estimator
 \begin{equation}
-\widehat g_{\mathrm{PW},k}
+\nabla_\theta J(\theta)
 =
+\mathbb E_c\mathbb E_{\varepsilon}
+\left[
+\sum_{k=1}^{K}
 \sum_{i\in\mathcal G}
-\frac{\partial V_\phi(y_k)}{\partial y_{k,i}}\,
+\frac{\partial V(y_k,t_k,c)}{\partial y_{k,i}}\,
 \alpha_k
-\frac{\partial D_\theta(y_{k-1})_i}{\partial\theta}.
+\frac{\partial D_\theta(y_{k-1})_i}{\partial\theta}
+\right].
 \label{eq:pw}
 \end{equation}
-When $V_\phi$ equals the true value, this is an unbiased estimate of the $k$-th transition's contribution to $\nabla_\theta J$ (Appendix~\ref{app:pw_derivation}). Unlike the score-function estimator in~(\ref{eq:sf}), it replaces the injected-noise factor with the critic's local slope, directly indicating how each state coordinate should change to increase predicted success. The remaining challenge is therefore to learn a critic that accurately scores noisy intermediate states. We develop it in two stages: Stage 2 introduces a scalar critic over flow steps, while Stage 3 extends it across token positions to obtain the \hl{2D critic}. Figure~\ref{fig:mechanism}(b) illustrates the method, and Algorithm~\ref{alg:jpc} summarizes the joint training loop.
+% When $V_\phi$ equals the true value, this is an unbiased estimate of the $k$-th transition's contribution to $\nabla_\theta J$ (Appendix~\ref{app:pw_derivation}). 
+Unlike the score-function estimator in~(\ref{eq:sf}), it replaces the injected-noise factor with the value function's local slope, indicating how each state coordinate should change to increase predicted success. The remaining challenge is therefore to learn a critic that accurately scores noisy intermediate states. We develop it in two stages: Stage 2 introduces a scalar critic over flow steps, while Stage 3 extends it across token positions to obtain the \hl{2D critic}. Figure~\ref{fig:mechanism}(b) illustrates the method, and Algorithm~\ref{alg:jpc} summarizes the joint training loop.
 
 \subsection{Stage 2: Scalar critic over flow steps}
 \label{sec:jpc_scalar}
