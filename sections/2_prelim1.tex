@@ -1,0 +1,43 @@
+\section{Preliminaries: Continuous Flow Language Modeling and RL}
+\label{sec:estimators}
+
+\paragraph{Continuous flow language modeling.}
+We study ELF \citep{hu2026elf}, a continuous flow language model that generates text in embedding space. A token sequence $w=(w_1,\dots,w_L)$ is embedded by a frozen T5 encoder \citep{raffel2020t5} as $x=\mathrm{Enc}(w)\in\mathbb R^{L\times d}$, one vector $x_i\in\mathbb R^d$ per position. The first positions hold the prompt $c$ and stay clean throughout; the remaining positions, the set $\mathcal G$, are generated. ELF is trained along the linear interpolation $z_t=(1-t)c_\sigma\varepsilon+tx$, where
+$\varepsilon\sim\mathcal N(0,I)$, $t\in[0,1]$, and $c_\sigma$ is a fixed noise scale. Its denoiser defines a velocity field $v_\theta(z_t,t)$ that jointly updates all position embeddings without selecting tokens. At the endpoint, a decoder maps each embedding to vocabulary logits $\ell_i\in\mathbb R^{|\mathcal V|}$, yielding $w_i=\arg\max\ell_i$.  Throughout, $\mathrm{sig}(\cdot)$ denotes the logistic function and $\mathrm{logit}=\mathrm{sig}^{-1}$.
+
+\paragraph{The SDE sampler as a Markov chain.}
+ELF also provides a stochastic sampler with churn parameter $\gamma$, which re-injects Gaussian noise at each step. Given $z_{k-1}$, the sampler first noises the state backward and adjusts its effective time, and then integrates the velocity forward:
+\begin{equation}
+y_k=\alpha_k z_{k-1}+(1-\alpha_k)c_\sigma\varepsilon_k,\quad z_k=y_k+(t_k-\tilde t_k)v_\theta(y_k,\tilde t_k,c)=:D_\theta(y_k) ,
+\end{equation}
+where $\tilde t_k=\alpha_k t_{k-1}, \alpha_k=1-\gamma h_k$, and $\varepsilon_k=(\varepsilon_{k,i})_{i=1}^{|\mathcal G|}$ with $\varepsilon_{k,i}\overset{\mathrm{iid}}{\sim}\mathcal N(0,I_d)$. Indexing the sampler by its noised state $y_k=(y_{k,i})_{i=1}^{|\mathcal G|}$, the sampler induces a Markov chain with trajectory $\tau=(y_k)_{k=1}^{K}$ and exact Gaussian density:
+\begin{equation}
+y_{k,i}=\alpha_kD_\theta(y_{k-1})_i+\sigma_k\varepsilon_{k,i}, \quad p_\theta(\tau\mid c)=\prod_{k=1}^{K-1}\prod_{i=1}^{|\mathcal G|}\mathcal N\!\left(y_{k,i};\alpha_kD_\theta(y_{k-1})_i,\sigma_k^2I_d\right),  
+\label{eq:chain}
+\end{equation}
+where $\sigma_k=(1-\alpha_k)c_\sigma$; the indices $k$ and $i$ denote the flow step and token position, respectively. The response $w=w_\theta(y_{K-1})$ is obtained deterministically by advancing $z_{K-1}=D_\theta(y_{K-1})$ to $t_K=1$ and applying decoder argmax.
+
+\paragraph{RL objective and value.}
+A program verifier scores the decoded response: $r=r(w,c)\in\{0,1\}$. RL post-training maximises the expected reward,
+\begin{equation}
+J(\theta)=\mathbb E_c\,\mathbb E_{\tau\sim p_\theta(\cdot\mid c)}\big[r\big(w_\theta(y_{K-1}),c\big)\big].
+\label{eq:objective}
+\end{equation}
+Because subsequent flow steps inject Gaussian noise, the same intermediate state $y_k$ can produce different responses. Thus, although the verifier is deterministic for a completed response, its outcome conditioned on $y_k$ is random:
+\begin{equation}
+r\mid y_k,t_k,c
+\sim
+\operatorname{Bernoulli}\!\left(V(y_k)\right),
+\qquad
+V(y_k)
+=
+\mathbb E_{\tau\sim p_\theta(\cdot\mid y_k,t_k,c)}
+\!\left[r\bigl(w_\theta(\tau),c\bigr)\right].
+\label{eq:value}
+\end{equation}
+The terminal value $V(y_{K-1})=r(w_\theta(y_{K-1}),c)$ is piecewise constant, whereas each earlier value is a success probability satisfying $V(y_{k-1})
+=\mathbb E_{\varepsilon_k} \left[V(y_k)\mid y_{k-1},c\right]$.
+Thus, earlier values depend on $\theta$ through subsequent transitions, and Gaussian re-noising smooths the bounded terminal reward over intermediate states (Appendix~\ref{app:pw_derivation}).
+
+\paragraph{Two gradient estimators.}
+The \emph{score-function} identity differentiates the density: $\nabla_\theta J=\mathbb E_\tau[A\,\nabla_\theta\log p_\theta(\tau\mid c)]$, where a baseline-adjusted advantage $A$ preserves the expected gradient \citep{williams1992reinforce}. For an AR model, $\tau$ is the token sequence and $\log p_\theta(w\mid c)=\sum_j\log\pi^{\rm AR}_\theta(w_j\mid w_{<j},c)$, so each term corresponds to a categorical token decision. For the flow the chain~(\ref{eq:chain}), the same identity applies to the exact Gaussian density (\S\ref{sec:grpo}). The \emph{pathwise} identity instead differentiates the sample. Writing $\tau=F_\theta(c,\varepsilon)$  gives $\nabla_\theta\mathbb E[g(\tau)]=\mathbb E_\varepsilon[\nabla_\theta g(F_\theta(c,\varepsilon))]$ for any $g$ that is locally Lipschitz with an integrable gradient. It needs a differentiable path from $\theta$ to $g$. The terminal reward is nondifferentiable due to decoder $\arg\max$ and program verification, whereas the intermediate-state value in~(\ref{eq:value}) is differentiable (\S\ref{sec:method}).
