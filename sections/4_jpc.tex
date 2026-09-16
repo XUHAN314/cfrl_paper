@@ -106,7 +106,7 @@ The bias~(\ref{eq:biasm}) has two moving targets. As $\theta$ changes, so does t
 
 \emph{Step size.} The bias~(\ref{eq:biasm}) is paid at every actor step in proportion to the step, which motivates a decreasing step; the schedule itself, a cosine decay to a tenth of the initial value, is a choice. The critic's learning rate is constant.
 
-\emph{One chain.} The value~(\ref{eq:value}) is defined by the chain, and a different sampler ($\gamma$, $K$) is a different chain with different values, so critic and actor are trained under the sampler that will be deployed. \S\ref{sec:loop} also uses the critic to rank and nudge candidates on a cheaper chain; that use rests on the assumption that a state's reading, at its own query time, ranks candidates on that chain too, which the training argument does not cover. Checkpoints are evaluated on prompts held out from training and the best is kept, since the critic's value on training rollouts is the actor's objective and not an independent measure of success.
+\emph{One chain.} The value~(\ref{eq:value}) is defined by the chain, and a different sampler ($\gamma$, $K$) is a different chain with different values, so critic and actor are trained under the sampler that will be deployed. \S\ref{sec:loop} also uses the critic to rank and nudge candidates on a cheaper chain; that use rests on the assumption that a state's reading, at its own query time, ranks candidates on that chain too, which the training argument does not cover.
 
 \begin{algorithm}[t]
 \caption{\jpc{}: pathwise RL with a jointly trained critic (Stage 2: scalar critic~(\ref{eq:critic1d}); Stage 3: 2D critic~(\ref{eq:critic2d}))}
@@ -121,6 +121,6 @@ The bias~(\ref{eq:biasm}) has two moving targets. As $\theta$ changes, so does t
   \STATE \textbf{Critic.} Repeat $m_{\rm c}$ times: draw $B'$ states uniformly from $\mathcal B$ and take $\phi\leftarrow\phi-\eta_\phi\,\mathrm{AdamW}(\nabla_\phi\mathcal L_{\rm 2D})$ on the head \hfill (eq.~\ref{eq:critic2d_loss}; for Stage 2 the second term is absent)
   \STATE Every $n_q$ iterations: if the AUC of $V_\phi$ against $r$ on the newest $N_q$ states of $\mathcal B$ is below $a_0$, repeat line 5 $m'_{\rm c}$ more times
 \ENDFOR
-\STATE Evaluate the saved checkpoints on prompts held out from training; return the best
+\STATE \textbf{return} the saved checkpoints $(\theta,\phi)$
 \end{algorithmic}
 \end{algorithm}
