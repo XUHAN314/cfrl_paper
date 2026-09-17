@@ -239,6 +239,37 @@ Figure~\ref{fig:frozen} (\S\ref{sec:ablations}) shows the exploit directly on Ga
 \label{app:lr_regime}
 The actor's step size is the one setting that separates a usable run from a collapsing one, as the bias argument of \S\ref{sec:joint} predicts. At $3\times10^{-6}$ the 2D critic reaches the level of Table~\ref{tab:main} within 250 iterations and then collapses: on Countdown $50.1$ at iteration 250, $49.8$, $45.6$ and $28.5$ at 500, 750 and 1000; on Game24 $58.0$ at 250, then $48.8$, $34.4$ and $30.3$ (single runs, deployment sampler). The scalar critic at the same rate is the better explorer but seed-fragile (per-seed peaks $51.2/49.2/44.3$ on Countdown and $55.2/50.6/43.7$ on Game24; all three seeds below the base on Sudoku). At $10^{-6}$ the 2D critic holds on every task and seed (Table~\ref{tab:main}), while the scalar critic never clears the base on Sudoku. Against the collapse of 2D-critic runs at $3\times10^{-6}$ we tried: a lower critic learning rate; an EMA target critic for the actor objective; both; a 16k buffer; resuming the critic together with the actor at a lower learning rate; and refining a 2D-explored actor with a scalar critic. The 16k buffer keeps the first 750 iterations stable; every continuation beyond about 1000 total iterations collapses ($-14$ to $-19$ at $\gamma28/\gamma56$ on Countdown). The learning rate of $10^{-6}$ is the change that made the 2D critic usable, and it too collapses eventually (Countdown at 1000--1250 iterations, Sudoku at about 900, Game24 not within 1500), which is why the held-out peak is part of the recipe; with the cosine schedule of Algorithm~\ref{alg:jpc} no run of Table~\ref{tab:main} declines before its last checkpoint, although the peak level is unchanged. Earlier in the Countdown campaign we also compared the one-step update with back-propagating through five to eight consecutive transitions (critic refreshed between updates, training at $\gamma4$@16): the multi-step form was never better than the one-step form at the same iteration count and degraded the heavier samplers within 600 iterations, so all reported runs use one random step (Appendix~\ref{app:pw_derivation}).
 
+\subsection{Where the two gradients live}
+\label{app:grad_blocks}
+On the 256 Game24 rollouts of Table~\ref{tab:snr}, Table~\ref{tab:grad_blocks} splits the squared norm of each estimator's gradient by parameter block, for the mean gradient over rollouts (the reproducible part) and for the average per-sample gradient, together with the per-block signal-to-noise ratio. The score-function gradient of one transition is $\varepsilon_k$ times the features of the last layer: about $80\%$ of its energy is in the final linear projection ($394$k of $105$M parameters) and the SNR of every block is at the $1/\sqrt{256}$ floor. The pathwise gradient's per-sample energy is spread over the network (final projection $15\%$, blocks 6--11 $52\%$, blocks 0--5 $17\%$); its mean is most reproducible at the final projection (block SNR $0.40$--$0.42$) and is above the floor in every block (SNR $0.09$--$0.15$ in blocks 6--11).
+\begin{table}[H]\centering\small
+\caption{Share of the gradient's squared norm by parameter block (mean gradient / average per-sample gradient) and block SNR, Game24, steps 16 and 24 of 64.}\label{tab:grad_blocks}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{@{}llcccccc@{}}\toprule
+ & & \multicolumn{3}{c}{$k=16$} & \multicolumn{3}{c}{$k=24$}\\
+ & block & mean & per-sample & SNR & mean & per-sample & SNR\\\midrule
+\multirow{3}{*}{score-function} & final linear projection & 0.81 & 0.81 & 0.065 & 0.79 & 0.80 & 0.060\\
+ & blocks 6--11 & 0.16 & 0.17 & $\le0.064$ & 0.18 & 0.17 & $\le0.063$\\
+ & blocks 0--5 & 0.01 & 0.01 & $\le0.062$ & 0.01 & 0.01 & $\le0.062$\\\midrule
+\multirow{3}{*}{pathwise} & final linear projection & 0.71 & 0.15 & 0.42 & 0.68 & 0.15 & 0.40\\
+ & blocks 6--11 & 0.21 & 0.53 & 0.09--0.27 & 0.22 & 0.52 & 0.09--0.26\\
+ & blocks 0--5 & 0.04 & 0.17 & --- & 0.04 & 0.17 & ---\\\bottomrule\end{tabular}}\end{table}
+
+\subsection{State-gradient profiles of the scalar and the 2D critic}
+\label{app:actor_signal}
+Table~\ref{tab:actor_signal} reads the actor's instruction $g_i=\partial V_\phi/\partial y_{k,i}$ for the pre-trained scalar and 2D Game24 critics on the same 256 states of the SFT policy under the deployment chain, restricted to the real tokens of each response (18 of 64 generated positions on average). Top-10\% share: fraction of $\sum_i\|g_i\|^2$ on the 10\% of positions with the largest norm (uniform baseline $0.11$). $\rho$: Spearman correlation across positions between $\|g_i\|$ and the undecidedness of position $i$, the negative margin between the decoder's top two logits at $\hat x_{k-1,i}$. The two critics' profiles agree at cosine $0.94$ (Spearman $0.90$) at every step: the order of head and mean does not change where the signal lands on the state, so the 2D critic's gain in Table~\ref{tab:main} is not a redistribution of the actor's signal over positions. For both critics about three quarters of the squared norm of $\nabla_{\theta}V_\phi$ flows through the estimate channel $\hat x_{k-1}$ of~(\ref{eq:chainrule}) rather than through the re-noised state, which is the second reason of \S\ref{sec:jpc_scalar} for reading the estimate.
+\begin{table}[H]\centering\small
+\caption{Per-position actor signal on Game24 (real tokens; mean over 256 states).}\label{tab:actor_signal}
+\begin{tabular}{@{}llccc@{}}\toprule
+ & & $k=16$ & $k=24$ & $k=32$\\\midrule
+\multirow{2}{*}{top-10\% share of $\sum_i\|g_i\|^2$} & scalar critic & 0.43 & 0.45 & 0.45\\
+ & 2D critic & 0.44 & 0.45 & 0.45\\\midrule
+\multirow{2}{*}{$\rho(\|g_i\|,\ \text{undecidedness})$} & scalar critic & 0.61 & 0.60 & 0.59\\
+ & 2D critic & 0.64 & 0.64 & 0.60\\\midrule
+\multirow{2}{*}{share of the signal through the estimate channel $\hat x_{k-1}$} & scalar critic & 0.79 & 0.79 & 0.79\\
+ & 2D critic & 0.77 & 0.77 & 0.77\\\midrule
+cosine of the two critics' $\|g_i\|$ profiles & & 0.94 & 0.94 & 0.94\\\bottomrule\end{tabular}\end{table}
+
 \subsection{Critic quality metrics}
 \label{app:critic_quality}
 Table~\ref{tab:critic_quality} reports, for the pre-trained 2D critic of each task, how well the pooled value $V=\mathrm{mean}_i R_i$ of a \emph{noisy} state at step $k$ predicts the final verifier outcome of the trajectory it lies on: the Pearson correlation between $V$ and the outcome over held-out rollouts, and pick@$V$, the top-1 accuracy of selecting a successful sample among a group of 8 rollouts of the same prompt by ranking on $V$ (only mixed groups count; the random baseline is the success rate of a random pick in such groups). The profile is the same on every task: near chance at $k{=}1$, informative from roughly a quarter of the trajectory, and essentially an oracle in the last third. This is the token-commitment profile of the sampler (Appendix~\ref{app:commit}); it is the reason the pathwise step is drawn from the middle of the trajectory ($k\in[8,40]$ of 64) rather than from its start, where the critic has no gradient to give, or its end, where the state is already committed. For Countdown and Game24 the per-token AUC of $R_i$ against the oracle step labels is also reported (0.46--0.47 and 0.70--0.73; the K\&K and Sudoku verifiers do not produce per-token labels).

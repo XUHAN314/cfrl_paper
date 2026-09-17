@@ -25,6 +25,23 @@
 \newcommand{\OURScdthree}{49.9}\newcommand{\OURScdthreeo}{45.1}\newcommand{\OURScdthreeg}{43.7}\newcommand{\OURScdthreet}{49.4}\newcommand{\OURSpoolthree}{95.6k / 37.2k}\newcommand{\OURSpoolfour}{99.1k / 37.8k}
 % d1 baseline pending cells (filled by baselines/d1 results)
 \newcommand{\PENDcd}{14.9}\newcommand{\PENDsd}{0.7}\newcommand{\PENDkk}{62.5}\newcommand{\PENDgt}{19.5}\newcommand{\PENDScd}{13.1}\newcommand{\PENDSsd}{0.7}\newcommand{\PENDSkk}{61.0}\newcommand{\PENDSgt}{16.1}
+
+% ---- values of the experiments of §6.2-6.4 and §7 (Game24 ablations, guided sampling) ----
+\newcommand{\SNRsfA}{0.065}\newcommand{\SNRsfB}{0.061}\newcommand{\SNRsfC}{0.061}\newcommand{\SNRpwA}{0.184}\newcommand{\SNRpwB}{0.177}\newcommand{\SNRpwC}{0.151}
+\newcommand{\COSsfA}{$0.02\pm0.03$}\newcommand{\COSsfB}{$-0.03\pm0.03$}\newcommand{\COSsfC}{$-0.02\pm0.02$}\newcommand{\COSpwA}{$0.81\pm0.02$}\newcommand{\COSpwB}{$0.79\pm0.03$}\newcommand{\COSpwC}{$0.70\pm0.03$}\newcommand{\SNRgA}{0.063}\newcommand{\SNRgB}{0.065}\newcommand{\SNRgC}{0.061}\newcommand{\SNRrA}{0.060}\newcommand{\SNRrB}{0.063}\newcommand{\SNRrC}{0.064}
+\newcommand{\COSxA}{$-0.00$}\newcommand{\COSxB}{$0.02$}\newcommand{\COSxC}{$-0.04$}
+\newcommand{\CDa}[1]{\ifcase#1 \or 0.93\or 0.97\or 0.94\or 1.00\or \textbf{58.2}\or \textbf{57.5}\fi}
+\newcommand{\CDb}[1]{\ifcase#1 \or 0.53\or 0.52\or 0.59\or 0.59\or 47.0\or 12.9\fi}
+\newcommand{\CDc}[1]{\ifcase#1 \or 0.65\or 0.65\or 0.82\or 0.81\or 51.7\or 13.4\fi}
+\newcommand{\CDd}[1]{\ifcase#1 \or 0.43\or 0.39\or 0.67\or 0.68\or ---\or ---\fi}
+\newcommand{\GBa}[1]{\ifcase#1 \or 25.4\or 2{,}783\or 4{,}978\fi}
+\newcommand{\GBb}[1]{\ifcase#1 \or 25.2\or 2{,}748\or 4{,}960\fi}
+\newcommand{\GBc}[1]{\ifcase#1 \or 52.8\or 3{,}712\or 10{,}204\fi}
+\newcommand{\GBd}[1]{\ifcase#1 \or 28.4\or 3{,}069\or 5{,}647\fi}
+\newcommand{\GBe}[1]{\ifcase#1 \or \textbf{59.3}\or \textbf{3{,}933}\or \textbf{11{,}753}\fi}
+\newcommand{\ABp}[1]{\ifcase#1 \or 49.9\or 54.8\or 53.0\or 51.7\or 51.8\or 51.9\or 54.8\fi}
+\newcommand{\ABm}[1]{\ifcase#1 \or 45.5\or 52.2\or 54.2\or 55.3\or 55.7\or 55.5\or 55.7\fi}
+\newcommand{\ABcp}[1]{\ifcase#1 \or 44.5\or 45.6\or 47.6\or 48.2\or 47.5\or 48.0\or 48.2\fi}
 \newtheorem{proposition}{Proposition}
 \newtheorem{remark}{Remark}
 
@@ -39,8 +56,8 @@
 \input{sections/3_grpo}
 \input{sections/4_jpc}
 \input{sections/5_amortise}
-\input{sections/5_experiments}
-\input{sections/6_ablations}
+\input{sections/6_experiments}
+\input{sections/7_needs}
 \input{sections/7_related}
 \input{sections/8_conclusion}
 
