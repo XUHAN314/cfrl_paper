@@ -1,5 +1,5 @@
 """Appendix: training dynamics of 2D-critic JPC on Countdown and K&K (same layout as the main-text figure)."""
-import re, glob, json, os, numpy as np, matplotlib; matplotlib.use("Agg"); import matplotlib.pyplot as plt
+import re, glob, json, os, numpy as np, style; import matplotlib.pyplot as plt; style.apply()
 plt.rcParams.update({"font.size":9,"axes.labelsize":9,"xtick.labelsize":8.5,"ytick.labelsize":8.5,"axes.spines.top":False,"axes.spines.right":False,"pdf.fonttype":42})
 R="/cluster/tufts/liulab/xhan03/flow-nlp-rl"
 def parse(log):
@@ -25,11 +25,11 @@ panels=[("Countdown (Algorithm 1, seed 3)","slurm/logs/cd5_K40_s3-3729236.out","
 H={}
 for ax,(title,log,pref,key,base,off) in zip(axes,panels):
     v,b=parse(f"{R}/{log}"); e=evals(pref,key); ax2=ax.twinx(); ax2.spines["top"].set_visible(False)
-    ax2.plot(v[:,0],np.convolve(v[:,1],np.ones(15)/15,mode="same"),color="#c0392b",lw=1.2,alpha=0.9,label="critic value $V_\\phi$ (train batch)")
-    if len(b): ax.plot(b[:,0],b[:,1]*100,color="#7f8c8d",lw=1.4,label="replay-buffer success (train)")
-    ax.plot(e[:,0],e[:,1],"o-",color="#2b6cb0",lw=1.8,ms=4.5,label="held-out accuracy (deployment)")
-    ax.axhline(base,color="k",ls=":",lw=0.8); ax.set_title(title,fontsize=9); ax.set_xlabel("iteration"); ax.set_ylabel("accuracy (%)")
-    ax2.set_ylabel("$V_\\phi$",color="#c0392b",labelpad=1); ax2.tick_params(axis="y",colors="#c0392b",labelsize=8)
+    ax2.plot(v[:,0],np.convolve(v[:,1],np.ones(15)/15,mode="same"),color=style.VAL,lw=1.2,alpha=0.9,label="critic value $V_\\phi$ (train batch)")
+    if len(b): ax.plot(b[:,0],b[:,1]*100,color=style.TRUE,lw=1.4,label="replay-buffer success (train)")
+    ax.plot(e[:,0],e[:,1],"o-",color=style.ACC,lw=1.8,ms=4.5,label="held-out accuracy (deployment)")
+    ax.axhline(base,color=style.BASE,ls=":",lw=0.8); ax.set_title(title,fontsize=9); ax.set_xlabel("iteration"); ax.set_ylabel("accuracy (%)")
+    ax2.set_ylabel("$V_\\phi$",color=style.VAL,labelpad=1); ax2.tick_params(axis="y",colors=style.VAL,labelsize=8)
     pk=e[np.argmax(e[:,1])]; ax.annotate("reported peak",xy=(pk[0],pk[1]),xytext=(pk[0]+off[0],pk[1]+off[1]),fontsize=8,arrowprops=dict(arrowstyle="->",lw=0.8))
     for a in (ax,ax2):
         for h,l in zip(*a.get_legend_handles_labels()): H.setdefault(l,h)

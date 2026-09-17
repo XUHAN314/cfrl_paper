@@ -4,12 +4,13 @@ Table~\ref{tab:needs} removes one element of Algorithm~\ref{alg:jpc} at a time o
 
 \begin{table}[t]
 \centering\small
-\caption{Ablations of the joint training on Game24: held-out accuracy at the deployment sampler by iteration and the best checkpoint (base $45.0$). Reference rows are means of three seeds, ablation rows single runs. Block A: Algorithm~\ref{alg:jpc}. Block B: the same with the buffer holding five evenly spaced steps of the window instead of $k_{\rm hi}$. Block C: an earlier version (pooled loss term only, constant learning rate, no AUC check).}
+\caption{Ablations of the joint training on Game24. Each cell is the held-out accuracy (\%) at the deployment sampler of the checkpoint saved after that many actor iterations, for one run with the named element of Algorithm~\ref{alg:jpc} changed; \emph{best} is the highest cell of the row; the SFT base is $45.0$. Reference rows are means of three seeds, the other rows single runs. The first column names the paragraph of \S\ref{sec:joint} (or \S\ref{sec:pathwise}, \S\ref{sec:jpc_2d}) whose choice the row tests. Blocks were run under three versions of the recipe and are compared within a block: A is Algorithm~\ref{alg:jpc}; B stores five evenly spaced steps of the window in the buffer instead of $k_{\rm hi}$; C is the first version (pooled loss term only, constant learning rate, no AUC check, 1000 iterations).}
 \label{tab:needs}
 \resizebox{\linewidth}{!}{%
 \begin{tabular}{@{}llcccccc|c@{}}
 \toprule
-tests & variant & @250 & @500 & @750 & @1000 & @1250 & @1500 & best \\
+tests & variant & \multicolumn{6}{c}{accuracy after $n$ actor iterations} & best \\
+ & & $n{=}250$ & 500 & 750 & 1000 & 1250 & 1500 & \\
 \midrule
 \multicolumn{9}{@{}l}{\emph{A. Algorithm~\ref{alg:jpc} (single-step buffer, both loss terms, AUC check, cosine decay)}}\\
  & \hl{reference (3 seeds)} & 50.2 & 56.4 & 58.8 & 58.1 & 58.1 & 58.0 & \textbf{58.8} \\
