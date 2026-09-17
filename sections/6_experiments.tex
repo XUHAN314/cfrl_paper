@@ -127,33 +127,14 @@ same architecture, random initialisation & \CDd{1} & \CDd{2} & \CDd{3} & \CDd{4}
 \end{table}
 
 \paragraph{Head before the mean (\S\ref{sec:jpc_2d}): the field acts over the course of training.}
-Table~\ref{tab:traj} follows the scalar- and 2D-critic runs of Table~\ref{tab:main} checkpoint by checkpoint. The two are not separated at the start: after 250 iterations the scalar critic's policy is as good as or better than the 2D critic's on Countdown and K\&K. They separate afterwards. From about 500 iterations the scalar critic's policy stalls (K\&K, Game24) or regresses (Countdown, Sudoku), while the 2D critic's keeps improving and holds its level to the end of the schedule; on Sudoku the scalar critic never lifts the policy above the base and the 2D critic lifts it by $+4.8$ before both decline. The gain the scalar critic does produce transfers less: on Game24 both policies reach the same success on the training prompts (66--70\%), but the scalar critic's policy stands at $51$ on the held-out number sets against $59$ for the 2D critic's.
+Figure~\ref{fig:traj} follows the scalar- and 2D-critic runs of Table~\ref{tab:main} over training. The two critics are not separated at the start: after 250 iterations the scalar critic's policy is as good as or better than the 2D critic's on Countdown and K\&K. From about 500 iterations the scalar critic's policy stalls (K\&K, Game24) or regresses (Countdown, Sudoku), while the 2D critic's keeps improving and holds its level to the end of the schedule. The reason is not a difference between the two critics at a fixed policy: on the same states of the same policy the pre-trained scalar and 2D critics discriminate the outcome equally, prescribe nearly the same parameter update (cosine $0.83$--$0.90$, equal SNR), react equally to a single wrong token, and their heads refit equally stably (Appendix~\ref{app:critic_equiv}). It is in what the refit of \S\ref{sec:joint} has to hold as the policy moves. On Countdown the pooled head falls behind the actor: its AUC on the newest buffer states drops from $0.95$ to $0.87$ over the run (bottom row), the floor check of Algorithm~\ref{alg:jpc} fires $4.7$, $15$ and $22$ times per 250 iterations in the last three windows against $1.7$, $3.3$ and $2.7$ for the field, and while the head is behind the actor ascends a value that separates outcomes less well: the training batch's success and the held-out accuracy fall together, from $49.9$ to $46.0$ and from $50.1$ to $46.0$. The field, each of whose $|\mathcal G|$ readings is refit against the outcome, stays at AUC $0.92$--$0.95$ on the same moving policy. On Game24 and K\&K both heads keep their AUC, both policies raise the success on the training prompts equally (Game24 $66$--$70\%$, K\&K $72$--$74\%$ in the last windows), and what differs is how much of that transfers: $51$ against $59$ held-out on Game24, $77$ against $80$ on K\&K. Both are the two faces of the shortcut of \S\ref{sec:jpc_2d}: a pooled value the actor can raise on the states it produces, either faster than the head can be refit (Countdown) or in a way that is specific to the training prompts (Game24). \SWAPSENTENCE
 
-This difference is not a difference between the two critics at any fixed policy. Measured on the same states of the same policy (Appendix~\ref{app:critic_equiv}), the pre-trained scalar and 2D critics have the same discrimination of the outcome, prescribe nearly the same parameter update (cosine $0.83$--$0.90$ between their mean pathwise gradients, with equal SNR), distribute that update over positions identically once the trunk's Jacobian is applied, react equally to a single wrong token, and their heads remain equally accurate on the drifted states of their own policies throughout training and equally stable under refitting. What the per-position supervision of~(\ref{eq:critic2d_loss}) changes is therefore the signal's effect accumulated over hundreds of actor steps, not its instantaneous direction: with the field the actor's improvement continues where the pooled value's runs out. \SWAPSENTENCE
-
-\begin{table}[t]
-\centering\small
-\caption{Scalar against 2D critic over training. Each cell is the held-out accuracy (\%) at the deployment sampler after that many actor iterations, mean of the three seeds of Table~\ref{tab:main} (the Table~\ref{tab:main} entry is the mean of the per-seed best). The scalar critic's first 250 iterations are as good as or better than the 2D critic's on Countdown and K\&K; after about 500 iterations its policy stalls or regresses while the 2D critic's keeps improving and holds.}
-\label{tab:traj}
-\resizebox{\linewidth}{!}{%
-\begin{tabular}{@{}llcccccc@{}}
-\toprule
- & critic & 250 & 500 & 750 & 1000 & 1250 & 1500 \\
-\midrule
-\multirow{2}{*}{Countdown} & scalar & \textbf{45.8} & 46.4 & 48.2 & 47.1 & 46.7 & 46.0 \\
- & 2D & 44.0 & \textbf{46.6} & \textbf{49.3} & \textbf{49.6} & \textbf{50.1} & \textbf{50.0} \\
-\midrule
-\multirow{2}{*}{Sudoku} & scalar & 66.3 & 65.5 & 63.6 & 62.7 & --- & --- \\
- & 2D & \textbf{69.6} & \textbf{71.0} & \textbf{67.5} & \textbf{65.1} & --- & --- \\
-\midrule
-\multirow{2}{*}{K\&K} & scalar & \textbf{76.0} & 77.5 & 77.1 & 77.1 & --- & --- \\
- & 2D & 74.5 & \textbf{77.8} & \textbf{78.8} & \textbf{79.6} & --- & --- \\
-\midrule
-\multirow{2}{*}{Game24} & scalar & 47.1 & 49.1 & 50.4 & 50.6 & 51.0 & 50.4 \\
- & 2D & \textbf{50.2} & \textbf{56.4} & \textbf{58.8} & \textbf{58.1} & \textbf{58.1} & \textbf{58.0} \\
-\bottomrule
-\end{tabular}}
-\end{table}
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/fig_traj.pdf}
+\caption{Scalar against 2D critic over training: the runs of Table~\ref{tab:main}, three seeds each (thin) and their mean (thick). Top: held-out accuracy (\%) at the deployment sampler of the checkpoint after that many actor iterations; dashed: the SFT base. Bottom: AUC of the jointly trained head against the outcome on the newest 256 replay-buffer states, averaged over 250-iteration windows of the training logs; dotted: the floor $a_0=0.9$ below which Algorithm~\ref{alg:jpc} gives the critic extra steps. Where the pooled head falls behind the moving policy (Countdown), its policy regresses; where both heads keep up (Game24, K\&K), the scalar critic's gain transfers less to held-out prompts.}
+\label{fig:traj}
+\end{figure}
 
 \subsection{The loop: coverage, and the critic as a search heuristic}
 \label{sec:exp_loop}

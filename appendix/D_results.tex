@@ -279,7 +279,7 @@ GPT-2, exact AR likelihood & GRPO $(r-\bar r)/\mathrm{sd}$ & 256 & 0.35 & 0.22 &
 
 \subsection{The scalar and the 2D critic are interchangeable at a fixed policy}
 \label{app:critic_equiv}
-Table~\ref{tab:critic_equiv} collects the measurements that compare the pre-trained scalar and 2D critics of the Table~\ref{tab:main} runs on the same states of the same policy (Game24 unless stated; 256 rollouts of the SFT policy under the deployment chain, or the 128 Sudoku rollouts under $\gamma28$@32), and the jointly trained heads of the Table~\ref{tab:main} runs on fixed probe sets. None of them separates the two critics: whatever distinguishes the policies they train (Table~\ref{tab:traj}) is not visible in either critic's value, slope or stability at a fixed policy.
+Table~\ref{tab:critic_equiv} collects the measurements that compare the pre-trained scalar and 2D critics of the Table~\ref{tab:main} runs on the same states of the same policy (Game24 unless stated; 256 rollouts of the SFT policy under the deployment chain, or the 128 Sudoku rollouts under $\gamma28$@32), and the jointly trained heads of the Table~\ref{tab:main} runs on fixed probe sets. None of them separates the two critics: whatever distinguishes the policies they train (Figure~\ref{fig:traj}) is not visible in either critic's value, slope or stability at a fixed policy.
 \begin{table}[H]\centering\small
 \caption{Scalar against 2D critic on the same states. Pre-trained critics unless a row says otherwise; $k$ is the flow step of the state.}\label{tab:critic_equiv}
 \resizebox{\linewidth}{!}{%
