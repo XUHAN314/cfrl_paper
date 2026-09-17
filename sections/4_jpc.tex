@@ -5,7 +5,7 @@ Stage 1 differentiates the density of the chain; this section differentiates the
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.9\linewidth]{figures/flow-rl-figure1.pdf}
-\caption{Where the reward lands. (a) In an AR model the reward is assigned along the token axis. (b) In RL for discrete diffusion models it is assigned along the denoising-step axis, one value for the whole sequence at each step or only at the end. (c) The 2D critic of \jpc{} assigns a value $R_{k,i}$ to every flow step $k$ and position $i$. (d) One \jpc{} update: at a random step $k$ the critic scores every position of $y_k$, the pooled value $V_\phi$ is the actor's objective, and the critic is trained on the outcome $r$ of the same policy's rollouts.}
+\caption{Where the reward lands. (a) In an AR model the reward is assigned along the token axis. (b) In RL for discrete diffusion models it is assigned along the denoising-step axis, one value for the whole sequence at each step or only at the end. (c) The 2D critic of \jpc{} assigns a value $R_{k,i}$ to every flow step $k$ and position $i$; the pooled value $V_\phi$ is the actor's objective, and the field is trained on the outcome $r$ of the same policy's rollouts.}
 \label{fig:mechanism}
 \end{figure}
 
