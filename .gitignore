@@ -1,4 +1,10 @@
 *.bak*
 *.bak_*
+main.aux
+main.blg
+main.fdb_latexmk
+main.fls
+main.log
+main.out
 *.pyc
 __pycache__/
