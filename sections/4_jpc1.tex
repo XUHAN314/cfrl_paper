@@ -10,7 +10,7 @@ This section differentiates the chain itself to avoid the noise factor $\varepsi
 \end{figure}
 
 \paragraph{Transition-wise pathwise decomposition.}
-The true value $V(s_k)$ summarizes the expected reward of all continuations from $s_k$, allowing the policy gradient to decompose over transitions. Temporarily assigning transition $k$ its own parameter copy $\theta_k$, tied across steps after differentiation, gives
+The true value $V(s_k)$ summarizes the expected reward of all continuations from $s_k$. Unrolling the standard stochastic value-gradient recursion \citep{heess2015svg} then decomposes the policy gradient into transition-wise contributions. Temporarily assigning transition $k$ its own parameter copy $\theta_k$, tied across steps after differentiation, gives
 \begin{equation}
 \label{eq:pw_exact}
 \nabla_\theta J
