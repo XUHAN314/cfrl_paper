@@ -16,7 +16,6 @@ The true value $V(s_k)$ summarizes the expected reward of all continuations from
 \nabla_\theta J
 =
 \sum_{k=2}^{K-1}\frac{\partial J}{\partial\theta_k},
-\qquad
 \frac{\partial J}{\partial\theta_k}
 =
 \mathbb E\!\left[\nabla_{\theta_k}V(s_k)\right] 
@@ -131,19 +130,44 @@ Replacing the true log-odds with the learned critic introduces the gradient bias
 \end{equation}
 which vanishes when their slopes agree on states visited by the current policy. As the policy changes, both these states and their true values change, allowing a stale critic to be exploited. We therefore update the critic jointly with the policy. After each actor update, fresh rollouts are decoded and verified, and their states at $k_{\rm hi}$ are added with their outcomes to a recent replay buffer. We update the critic head on buffer minibatches, taking extra steps when its AUC on recent states falls below a threshold. The denoiser copy remains frozen, and a decaying actor learning rate limits movement between critic updates. Because values depend on the sampling chain, actor and critic are trained under the sampler used for final evaluation, which we call the deployment sampler. Algorithm~\ref{alg:jpc} summarizes the procedure; further details appear in Appendix~\ref{app:details}.
 
-\begin{algorithm}[t]
-\caption{\jpc{}: pathwise RL with a jointly trained critic (Stage 2: scalar critic~(\ref{eq:critic1d}); Stage 3: 2D critic~(\ref{eq:critic2d}))}
+\noindent
+\begin{minipage}[t]{0.49\textwidth}
+\begin{algorithm}[H]
+\caption{\jpc{}}
 \label{alg:jpc}
 \small
 \begin{algorithmic}[1]
-\REQUIRE policy $\hat X_\theta$ (the task-SFT model); critic $V_\phi$ pre-trained on rollouts of the policy (frozen copy $\hat X_\phi$, trainable head $h_\phi$); verifier $r$; prompt set $\mathcal C$; sampler ($\gamma$, $K$); window $\mathcal W=\{k_{\rm lo},\dots,k_{\rm hi}\}$; prompts per iteration $B$; replay buffer $\mathcal B$ of capacity $N_{\mathcal B}$; critic steps $m_{\rm c}$ on minibatches of $B'$, extra steps $m'_{\rm c}$; AUC check every $n_q$ iterations on the newest $N_q$ states with floor $a_0$; actor learning rate $\eta_\theta$ (cosine decay), critic learning rate $\eta_\phi$
+\REQUIRE policy $\theta$; pre-trained critic $V_\phi$; verifier $r$; prompt set $\mathcal C$; window $\mathcal W=[k_{\rm lo},k_{\rm hi}]$; batch sizes $B$, $B'$; replay buffer $\mathcal B$ of capacity $N_{\mathcal B}$; critic steps $m_{\rm c}$; learning rates $\eta_\theta$, $\eta_\phi$
 \FOR{iteration $=1,\dots,T$}
-  \STATE \textbf{Actor.} Sample $B$ prompts and one step $k\sim\mathcal U(\mathcal W)$ shared by the batch. For each prompt roll out the chain to $s_{k-1}$ without gradients, then take the denoiser call at $s_{k-1}$ with gradients to form $s_k=(\alpha_kD_\theta(s_{k-1})+\sigma_k\varepsilon_k,\hat x_{k-1})$
-  \STATE $\theta\leftarrow\theta+\eta_\theta\,\mathrm{AdamW}\Big(\nabla_\theta\frac1B\sum_{b=1}^{B}V_\phi(s_k^{(b)})\Big)$, gradient norm clipped at 1 \hfill ($\phi$ fixed; eq.~\ref{eq:pw})
-  \STATE \textbf{Buffer.} Sample $B$ fresh prompts; roll out the full chain, decode, verify; push $(s_{k_{\rm hi}},\tilde t_{k_{\rm hi}},r)$ for each into $\mathcal B$, keeping the newest $N_{\mathcal B}$
-  \STATE \textbf{Critic.} Repeat $m_{\rm c}$ times: draw $B'$ states uniformly from $\mathcal B$ and take $\phi\leftarrow\phi-\eta_\phi\,\mathrm{AdamW}(\nabla_\phi\mathcal L_{\rm 2D})$ on the head \hfill (eq.~\ref{eq:critic2d_loss}; for Stage 2 the second term is absent)
-  \STATE Every $n_q$ iterations: if the AUC of $V_\phi$ against $r$ on the newest $N_q$ states of $\mathcal B$ is below $a_0$, repeat line 5 $m'_{\rm c}$ more times
+  \STATE \textbf{Actor.} Sample prompts $c_B \sim \mathcal C$ and step $k\sim\mathcal U(\mathcal W)$. For each $c \in c_B$ roll out the chain to $s_{k-1}$ without gradients, then compute $s_k$ from $s_{k-1}$ with gradients Eq~\ref{eq:chain}.
+  \STATE $\theta\leftarrow\theta+\eta_\theta\,\mathrm{AdamW}\Big(\nabla_\theta\frac1B\sum_{b=1}^{B}V_\phi(s_k^{(b)})\Big)$
+  \STATE \textbf{Buffer.} Sample $c'_B \sim \mathcal C$; roll out, verify \STATE $\mathcal B \leftarrow \operatorname{Tail}_{N_{\mathcal B}}\!\left(\operatorname{Append}\!\left(\mathcal B,(s_{k_{\rm hi}},\tilde t_{k_{\rm hi}},r)\right)\right)$
+  \STATE \textbf{Critic.} Draw $B'$ states uniformly from $\mathcal B$ 
+  \STATE $\phi\leftarrow\phi-\eta_\phi\,\mathrm{AdamW}(\nabla_\phi\mathcal L_{\phi})$ Eq~\ref{eq:bce}, Eq~\ref{eq:critic2d_loss}
+  \STATE Repeat critic updates $m_{\rm c}$ times
 \ENDFOR
 \STATE \textbf{return} the saved checkpoints $(\theta,\phi)$
 \end{algorithmic}
 \end{algorithm}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.49\textwidth}
+\begin{algorithm}[H]
+\caption{Amortisation loop}
+\label{alg:loop}
+\small
+\begin{algorithmic}[1]
+\REQUIRE policy $\theta^0$; 2D critic $V_\phi$; verifier $r$; prompt pool $\mathcal C$; responses per prompt $n$; cap $M$; rounds $n_{\rm r}$; guidance constants $(n_{\rm g},k_p,\kappa)$
+\FOR{round $\rho=0, \dots,n_{\rm r}-1$}
+  \FOR{each prompt $c\in\mathcal C$ } 
+  \FOR{chains $i=1, \dots, n$}
+    \STATE Rollout under $\theta_\rho$
+    \STATE If with guidance, apply~(\ref{eq:minscore}) at every step for $n_{\rm g}$ chains and prune at step $k_p$; decode 
+  \ENDFOR
+  \ENDFOR
+  \STATE $\mathcal A\leftarrow$ the verified, distinct responses Eq~\ref{eq:accept}
+  \STATE $\theta^{\rho+1}\leftarrow\arg\min_{\theta'}\mathcal L_{\rm ELF}(\theta';\mathcal A)$
+\ENDFOR
+\STATE \textbf{return} $\theta^{n_{\rm r}}$
+\end{algorithmic}
+\end{algorithm}
+\end{minipage}

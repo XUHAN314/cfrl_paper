@@ -1,56 +1,37 @@
-\section{Amortising the policy into the model}
+\section{Amortising the RL Policy Across Samplers}
 \label{sec:loop}
-The objective~(\ref{eq:objective}) is defined by one chain. The value, the critic and the improvement of Stages 2--3 belong to the sampler ($\gamma$, $K$) under which the policy was trained; a cheaper sampler, with fewer steps or $\gamma=0$, is a different chain through the same denoiser, and an improvement of the denoiser along the training chain need not carry over to it. This section moves the improvement into the model's supervised objective, which trains the denoiser at every time $t$ rather than along one chain, and uses the critic of Stage 3 a second time, to steer generation before the verifier can.
+Pathwise RL improves the policy most under its training sampler; and their gains may not transfer to cheaper samplers. We amortise these gains into the model parameters through verified self-training across all times $t$ rather than along one chain, so that cheaper samplers inherit them. The 2D critic can additionally guide candidate generation before verification.
 
-\paragraph{One round.}
-Let $\pi_\theta(w\mid c)$ be the distribution of decoded responses under the deployment chain, the push-forward of~(\ref{eq:chain}) through $w_\theta(s_{K-1})$. A round takes a pool $\mathcal P$ of prompts without labels, disjoint from the evaluation prompts, draws $n$ responses per prompt, keeps the verified ones, and fine-tunes the model on them:
+\paragraph{Amortising loop.} Let $\pi_\theta(w\mid c)$ denote the response distribution induced by the chosen sampler. From a pool $\mathcal C$ of training prompts, we sample $n$ responses per prompt, retain deduplicated ones accepted by the verifier, and fine-tune the current policy on the resulting pairs with the original supervised objective of ELF \citep{hu2026elf} (Algorithm~\ref{alg:loop}):
 \begin{align}
-\mathcal A(\theta)&=\Big\{(c,w^{(j)}):\ c\in\mathcal P,\ 1\le j\le n,\ r(w^{(j)},c)=1\Big\},\qquad w^{(1)},\dots,w^{(n)}\overset{\text{iid}}{\sim}\pi_\theta(\cdot\mid c),
-\label{eq:accept}\\
-\theta'&=\arg\min_{\theta'}\ \mathcal L_{\rm SFT}\big(\theta';\mathcal A(\theta)\big)\quad\text{initialised at }\theta,
-\label{eq:sft_step}
+\mathcal A(\theta)
+=
+\left\{
+(c,w^{(j)}):
+c\in\mathcal C,\ 
+w^{(j)}\sim\pi_\theta(\cdot\mid c),\
+r(w^{(j)},c)=1
+\right\},
+\label{eq:accept}
 \end{align}
-where duplicate responses of a prompt are removed from $\mathcal A(\theta)$, at most $M$ are kept per prompt, the minimisation runs for a fixed number of epochs, and $\mathcal L_{\rm SFT}$ is ELF's training loss on the accepted pairs, the objective that produced the initial model \citep{hu2026elf}: for $(c,w)\in\mathcal A$ with $x=\mathrm{Enc}(w)$, a random time $t$ and noise $\varepsilon$ on the generated positions, $z_t=(1-t)c_\sigma\varepsilon+tx$ on $\mathcal G$ with the prefix held at $\mathrm{Enc}(c)$,
-\begin{equation}
-\mathcal L_{\rm SFT}(\theta';\mathcal A)=\mathbb E_{(c,w)\in\mathcal A}\Big[\,\mathbb E_{t,\varepsilon}\sum_{i\in\mathcal G}\big\|v_{\theta'}(z_t,t;\hat x_{\rm prev})_i-(x_i-c_\sigma\varepsilon_i)\big\|^2-\sum_{i\in\mathcal G}\log p_{\theta'}(w_i\mid x)\Big],
-\label{eq:sft}
-\end{equation}
-the flow-matching regression of the velocity on the generated positions plus the cross-entropy of the network's decoding pass on the clean embeddings at $t=1$. The self-conditioning input $\hat x_{\rm prev}$ is, as in ELF's training, the network's own estimate from a preceding call without gradient for half of the examples and zero for the rest, and the prompt is dropped at random for guidance training; both are kept as in the base training. Rounds are chained: $\theta_{\rho+1}$ is~(\ref{eq:sft_step}) applied to $\theta_\rho$, for $n_{\rm r}$ rounds, and the final round's model is the result (Algorithm~\ref{alg:loop}).
+Repeating the round from each updated policy transfers verified behavior into the denoiser parameters. This loop follows rejection-sampling self-training methods such as STaR, RFT, and ReST$^{\rm EM}$ \citep{zelikman2022star,yuan2023rft,singh2023restem}. Ideally, accepted responses sample the policy conditioned on success, and maximum-likelihood training on them performs an EM-style update that improves a tight lower bound on expected reward (Appendix~\ref{app:em}).
 
-\paragraph{Why a round raises the reward.}
-Write $J_c(\theta)=\mathbb E_{w\sim\pi_\theta(\cdot\mid c)}[r(w,c)]$ for one prompt and $q_\theta(w\mid c)=\pi_\theta(w\mid c)\,r(w,c)/J_c(\theta)$ for the policy conditioned on success. The responses of prompt $c$ that pass the verifier are a sample from $q_\theta(\cdot\mid c)$; de-duplication and the cap $M$ change the weights within its support but not the support. For every $\theta'$,
-\begin{equation}
-\log J_c(\theta')\ \ge\ \mathbb E_{w\sim q_\theta(\cdot\mid c)}\big[\log\pi_{\theta'}(w\mid c)\big]+H\big(q_\theta(\cdot\mid c)\big),
-\label{eq:em}
-\end{equation}
-with equality at $\theta'=\theta$ (Proposition~\ref{prop:em}). Raising the likelihood of the accepted samples therefore raises a lower bound on the expected reward that is tight at the current model: a round is the M-step of an EM view of~(\ref{eq:objective}), the rejection-sampling fine-tuning of \citet{yuan2023rft,singh2023restem,zelikman2022star} for a model whose likelihood is not computed and whose training loss~(\ref{eq:sft}) stands in for it, as in the model's own training. Two properties of~(\ref{eq:sft}) are the design reasons for using it rather than a chain-specific loss: it is the objective the model was built with, so a round is ordinary fine-tuning, and it trains the denoiser at all times $t$, which is the mechanism by which the improvement can reach every sampler rather than only the chain that produced the samples. The bound~(\ref{eq:em}) is per prompt, and $q_\theta(\cdot\mid c)$ is undefined where $J_c(\theta)=0$: a round gives no direct signal on a prompt with no accepted response, so its coverage, the fraction of the pool with at least one success, bounds what the round can teach directly. This is where the critic enters.
 
 \paragraph{Critic-guided sampling.}
-The 2D critic is a function of partial states, so it can rank and improve candidates before they are decoded. Both operations use the field~(\ref{eq:critic2d}) through the score
+The 2D critic can improve pool coverage by ranking and guiding partial states. We score a state by its least confident position and move it toward higher critic value before the denoiser call:
 \begin{equation}
-u(s_k)=\min_{i\in\mathcal G}\mathrm{sig}(R_{k,i}),
+u(s_k)
+=
+\min_{i\in\mathcal G}
+\mathrm{sig}(R_{k,i}), \quad 
+y_k
+\leftarrow
+y_k
++
+\kappa\sigma_k\sqrt L\,
+\frac{\nabla_yu(s_k)}
+     {\|\nabla_yu(s_k)\|}.
 \label{eq:minscore}
 \end{equation}
-the most pessimistic of the $|\mathcal G|$ readings of the outcome. The minimum is used here, and the mean in training, because the two tasks differ: the actor improves the policy on average and needs a gradient at every position, whereas a single candidate is accepted only if the whole response is right, so what limits it is its least confident reading, and a gradient of the minimum acts on that reading. \emph{Pruning:} for each prompt, $n_{\rm g}$ chains are run in parallel to a step $k_p$; the chain with the largest $u(s_{k_p})$ continues alone. \emph{Guidance:} at every stochastic step $k=1,\dots,K-1$ (it needs $\gamma>0$), before the denoiser call, the state is moved along the gradient of the score on the generated positions,
-\begin{equation}
-y_k\ \leftarrow\ y_k+\kappa\,\sigma_k\sqrt L\ \frac{\nabla_{y}u(s_k)}{\|\nabla_{y}u(s_k)\|},
-\label{eq:guide}
-\end{equation}
-a step whose length is proportional to the noise scale $\sigma_k$ of that step, a fraction $\kappa\sqrt{L/(|\mathcal G|d)}$, of order $\kappa/\sqrt d$, of the norm of the noise the sampler injects there, so that the pushed state stays within the spread of the chain. The gradient with respect to the state in~(\ref{eq:guide}) is the same kind of quantity as the critic's slope that the actor multiplies with the denoiser Jacobian in~(\ref{eq:chainrule}); guidance applies it to the sample at inference instead of to the parameters at training. A guided response costs $n_{\rm g}$ chains up to step $k_p$, one afterwards, and one backward pass through the critic per step; guided pools are therefore drawn with a cheap chain (small $K$ and $\gamma$), and the search is meant to compensate the cheap chain's lower accuracy. Ranking states of a chain other than the critic's training chain is an assumption of this use (\S\ref{sec:joint}). Verification and fine-tuning are unchanged.
-
-\begin{algorithm}[t]
-\caption{Amortisation loop (with optional critic-guided sampling)}
-\label{alg:loop}
-\small
-\begin{algorithmic}[1]
-\REQUIRE policy $\theta_0$; optional critic $V_\phi$ of Stage 3; verifier $r$; prompt pool $\mathcal P$; per round: a sampler and whether guidance is used; responses per prompt $n$; cap $M$; rounds $n_{\rm r}$; guidance constants $(n_{\rm g},k_p,\kappa)$
-\FOR{round $\rho=0,\dots,n_{\rm r}-1$}
-  \FOR{each prompt $c\in\mathcal P$ and $j=1,\dots,n$}
-    \STATE Run the round's chain under $\theta_\rho$; with guidance, apply~(\ref{eq:guide}) at every step and prune $n_{\rm g}\to1$ at step $k_p$ by~(\ref{eq:minscore}); decode $w^{(j)}$
-  \ENDFOR
-  \STATE $\mathcal A\leftarrow$ the verified, distinct responses, at most $M$ per prompt \hfill (eq.~\ref{eq:accept})
-  \STATE $\theta_{\rho+1}\leftarrow\arg\min_{\theta'}\mathcal L_{\rm SFT}(\theta';\mathcal A)$, initialised at $\theta_\rho$ \hfill (eq.~\ref{eq:sft_step})
-\ENDFOR
-\STATE \textbf{return} $\theta_{n_{\rm r}}$
-\end{algorithmic}
-\end{algorithm}
+For pruning, $n_{\rm g}$ chains are run to step $k_p$, after which only the highest-scoring chain continues. This guidance is applied directly to the sampled state at inference instead of training. Scaling by $\sigma_k$ adapts the update to the transition's noise level. Guidance requires additional critic backward passes and parallel prefixes, so we apply it with a cheaper sampling chain. 
+% Verification and fine-tuning remain unchanged.
