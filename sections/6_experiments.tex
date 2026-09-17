@@ -1,0 +1,172 @@
+\section{Experiments}
+\label{sec:experiments}
+The experiments follow the design of \S\ref{sec:grpo}--\S\ref{sec:loop} one choice at a time: the estimator (Stage 1 against Stage 2, \S\ref{sec:exp_main}--\ref{sec:exp_estimator}), the critic's input, network and head (Stages 2--3, \S\ref{sec:exp_critic}), the loop and the critic as a search heuristic (\S\ref{sec:exp_loop}); \S\ref{sec:ablations} removes the elements of the joint training one at a time.
+
+\paragraph{Setup.}
+Four tasks with program verifiers (Appendix~\ref{app:datasets}): \textbf{Countdown} (a derivation reaching a target from four or five numbers), \textbf{Sudoku} (all 81 cells; unique solution), \textbf{Knights-and-Knaves} (K\&K; an assignment for 4--6 characters; unique), \textbf{Game24} (reach 24 from four numbers; split by number set, so no evaluation set is seen in training). Every run starts from ELF-B (105M) fine-tuned on the task (Appendix~\ref{app:details}). Accuracy is measured on 2{,}000 held-out prompts (1{,}601 for Game24) under the deployment chain ($\gamma56$@64; $\gamma28$@32 on Sudoku), the 64-step ODE sampler and the cheap $\gamma4$@16 chain. Table~\ref{tab:main} has three RL rows per task, each the mean of three seeds: GRPO (Stage 1, \S\ref{sec:grpo}) in its standard form, and Algorithm~\ref{alg:jpc} with the scalar critic~(\ref{eq:critic1d}) (Stage 2) and with the 2D critic~(\ref{eq:critic2d}) (Stage 3), which differ in nothing but the head. The loop rows are single runs of Algorithm~\ref{alg:loop} (4/1/5/4 rounds) from the best 2D-critic seed, with three controls that run the identical rounds from the SFT base, from the best GRPO seed, and on the gold derivations of the same problems. GPT-2 (124M) with token-level GRPO/PPO and LLaDA-8B-Instruct with d1's diffu-GRPO \citep{zhao2025d1}, trained on the same data, are cross-architecture references (Appendix~\ref{app:results}). Per-seed values, budgets and the selection protocol are in Appendix~\ref{app:details}.
+
+\begin{table}[t]
+\centering\small
+\begin{minipage}[t]{0.585\linewidth}
+\centering
+\caption{Held-out accuracy (\%) at the deployment sampler.}
+\label{tab:main}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+ & Countdown & Sudoku & K\&K & Game24 \\
+\midrule
+\multicolumn{5}{@{}l}{\emph{GPT-2 (124M, autoregressive)}}\\
+task SFT & 44.2 & \phantom{0}1.2 & 92.9 & 26.9 \\
++ token-level GRPO/PPO & 53.9 & \phantom{0}1.4 & 93.2 & 32.2 \\
+\midrule
+\multicolumn{5}{@{}l}{\emph{LLaDA-8B-Instruct (masked diffusion)}}\\
+task SFT & 13.1 & \phantom{0}0.7 & 61.0 & 16.1 \\
++ diffu-GRPO & \PENDcd & \phantom{0}0.7 & 62.5 & 19.5 \\
+\midrule
+\multicolumn{5}{@{}l}{\emph{ELF-B (105M, continuous flow)}}\\
+task SFT (base) & 42.2 & 66.2 & 67.5 & 45.0 \\
++ GRPO (Stage 1) & 43.1 & 69.7 & 71.6 & 47.5 \\
++ \jpc{}, scalar critic (Stage 2) & 48.2 & 66.3 & 77.6 & 51.4 \\
++ \hl{\jpc{}, 2D critic (Stage 3)} & \textbf{50.2} & \textbf{71.0} & \textbf{79.6} & \textbf{58.8} \\
+\midrule
+\multicolumn{5}{@{}l}{\emph{ELF-B, amortisation loop (4 / 1 / 5 / 4 rounds)}}\\
+loop from the SFT base (no RL) & 46.2 & 65.5 & 99.6 & 46.1 \\
+loop from the GRPO policy & 45.1 & 71.9 & 98.3 & 50.5 \\
+gold labels of the loop's problems (oracle) & 42.6 & \textbf{72.2} & \textbf{99.7} & 49.2 \\
+\hl{2D-critic policy + loop} & \textbf{\OURScd} & 71.4 & \OURSkk & \textbf{56.0} \\
+\bottomrule
+\end{tabular}}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.40\linewidth}
+\centering
+\caption{ELF-B at the cheap 64-step ODE sampler (\%).}
+\label{tab:ode}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+ & Countdown & Sudoku & K\&K & Game24 \\
+\midrule
+task SFT (base) & 28.1 & 62.3 & 57.8 & 35.2 \\
++ GRPO & 28.9 & 66.0 & 63.7 & 36.5 \\
++ \jpc{}, scalar critic & 33.5 & 63.6 & 69.1 & 38.3 \\
++ \hl{\jpc{}, 2D critic} & \textbf{34.4} & \textbf{66.7} & \textbf{69.9} & \textbf{41.8} \\
+\midrule
+loop from the SFT base & 44.1 & 62.0 & 97.2 & 40.2 \\
+loop from the GRPO policy & 42.1 & \textbf{68.5} & 94.7 & 43.5 \\
+gold labels (oracle) & 27.3 & 67.0 & \textbf{98.2} & 38.7 \\
+\hl{2D-critic policy + loop} & \textbf{\OURScdo} & 67.3 & \OURSkko & \textbf{50.5} \\
+\bottomrule
+\end{tabular}}
+\end{minipage}
+\end{table}
+
+\subsection{Main result: three stages, then the loop}
+\label{sec:exp_main}
+\paragraph{Stage 1 against Stage 2: the chain, not its density.}
+GRPO adds $+0.9$, $+3.5$, $+4.1$ and $+2.5$ points over the base (Countdown, Sudoku, K\&K, Game24); Algorithm~\ref{alg:jpc} with the scalar critic adds $+6.0$, $+0.1$, $+10.1$ and $+6.4$, i.e.\ $+5.1$, $+6.0$ and $+3.9$ more than GRPO on the three tasks with headroom, at the same GPU-hours. The estimator is not what limits GRPO: on the same data, GPT-2 gains $+9.7$ on Countdown and $+5.3$ on Game24 under token-level GRPO/PPO, where the score acts on categorical decisions, while no refinement of the advantage lifts the flow model past $+5$ (Table~\ref{tab:sf_variants}). This is the analysis of \S\ref{sec:grpo}: the same reward bit is spread over $(K-2)\cdot|\mathcal G|\cdot d$ noise coordinates; \S\ref{sec:exp_estimator} measures the two estimators on the same rollouts. Stage 2 is also the fragile one: on Sudoku it never clears the base, and every seed declines to $62$--$64$ by 1000 iterations.
+
+\paragraph{Stage 3: the head before the mean.}
+Applying the head per position and pooling afterwards, with nothing else changed, adds $+2.0$, $+4.7$, $+2.0$ and $+7.4$ over the scalar critic, brings the three seeds of every task within $0.3$--$1.1$ points of each other, and turns the Sudoku failure into $+4.8$ ($70.8/71.3/71.0$). The 2D critic leads GRPO by $+7.1$, $+1.3$, $+8.0$ and $+11.3$. \S\ref{sec:exp_critic} examines what the field changes.
+
+\paragraph{The loop moves the gain into the model.}
+RL alone leaves the cheap chain behind: at $\gamma4$@16 the 2D policy gains $+0.4$, $+0.7$, $+10.6$ and $+3.2$ over the base against $+8.0$, $+4.8$, $+12.1$ and $+13.8$ at deployment (Table~\ref{tab:samplers}), the sampler lock of \S\ref{sec:loop}. After the loop the cheap chain stands at $\OURScdg$, $56.2$, $\OURSkkg$ and $49.0$, at or above the deployment accuracy of the base on three tasks, and ODE-64 at $\OURScdo$, $67.3$, $\OURSkko$ and $50.5$ (Table~\ref{tab:ode}). Against the controls, which run the same rounds without a critic, the 2D policy's loop ends $+4.0$ to $+7.6$ higher on Countdown and $+5.5$ to $+9.9$ higher on Game24 at deployment; on K\&K five rounds on fresh problems close the task from every start ($99.1$; $99.6$, $98.3$ and $99.7$ for the controls), so there the rounds, not the RL level, do the work; on Sudoku the loop is null from every start, since solutions are unique and a policy only re-solves what it already solves. \S\ref{sec:exp_loop} follows the Countdown loop's coverage round by round.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/fig_results.pdf}
+\caption{Table~\ref{tab:main} as a picture: accuracy at the deployment sampler (bars: mean over three seeds, error bars: standard deviation over seeds; single runs for the base and the loop). Dashed lines: GPT-2 with token-level GRPO/PPO on the same data.}
+\label{fig:results}
+\end{figure}
+
+\subsection{The estimator: the same rollouts, two gradients}
+\label{sec:exp_estimator}
+\S\ref{sec:pathwise} says that the score-function and the pathwise term of transition $k$ have the same expectation and differ in the factor that multiplies the denoiser Jacobian: the noise $\varepsilon_{k,i}/\sigma_k$ against the critic's slope. Table~\ref{tab:snr} measures both on the same 256 Game24 rollouts, with one differentiable denoiser call at $s_{k-1}$ as in Algorithm~\ref{alg:jpc}, and reads what an optimiser would see: the signal-to-noise ratio of the per-sample gradients and the agreement between two halves of the batch. The score-function gradient is indistinguishable from an estimator whose true mean is zero, with every form of the advantage (its SNR sits at the $1/\sqrt N$ floor and its two halves agree at cosine $0\pm0.03$), whereas the pathwise gradient's two halves agree at cosine $0.7$--$0.8$ and its SNR is three times the floor. The group baseline removes the 156 of 256 rollouts whose group has one outcome and changes nothing: the noise is the $|\mathcal G|\cdot d$ Gaussian coordinates of~(\ref{eq:sf}), not the baseline. The cross cosine is $\approx0$ because the score-function mean is noise at this $N$; confirming the identity of the two expectations would need $N\gg(1/\mathrm{SNR})^2$ rollouts per transition, which is the variance argument of \S\ref{sec:pathwise} in one number. Where the two gradients live is consistent with this reading (Appendix~\ref{app:grad_blocks}): the score-function gradient is a perturbation of the final linear layer, which carries $80\%$ of its energy while every block of the network sits at the noise floor; the pathwise gradient spreads over the network per sample and is above the floor in every block, with its most reproducible part at the output projection.
+\begin{table}[t]
+\centering\small
+\caption{Score-function against pathwise gradient of the policy parameters on the same 256 Game24 rollouts of the SFT policy (deployment chain; pre-trained 2D critic), at three steps $k$ of 64. SNR: norm of the mean per-sample gradient over the root-mean-square deviation from it; for an estimator whose true mean is zero the SNR at $N{=}256$ is $1/\sqrt N=0.0625$, and the row with the constant advantage $A{=}1$ is such an estimator. Half-split cosine: cosine between the mean gradients of two disjoint halves of the rollouts (mean$\pm$sd over 10 splits). Cross cosine: between the mean score-function (mean-centred) and pathwise gradients.}
+\label{tab:snr}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+ & $k=16$ & $k=24$ & $k=32$ \\
+\midrule
+score-function~(\ref{eq:sf}), mean-centred advantage: SNR & \SNRsfA & \SNRsfB & \SNRsfC \\
+score-function, GRPO advantage (groups of 4): SNR & \SNRgA & \SNRgB & \SNRgC \\
+score-function, $A{=}1$ (true mean zero): SNR & \SNRrA & \SNRrB & \SNRrC \\
+pathwise~(\ref{eq:pw}), 2D critic: SNR & \textbf{\SNRpwA} & \textbf{\SNRpwB} & \textbf{\SNRpwC} \\
+\midrule
+score-function, mean-centred: half-split cosine & \COSsfA & \COSsfB & \COSsfC \\
+pathwise: half-split cosine & \textbf{\COSpwA} & \textbf{\COSpwB} & \textbf{\COSpwC} \\
+cross cosine, score-function against pathwise & \COSxA & \COSxB & \COSxC \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{The critic: what it reads, what it is, and the order of head and mean}
+\label{sec:exp_critic}
+\paragraph{Input and network (\S\ref{sec:jpc_scalar}).}
+Table~\ref{tab:critic_design} pre-trains four critics on the same 16k Game24 rollouts, changing one thing at a time against the critic of Algorithm~\ref{alg:jpc}: without the estimate $\hat x_{k-1}$ in the input; with the denoiser copy frozen (head only); with a randomly initialised trunk of the same architecture. The estimate is what the critic reads the outcome from: without $\hat x_{k-1}$ the pooled value's correlation with the outcome falls from $0.93$ to $0.53$ at step 32 and pick@$V$ from $0.94$ to $0.59$, close to the random $0.55$, although the re-noised state $y_k$ itself carries the same information after a denoiser call. The denoiser is the right network to read it with: a randomly initialised trunk of the same architecture reaches a correlation of $0.43$ on the same data and epochs, the frozen copy $0.65$, the fine-tuned copy $0.93$. The last columns report what each critic does to the policy under Algorithm~\ref{alg:jpc}: the control tracks the reference seed ($58.2$ best, $57.5$ final); with the critic that cannot read the estimate the policy improves for 250 iterations and then collapses ($47.0$, then $14.4$ at 500 and $12.9$ at the end), and with the frozen copy it collapses more slowly ($51.7$ at 250, $44.2$, $37.2$, $14.1$). A critic whose features do not follow the policy is exploited in the sense of~(\ref{eq:biasm}): the actor finds states where the critic's slope is positive and the true value is not, and the head refit alone (\S\ref{sec:joint}) cannot repair features that never read the outcome.
+\begin{table}[t]
+\centering\small
+\caption{Critic design on Game24, one change at a time (same 16k pre-training rollouts and schedule). Pre-training columns: on held-out rollouts of the base policy at steps 32 and 48 of 64, the Pearson correlation of the pooled value with the outcome and pick@$V$, the accuracy of selecting a successful rollout among eight of the same prompt (random: $0.55$). RL columns: held-out accuracy at the deployment sampler of one seed of Algorithm~\ref{alg:jpc} trained with that critic (best / final checkpoint; the reference seed of Table~\ref{tab:main} is $58.2$ / $56.8$).}
+\label{tab:critic_design}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{@{}lcccccc@{}}
+\toprule
+critic & Pearson $k{=}32$ & Pearson $k{=}48$ & pick@$V$ $k{=}32$ & pick@$V$ $k{=}48$ & RL best & RL final \\
+\midrule
+denoiser copy, fine-tuned, input $(y_k,\hat x_{k-1},\tilde t_k)$ (Algorithm~\ref{alg:jpc}) & \CDa{1} & \CDa{2} & \CDa{3} & \CDa{4} & \CDa{5} & \CDa{6} \\
+without the estimate $\hat x_{k-1}$ & \CDb{1} & \CDb{2} & \CDb{3} & \CDb{4} & \CDb{5} & \CDb{6} \\
+denoiser copy frozen (head only) & \CDc{1} & \CDc{2} & \CDc{3} & \CDc{4} & \CDc{5} & \CDc{6} \\
+same architecture, random initialisation & \CDd{1} & \CDd{2} & \CDd{3} & \CDd{4} & --- & --- \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\paragraph{Head before the mean (\S\ref{sec:jpc_2d}).}
+Where the 2D critic's gain does \emph{not} come from is measured first. On the same Game24 states, the actor's instruction $\partial V_\phi/\partial y_{k,i}$ has almost the same profile over positions for the scalar and the 2D critic (cosine $0.94$ between the two critics' per-position norms; the same concentration on the top 10\% of positions and the same rank correlation with the decoder's undecidedness; Appendix~\ref{app:actor_signal}): after the trunk's Jacobian, both critics push the state in nearly the same direction. The difference lies in the field and its supervision. Appendix~\ref{app:critic_maps} shows what the field contains: the pooled value separates successful from failed rollouts from a quarter of the chain on, and on Sudoku the per-position values separate correct from wrong cells within failed grids (cell AUC $0.56$--$0.63$). The K\&K runs tie the field to the outcome of training: with Algorithm~\ref{alg:jpc} unchanged, a critic pre-trained on 16k rollouts gives $71.2/72.0/70.6$ and one pre-trained on 32k gives $79.5/79.1/79.0$, while the pooled value's correlation with the outcome barely moves ($0.70$ against $0.71$) and the minimum per-position value's rises from $0.38$ to $0.66$. The actor's result follows the field's quality where the pooled value does not change, which is what the second term of~(\ref{eq:critic2d_loss}) trains and the scalar critic does not have.
+
+\subsection{The loop: coverage, and the critic as a search heuristic}
+\label{sec:exp_loop}
+Proposition~\ref{prop:em} bounds a round by its coverage. Table~\ref{tab:cd_loop_main} follows the Countdown loop: two rounds sampled with the deployment chain move ODE-64 from $34.6$ to $42.5$ while coverage falls from $35.1$k to $31.2$k of the 50k problems and the deployment sampler from $50.4$ to $46.4$, the model re-solving what it already solves. Rounds 3--4 sample the pool with the critic-guided chain of \S\ref{sec:loop} and the jointly trained 2D critic of the starting policy; coverage rises to $37.8$k and the deployment sampler returns to $\OURScd$, with ODE-64 at $\OURScdo$. The controls, without a critic, end at $46.2$, $45.1$ and $42.6$. Table~\ref{tab:guided} isolates the sampler: on the first 5{,}000 pool problems, with the same policy and critic at $\gamma4$@16 and four seeds, plain sampling is compared with pruning four chains at step 8 by the critic or at random, and with the gradient push~(\ref{eq:guide}) alone and combined. Pruning by the critic doubles the accuracy of a sample ($25.4\to52.8$) and raises coverage from $56\%$ to $74\%$ of the problems; pruning at random changes nothing, so the gain is the critic's ranking and not the extra chains. The push alone adds three points; on top of the pruning it adds another $6.5$, to $59.3\%$ and $79\%$ coverage, with $2.4\times$ the distinct verified derivations of plain sampling. At the same cost in denoiser calls, four plain chains would reach the same coverage only if their successes fell on different problems, which the random-pruning row shows they do not.
+\begin{table}[t]
+\centering\small
+\begin{minipage}[t]{0.5\linewidth}
+\centering
+\caption{Countdown loop round by round (single run): problems of the 50k pool with at least one verified sample, and held-out accuracy at the end of the round. Controls: the same four rounds from other starts, without a critic (Appendix~\ref{app:cd_loop}).}
+\label{tab:cd_loop_main}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{@{}llccc@{}}
+\toprule
+round & pool sampler & covered & $\gamma56$@64 & ODE-64 \\
+\midrule
+2D-critic policy (start) & & & 50.4 & 34.6 \\
+1 & deployment chain & 35.1k & 47.9 & 41.0 \\
+2 & deployment chain & 31.2k & 46.4 & 42.5 \\
+3 & critic-guided, $\gamma4$@16 & 37.2k & \OURScdthree & \OURScdthreeo \\
+4 & critic-guided, $\gamma4$@16 & 37.8k & \textbf{\OURScd} & \textbf{\OURScdo} \\
+\midrule
+SFT base, round 4 & deployment chain & 31.2k & 46.2 & 44.1 \\
+GRPO policy, round 4 & deployment chain & 30.9k & 45.1 & 42.1 \\
+gold derivations, round 4 & (labels) & 50.0k & 42.6 & 27.3 \\
+\bottomrule
+\end{tabular}}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.47\linewidth}
+\centering
+\caption{The critic as a search heuristic (Countdown, 2D policy and its critic, $\gamma4$@16, 5{,}000 pool problems, 4 seeds). Accuracy per sample; coverage: problems with at least one verified sample over the 4 seeds; distinct: verified distinct derivations.}
+\label{tab:guided}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{@{}lccc@{}}
+\toprule
+sampler & acc.\ (\%) & coverage & distinct \\
+\midrule
+plain & \GBa{1} & \GBa{2} & \GBa{3} \\
+best of 4 at step 8, random & \GBb{1} & \GBb{2} & \GBb{3} \\
+best of 4 at step 8, by the critic & \GBc{1} & \GBc{2} & \GBc{3} \\
+push~(\ref{eq:guide}) at every step & \GBd{1} & \GBd{2} & \GBd{3} \\
+best of 4 by the critic + push & \GBe{1} & \GBe{2} & \GBe{3} \\
+\bottomrule
+\end{tabular}}
+\end{minipage}
+\end{table}

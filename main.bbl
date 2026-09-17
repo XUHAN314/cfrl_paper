@@ -1,4 +1,4 @@
-\begin{thebibliography}{46}
+\begin{thebibliography}{47}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
@@ -262,6 +262,14 @@ Chulin Xie, Yangsibo Huang, Chiyuan Zhang, Da~Yu, Xinyun Chen, Bill~Yuchen Lin,
   Bo~Li, Badih Ghazi, and Ravi Kumar.
 \newblock On memorization of large language models in logical reasoning.
 \newblock \emph{arXiv preprint arXiv:2410.23123}, 2024.
+
+\bibitem[Xu et~al.(2023)Xu, Liu, Wu, Tong, Li, Ding, Tang, and
+  Dong]{xu2023imagereward}
+Jiazheng Xu, Xiao Liu, Yuchen Wu, Yuxuan Tong, Qinkai Li, Ming Ding, Jie Tang,
+  and Yuxiao Dong.
+\newblock Imagereward: Learning and evaluating human preferences for
+  text-to-image generation.
+\newblock \emph{Advances in Neural Information Processing Systems}, 2023.
 
 \bibitem[Xue et~al.(2025)Xue, Wu, Gao, Kong, Zhu, Chen, Liu, Liu, Guo, Huang,
   and Luo]{xue2025dancegrpo}
