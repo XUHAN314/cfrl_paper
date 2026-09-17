@@ -255,6 +255,28 @@ On the 256 Game24 rollouts of Table~\ref{tab:snr}, Table~\ref{tab:grad_blocks} s
  & blocks 6--11 & 0.21 & 0.53 & 0.09--0.27 & 0.22 & 0.52 & 0.09--0.26\\
  & blocks 0--5 & 0.04 & 0.17 & --- & 0.04 & 0.17 & ---\\\bottomrule\end{tabular}}\end{table}
 
+\subsection{The score-function gradient of the discrete baselines}
+\label{app:discrete_snr}
+Table~\ref{tab:discrete_snr} extends the measurement of Table~\ref{tab:snr} to the two discrete models of Table~\ref{tab:main} on the same 32 Countdown training prompts with $G{=}8$ responses each ($N{=}256$), and for GPT-2 to $N{=}1024$ and $2048$. GPT-2 (124M, all parameters) is the task-SFT model of Table~\ref{tab:main} with its own sampler (temperature 1, 48 new tokens); the gradient is that of the exact autoregressive log-likelihood of the sampled response, weighted by the advantage, as in its GRPO run. LLaDA-8B-Instruct is the d1 setup of Table~\ref{tab:main}: 4-bit weights, a fresh LoRA of rank 128 on the attention and up projections (its gradient is over the LoRA's second factor, 101M parameters; the first factor's gradient is identically zero at initialisation), d1's sampler (256 tokens, 128 steps, blocks of 32, low-confidence remasking) and d1's one-pass surrogate: one random mask of the prompt at rate 0.15 with the completion fully masked, the sum of the token log-probabilities of the sampled completion under that mask, at the first inner step of a d1 iteration, where the ratio is one and the KL term has no gradient. The advantage forms are those of Table~\ref{tab:snr}; ``d1's'' is the per-group mean-centred advantage on d1's reward with its 0.1 format credit, which coincides with the mean-centred 0/1 outcome here because the credit was uniform within groups. The statistics are those of Table~\ref{tab:snr}; the noise floor is $1/\sqrt N$ and the excess is $\sqrt{\max(\mathrm{SNR}^2-1/N,0)}$.
+
+Two things separate the two discrete models. GPT-2's $A{=}1$ control is zero-mean, as the score-function identity requires of the exact likelihood (cosine $0.01$--$0.02$ at every $N$), and its advantage-weighted gradient has a stable excess SNR of about $0.019$ whose half-split cosine grows with $N$ as a real signal does. LLaDA's $A{=}1$ control is not zero-mean: the one-pass surrogate is not the log-density of the 128-step sampler, so every sample's gradient shares a large reward-independent component (SNR $0.50$, cosine $0.97$; it is 0.18--0.20 aligned with the advantage-weighted mean). Centring the advantage removes it from the mean but not from the per-sample variance, and the remainder is indistinguishable from noise at $N{=}256$; 56\% of the groups also have no reward variance (outcome rate $0.13$), so only 112 of the 256 samples carry any weight. The measurement bounds LLaDA's per-sample signal loosely ($s\lesssim0.08$); a signal of GPT-2's size would also be invisible at this $N$, so the table shows that the surrogate gradient is dominated by a reward-independent drift and that its signal, if any, is not detectable with the batch a d1 iteration uses, not that it is smaller than GPT-2's.
+\begin{table}[H]\centering\small
+\caption{Score-function gradients of the discrete baselines on Countdown (32 prompts, $G{=}8$). Columns as in Table~\ref{tab:snr}; ``0-var'' is the fraction of groups whose responses all have the same outcome.}\label{tab:discrete_snr}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{@{}llcccccc@{}}\toprule
+model & advantage & $N$ & outcome & 0-var & SNR & floor $1/\sqrt N$ & half-split cosine\\\midrule
+LLaDA-8B, diffu-GRPO surrogate & GRPO $(r-\bar r)/\mathrm{sd}$ & 256 & 0.13 & 0.56 & 0.049 & 0.0625 & $-0.12\pm0.18$\\
+ & group mean-centred (d1's) & 256 & 0.13 & 0.56 & 0.049 & 0.0625 & $-0.14\pm0.17$\\
+ & batch mean-centred & 256 & 0.13 & 0.56 & 0.050 & 0.0625 & $-0.06\pm0.22$\\
+ & $A{=}1$ (control) & 256 & 0.13 & 0.56 & 0.497 & 0.0625 & $0.97\pm0.01$\\\midrule
+GPT-2, exact AR likelihood & GRPO $(r-\bar r)/\mathrm{sd}$ & 256 & 0.35 & 0.22 & 0.066 & 0.0625 & $0.05\pm0.05$\\
+ & $A{=}1$ (control) & 256 & 0.35 & 0.22 & 0.063 & 0.0625 & $0.01\pm0.04$\\
+ & GRPO & 1024 & 0.27 & 0.25 & 0.037 & 0.0312 & $0.17\pm0.05$\\
+ & $A{=}1$ (control) & 1024 & 0.27 & 0.25 & 0.031 & 0.0312 & $0.00\pm0.03$\\
+ & GRPO & 2048 & 0.29 & 0.21 & 0.029 & 0.0221 & $0.27\pm0.02$\\
+ & $A{=}1$ (control) & 2048 & 0.29 & 0.21 & 0.023 & 0.0221 & $0.02\pm0.03$\\
+\bottomrule\end{tabular}}\end{table}
+
 \subsection{The scalar and the 2D critic are interchangeable at a fixed policy}
 \label{app:critic_equiv}
 Table~\ref{tab:critic_equiv} collects the measurements that compare the pre-trained scalar and 2D critics of the Table~\ref{tab:main} runs on the same states of the same policy (Game24 unless stated; 256 rollouts of the SFT policy under the deployment chain, or the 128 Sudoku rollouts under $\gamma28$@32), and the jointly trained heads of the Table~\ref{tab:main} runs on fixed probe sets. None of them separates the two critics: whatever distinguishes the policies they train (Table~\ref{tab:traj}) is not visible in either critic's value, slope or stability at a fixed policy.
