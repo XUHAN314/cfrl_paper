@@ -110,7 +110,7 @@ V_\phi(s_k)
 \end{equation}
 Each $R_{k,i}$ reads the outcome log-odds from position $i$, while their mean is the value ascended by the actor. The features and training procedure are unchanged from Stage~2. With the 2D cricit, \emph{Every position is pushed along its own direction.} By the chain rule the actor's signal at position $i$ is $\sum_{j\in\mathcal G}(\partial V_\phi/\partial f_j)(\partial f_j/\partial y_{k,i})$. The scalar critic applies the same head gradient to every position, whereas the 2D critic evaluates the head at each position's feature:
 \begin{equation}
-\text{head after the mean: }\ \frac{\partial V_\phi}{\partial f_j}=\frac{\nabla h_\phi(\mathrm{mean}(f))}{|\mathcal G|}\ ,\qquad \text{head before the mean: }\ \frac{\partial V_\phi}{\partial f_j}=\frac{\nabla h_\phi(f_j)}{|\mathcal G|}.
+\text{head after the mean: }\ \frac{\partial V_\phi}{\partial f_j}=\frac{\nabla h_\phi(\mathrm{mean}(f))}{|\mathcal G|}\ ,\quad \text{head before the mean: }\ \frac{\partial V_\phi}{\partial f_j}=\frac{\nabla h_\phi(f_j)}{|\mathcal G|}.
 \label{eq:headgrad}
 \end{equation}
 Thus, the scalar critic pushes all position features in one direction, while the 2D critic gives each position its own direction. The transformer may still couple positions through its Jacobian; the distinction lies in the signal assigned to each feature. The 2D critic also permits nonlinear dependence on each position feature, whereas a head on the mean can combine position contributions only affinely (Proposition~\ref{prop:additive}).
