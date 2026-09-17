@@ -255,6 +255,29 @@ On the 256 Game24 rollouts of Table~\ref{tab:snr}, Table~\ref{tab:grad_blocks} s
  & blocks 6--11 & 0.21 & 0.53 & 0.09--0.27 & 0.22 & 0.52 & 0.09--0.26\\
  & blocks 0--5 & 0.04 & 0.17 & --- & 0.04 & 0.17 & ---\\\bottomrule\end{tabular}}\end{table}
 
+\subsection{The scalar and the 2D critic are interchangeable at a fixed policy}
+\label{app:critic_equiv}
+Table~\ref{tab:critic_equiv} collects the measurements that compare the pre-trained scalar and 2D critics of the Table~\ref{tab:main} runs on the same states of the same policy (Game24 unless stated; 256 rollouts of the SFT policy under the deployment chain, or the 128 Sudoku rollouts under $\gamma28$@32), and the jointly trained heads of the Table~\ref{tab:main} runs on fixed probe sets. None of them separates the two critics: whatever distinguishes the policies they train (Table~\ref{tab:traj}) is not visible in either critic's value, slope or stability at a fixed policy.
+\begin{table}[H]\centering\small
+\caption{Scalar against 2D critic on the same states. Pre-trained critics unless a row says otherwise; $k$ is the flow step of the state.}\label{tab:critic_equiv}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{@{}llcc@{}}\toprule
+measurement & setting & scalar & 2D\\\midrule
+Pearson correlation of the pooled value with the outcome, held-out rollouts & pre-training, Game24 $k{=}48$ / Sudoku $k{=}18$ / Countdown $k{=}14$ & 0.97 / 0.94 / 0.99 & 0.97 / 0.94 / 0.99\\
+pathwise SNR of the actor's parameter gradient (Table~\ref{tab:snr} statistic) & Game24 $k{=}16$ / 24 / 32 & 0.19 / 0.17 / 0.20 & 0.18 / 0.18 / 0.15\\
+half-split cosine of the actor's parameter gradient & Game24 $k{=}16$ / 24 / 32 & 0.81 / 0.78 / 0.83 & 0.81 / 0.79 / 0.70\\
+cosine between the two critics' mean actor gradients & Game24 $k{=}16$ / 24 / 32 & \multicolumn{2}{c}{0.90 / 0.88 / 0.83}\\
+cosine between the two critics' per-position gradient-norm profiles & Game24, real tokens & \multicolumn{2}{c}{0.94 / 0.94 / 0.94}\\
+mean pairwise cosine of per-position state gradients $\partial V/\partial y_{k,i}$ (shared direction) & Game24 $k{=}24$ / Sudoku $k{=}12$ & 0.03 / 0.06 & 0.04 / 0.07\\
+pooled $\Delta V$ (logits) for one wrong token in a successful state & Game24 $k{=}24$, re-encoded & $-0.86$ & $-0.89$\\
+\quad the same, corruptions that break the answer & Game24 $k{=}24$ & $-1.76$ & $-2.04$\\
+pooled $\Delta V$ for one wrong cell (never changes the decoded grid) & Sudoku $k{=}12$ & $-0.11$ & $-0.03$\\
+jointly trained head: AUC on states of its own peak policy, iteration 0 $\to$ end & Game24 / Sudoku / Countdown & 0.97$\to$0.96 / 0.98$\to$0.98 / 0.90$\to$0.92 & 0.96$\to$0.96 / 0.98$\to$0.98 / 0.90$\to$0.91\\
+jointly trained head: AUC on the newest buffer states, mean over training & Game24 / Sudoku / K\&K / Countdown & 0.96 / 0.98 / 0.98 / 0.92 & 0.96 / 0.98 / 0.98 / 0.93\\
+actor gradient after 20 head refits: cosine to the gradient before them & Game24 $k{=}32$, buffer displaced 5\%/refit & 0.98 & 0.99\\
+frozen critic: held-out accuracy of the exploited policy at iteration 750 & Game24 & 29.5 & 2.1\\
+\bottomrule\end{tabular}}\end{table}
+
 \subsection{State-gradient profiles of the scalar and the 2D critic}
 \label{app:actor_signal}
 Table~\ref{tab:actor_signal} reads the actor's instruction $g_i=\partial V_\phi/\partial y_{k,i}$ for the pre-trained scalar and 2D Game24 critics on the same 256 states of the SFT policy under the deployment chain, restricted to the real tokens of each response (18 of 64 generated positions on average). Top-10\% share: fraction of $\sum_i\|g_i\|^2$ on the 10\% of positions with the largest norm (uniform baseline $0.11$). $\rho$: Spearman correlation across positions between $\|g_i\|$ and the undecidedness of position $i$, the negative margin between the decoder's top two logits at $\hat x_{k-1,i}$. The two critics' profiles agree at cosine $0.94$ (Spearman $0.90$) at every step: the order of head and mean does not change where the signal lands on the state, so the 2D critic's gain in Table~\ref{tab:main} is not a redistribution of the actor's signal over positions. For both critics about three quarters of the squared norm of $\nabla_{\theta}V_\phi$ flows through the estimate channel $\hat x_{k-1}$ of~(\ref{eq:chainrule}) rather than through the re-noised state, which is the second reason of \S\ref{sec:jpc_scalar} for reading the estimate.

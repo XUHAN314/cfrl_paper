@@ -36,77 +36,31 @@ AR GPT-2 (124M) + token-level GRPO/PPO & same estimator, AR actions & $+9.7$ \\
 scalar, $3{\times}10^{-6}$ (then $10^{-6}$) & $+9.0,+7.0,+2.1$ & collapse (3/3) & $+2.0,+4.5,+4.5$ & $+10.2,-1.3,+5.6$ \\
 scalar, $10^{-6}$ & --- & --- & $+3.4$ & $+2.6$ \\
 2D, $3{\times}10^{-6}$ & collapse & $+2.2$ then collapse & $-1.5$ & collapse \\
-\hl{2D, $10^{-6}$} & $+6.2,+5.1,+7.1$ & $+3.6,+3.8,+2.9$ & $+2.8,+2.8,+3.3$ & $+11.8,+15.7,+13.9$ \\
+\hl{2D, $10^{-6}$ (Algorithm~\ref{alg:jpc})} & $+5.0,+3.8,+5.3$ & $+3.3,+3.5,+4.5$ & $+12.0,+11.6,+11.5$ & $+14.3,+13.5,+13.8$ \\
 \bottomrule
 \end{tabular}}
 \end{table}
 
-\subsection{Four-sampler tables}
-Figure~\ref{fig:results} plots the deployment-sampler results of Table~\ref{tab:main} with seed error bars.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.9\linewidth]{figures/fig_results.pdf}
-\caption{Accuracy at the deployment sampler on the four tasks (mean over seeds, error bars = standard deviation over seeds). Dashed lines: an AR GPT-2 with token-level GRPO/PPO on the same data. The 2D-critic \jpc{} is the only recipe that improves on every task with every seed; the loop adds the most where RL changed what the policy can solve.}
-\label{fig:results}
-\end{figure}
-
-Tables~\ref{tab:full_cd}--\ref{tab:full_g24} give every number behind \S\ref{sec:experiments} at all four samplers (ODE64 / $\gamma4$@16 / $\gamma28$@32 / $\gamma56$@64; Sudoku: ODE64 / $\gamma4$@16 / $\gamma14$@16 / $\gamma28$@32).
+\subsection{Cheap samplers after the loop}
+\label{app:samplers}
+Table~\ref{tab:samplers} reads Tables~\ref{tab:main} and~\ref{tab:ode} across sampler cost. RL alone moves the cheap samplers little: the 2D-critic policy gains $0$--$11$ points at $\gamma4$@16 against $+5$ to $+14$ at the deployment sampler. One loop moves the rest: after it, the 16-step sampler reaches or passes the accuracy the 64-step deployment sampler had before RL on Countdown, K\&K and Game24 ($\OURScdg$ vs $42.2$, $\OURSkkg$ vs $67.5$, $49.0$ vs $45.0$), and on K\&K it passes the deployment accuracy of the RL policy itself ($\OURSkkg$ vs $79.6$). Sudoku, whose loop is null, is unchanged at every sampler.
 
 \begin{table}[H]\centering\small
-\caption{Countdown (base 28.1/23.1/38.0/42.2).}\label{tab:full_cd}
-\begin{tabular}{@{}lcccc@{}}\toprule
-run & ODE64 & $\gamma4$@16 & $\gamma28$@32 & $\gamma56$@64\\\midrule
-GRPO seeds 1/2/3 (peak 300/100/500; final 42.4/42.2/41.7) & 29.2/28.5/28.9 & 23.2/23.4/24.3 & 40.6/39.4/39.6 & 43.1/42.8/43.3\\
-\jpc{} scalar two-phase, seed 1 & 35.4 & 27.4 & 41.8 & 51.2\\
-\jpc{} scalar two-phase, seed 2 & 34.4 & 29.0 & 44.4 & 49.2\\
-\jpc{} scalar, seed 3 (peak 125; barely leaves the base, final 42.8) & 29.0 & 23.2 & 37.0 & 44.3\\
-\jpc{} 2D $10^{-6}$, seeds 1/2/3 (peak 750/750/1000) & 34.0/33.1/33.8 & 26.2/25.6/25.6 & 40.8/41.9/40.8 & 48.4/47.3/49.3\\
-amortisation loop, round 5 (from scalar policy) & 51.1 & 48.8 & 54.8 & 54.4\\
-loop from the SFT base, round 1 (no RL) & 34.4 & 29.3 & 42.9 & 44.1\\\bottomrule\end{tabular}\end{table}
-
-\begin{table}[H]\centering\small
-\caption{Sudoku (base 62.3/55.3/62.0/66.2).}\label{tab:full_sd}
-\begin{tabular}{@{}lcccc@{}}\toprule
-run & ODE64 & $\gamma4$@16 & $\gamma14$@16 & $\gamma28$@32\\\midrule
-GRPO seed 1 (peak 600) & 65.9 & 55.5 & 65.0 & 70.1\\
-GRPO seed 2 (peak 500; final 70.5) & 69.7 & 59.1 & 67.1 & 72.8\\
-GRPO seed 3 (peak 100; final 63.0) & 62.4 & 53.3 & 61.4 & 66.2\\
-\jpc{} 2D $10^{-6}$, seed 1 (peak 500) & 67.6 & 59.8 & 66.5 & 69.9\\
-\jpc{} 2D $10^{-6}$, seed 2 (peak 500) & 68.0 & 61.0 & 66.5 & 70.1\\
-\jpc{} 2D $10^{-6}$, seed 3 (peak 500) & 67.8 & 59.6 & 66.8 & 69.2\\
-\jpc{} scalar, seeds 1/2/3 (peak 250/250/125; all collapse by 500) & 49.8/55.6/60.5 & 42.0/48.9/52.0 & 50.0/55.0/59.0 & 53.1/58.1/63.3\\
-loop on training puzzles, round 1 (from 2D policy) & 67.3 & 59.5 & 66.8 & 69.2\\
-loop on 50k fresh puzzles, round 1 & 67.0 & 60.2 & 66.5 & 69.8\\\bottomrule\end{tabular}\end{table}
-
-\begin{table}[H]\centering\small
-\caption{Knights-and-Knaves (base = SFT epoch 4, 57.8/58.1/65.8/67.5; gold-SFT epoch 8 = 96.8/93.8/99.4/99.7).}\label{tab:full_kk}
-\resizebox{\linewidth}{!}{%
-\begin{tabular}{@{}lcccc@{}}\toprule
-run & ODE64 & $\gamma4$@16 & $\gamma28$@32 & $\gamma56$@64\\\midrule
-GRPO seeds 1/2/3 (peak = final, 600) & 62.6/61.6/67.0 & 63.8/62.6/66.9 & 69.7/69.3/73.0 & 70.2/70.0/74.6\\
-\jpc{} 2D $10^{-6}$ seeds 1/2/3 (peak 250) & 62.3/62.7/61.6 & 64.0/63.8/63.9 & 69.0/69.3/69.3 & 70.3/70.3/70.8\\
-\jpc{} scalar $3{\times}10^{-6}\!\to\!10^{-6}$, seeds 1/2/3 (peak) & 64.8/65.3/66.1 & 66.2/66.2/66.1 & 68.6/70.7/70.5 & 69.5/72.0/72.0\\
-fresh-problem loop, rounds 2/3/4/5 (from \jpc{}) & 72.2/78.8/86.0/90.3 & 71.0/77.3/82.8/87.2 & 76.5/82.8/90.1/93.7 & 77.3/83.9/91.3/94.9\\
-gold-label controls, rounds 2/3/4/5 & 78.1/83.2/87.9/91.0 & 76.2/80.9/84.2/88.5 & 82.3/88.8/92.5/95.7 & 84.0/89.8/93.8/96.7\\
-loop from the SFT base, round 1 (no RL) & 75.8 & 74.0 & 81.0 & 82.3\\\bottomrule\end{tabular}}\end{table}
-
-\begin{table}[H]\centering\small
-\caption{Game24, set-split evaluation (base = SFT epoch 20, 35.2/35.4/42.6/45.0).}\label{tab:full_g24}
-\resizebox{\linewidth}{!}{%
-\begin{tabular}{@{}lcccc@{}}\toprule
-run & ODE64 & $\gamma4$@16 & $\gamma28$@32 & $\gamma56$@64\\\midrule
-GRPO seeds 1/2/3 (peak 600/500/500; final 46.8/48.0/46.3) & 36.0/36.9/36.5 & 36.9/36.7/36.4 & 45.8/46.9/44.8 & 46.8/48.6/47.1\\
-\jpc{} scalar $3{\times}10^{-6}\!\to\!10^{-6}$, seed 1 & 41.2 & 39.9 & 52.2 & 55.2\\
-\jpc{} scalar $3{\times}10^{-6}$, seed 2 (peak 125; collapses to 39.5 at 250) & 32.1 & 32.9 & 39.7 & 43.7\\
-\jpc{} scalar $3{\times}10^{-6}\!\to\!10^{-6}$, seed 3 & 38.4 & 36.3 & 47.0 & 50.6\\
-\jpc{} 2D $10^{-6}$ seeds 1/2/3 (1375--1500 iterations) & 39.5/40.0/39.6 & 34.2/37.2/37.2 & 52.3/54.3/52.5 & 56.8/60.6/58.8\\
-loop rounds 1/2/3/4 (from scalar policy 55.2) & 46.7/49.8/52.6/52.7 & 45.7/48.6/51.0/51.8 & 55.0/56.0/57.9/57.2 & 56.4/56.0/57.0/58.3\\
-loop started from a 2D-critic policy (57.8) instead, rounds 1/2 (no gain) & 45.4/45.6 & 42.7/44.4 & 52.3/52.0 & 55.8/54.5\\
-gold derivations of the pool orderings (init 55.2) & 40.0 & 39.9 & 52.2 & 53.8\\
-loop from the GRPO policy (48.0), rounds 1/2 & 40.0/42.3 & 39.7/40.8 & 49.3/48.6 & 50.5/49.8\\
-loop from the SFT base, rounds 1/2 (no RL) & 38.2/41.0 & 38.0/39.4 & 43.5/45.7 & 45.8/48.0\\
-AR GPT-2 SFT / + token GRPO-PPO & \multicolumn{4}{c}{26.9 / 32.2 (greedy decoding)}\\\bottomrule\end{tabular}}\end{table}
+\caption{The loop moves what the policy can do to the cheap samplers. Held-out accuracy (\%) at samplers of increasing cost: the SFT base, the 2D-critic policy (mean of three seeds) and that policy after the loop (final round). $^\dagger$Sudoku: $\gamma14$@16, and its deployment sampler is $\gamma28$@32.}\label{tab:samplers}
+\begin{tabular}{@{}llcccc@{}}\toprule
+ & & $\gamma4$@16 & $\gamma28$@32$^\dagger$ & ODE-64 & deployment\\\midrule
+\multirow{3}{*}{Countdown} & SFT base & 23.1 & 38.0 & 28.1 & 42.2\\
+ & 2D-critic policy & 23.5 & 43.9 & 34.4 & \textbf{50.2}\\
+ & \hl{+ loop} & \textbf{\OURScdg} & \textbf{\OURScdt} & \textbf{\OURScdo} & \textbf{\OURScd}\\\midrule
+\multirow{3}{*}{Sudoku} & SFT base & 55.3 & 62.0 & 62.3 & 66.2\\
+ & 2D-critic policy & 56.0 & 65.0 & 66.7 & 71.0\\
+ & \hl{+ loop} & \textbf{56.2} & \textbf{65.5} & \textbf{67.3} & \textbf{71.4}\\\midrule
+\multirow{3}{*}{K\&K} & SFT base & 58.1 & 65.8 & 57.8 & 67.5\\
+ & 2D-critic policy & 68.7 & 76.5 & 69.9 & 79.6\\
+ & \hl{+ loop} & \textbf{\OURSkkg} & \textbf{\OURSkkt} & \textbf{\OURSkko} & \textbf{\OURSkk}\\\midrule
+\multirow{3}{*}{Game24} & SFT base & 35.4 & 42.6 & 35.2 & 45.0\\
+ & 2D-critic policy & 38.6 & 54.5 & 41.8 & \textbf{58.8}\\
+ & \hl{+ loop} & \textbf{49.0} & \textbf{55.7} & \textbf{50.5} & 56.0\\\bottomrule\end{tabular}\end{table}
 
 \subsection{Sampler sweep on the Countdown base model}
 \label{app:sampler_sweep}
@@ -125,21 +79,24 @@ $\gamma112$@128 & 44.9 & $\gamma112$@128 & 37.4\\\bottomrule\end{tabular}}\end{t
 
 \subsection{Autoregressive control: learning curves}
 \label{app:ar_curves}
-Table~\ref{tab:ar_curves} gives the full curves behind the AR control of \S\ref{sec:experiments}. Supervised fine-tuning of GPT-2 on Countdown peaks at epoch 8 (44.2) and on Game24 at epoch 2 (26.9, from the Countdown-trained model; from vanilla GPT-2 the same data reaches only 12.4 at epoch 4). Token-level PPO at $10^{-5}$ then climbs monotonically on Countdown ($+9.7$ at iteration 550) and, after an initial dip, on Game24 ($+5.3$ at iteration 600); at $3\times10^{-6}$ the Countdown curve saturates at $+6.6$. The AR policy sees exactly the same problems, verifier and number of rollouts per iteration as the flow policies; the only difference is the estimator its action space admits.
+Table~\ref{tab:ar_curves} gives the full curves behind the AR control of \S\ref{sec:experiments}. Supervised fine-tuning of GPT-2 peaks at epoch 8 on Countdown (44.2), at epoch 10 on K\&K (92.9), at epoch 20 on Sudoku (1.2) and at epoch 2 on Game24 (26.9, from the Countdown-trained model; from vanilla GPT-2 the same data reaches only 12.4 at epoch 4). Token-level PPO at $10^{-5}$ then climbs monotonically on Countdown ($+9.7$ at iteration 550) and, after an initial dip, on Game24 ($+5.3$ at iteration 600); at $3\times10^{-6}$ the Countdown curve saturates at $+6.6$. On K\&K the supervised policy is already sharp: at $10^{-5}$ the importance ratios explode and accuracy falls from 92.9 to 7.2 within 50 iterations, and at $3\times10^{-6}$ (with the log-ratio clamped to $\pm10$) the curve stays flat at $92.7$--$93.2$; on Sudoku, where the supervised model solves one puzzle in a hundred, the reward signal is too sparse to move it. The AR policy sees exactly the same problems, verifier and number of rollouts per iteration as the flow policies; the only difference is the estimator its action space admits.
 
 \begin{table}[H]\centering\small
-\caption{AR control (GPT-2, 124M), held-out accuracy with greedy decoding. Top: supervised fine-tuning by epoch. Bottom: token-level PPO by iteration (32 prompts $\times$ 8 samples per iteration).}\label{tab:ar_curves}
+\caption{AR control (GPT-2, 124M), held-out accuracy with greedy decoding. Top: supervised fine-tuning by epoch (Sudoku: epochs 2, 4, \dots, 20, scored by the SFT script's solved-grid metric; the verifier gives 1.2 at epoch 20). Bottom: token-level PPO by iteration (32 prompts $\times$ 8 samples per iteration).}\label{tab:ar_curves}
 \resizebox{\linewidth}{!}{%
 \begin{tabular}{@{}lcccccccccc@{}}\toprule
 SFT epoch & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10\\\midrule
 Countdown & 26.5 & 30.8 & 38.1 & 38.8 & 41.1 & 43.9 & 42.4 & \textbf{44.2} & 43.6 & 42.8\\
+Sudoku (epochs 2--20) & \phantom{0}0.6 & \phantom{0}0.9 & \phantom{0}1.1 & \phantom{0}1.3 & \phantom{0}1.3 & \phantom{0}1.4 & \phantom{0}1.4 & \phantom{0}1.4 & \textbf{\phantom{0}1.7} & \textbf{\phantom{0}1.7}\\
+K\&K & 28.2 & 46.6 & 68.7 & 82.8 & 87.1 & 88.5 & 91.4 & 92.3 & 92.8 & \textbf{92.9}\\
 Game24 (init.\ from the Countdown model) & 19.6 & \textbf{26.9} & 22.1 & 21.3 & 19.9 & 21.7 & 21.0 & 20.8 & 20.7 & 21.6\\
 Game24 (init.\ from vanilla GPT-2) & \phantom{0}1.1 & \phantom{0}9.8 & 11.4 & \textbf{12.4} & \phantom{0}9.0 & \phantom{0}9.5 & 10.3 & 11.2 & \phantom{0}9.7 & \phantom{0}9.7\\
 \midrule
-PPO iteration & 0 & 100 & 200 & 300 & 400 & 450 & 500 & 550 & 600 & \\\midrule
-Countdown, $10^{-5}$ & 44.2 & 48.7 & 51.1 & 51.0 & 53.0 & 52.8 & 53.1 & \textbf{53.9} & 53.6 & \\
-Countdown, $3\times10^{-6}$ & 44.2 & 47.3 & 49.5 & 49.8 & 48.9 & 49.9 & \textbf{50.8} & 49.6 & 50.6 & \\
-Game24, $10^{-5}$ & 26.9 & 20.5 & 25.0 & 25.8 & 26.8 & 26.9 & 30.1 & 28.9 & \textbf{32.2} & \\\bottomrule\end{tabular}}\end{table}
+PPO iteration & 0 & 100 & 150 & 200 & 300 & 400 & 500 & 550 & 600 & \\\midrule
+Countdown, $10^{-5}$ & 44.2 & 48.7 & 50.1 & 51.1 & 51.0 & 53.1 & 53.1 & \textbf{53.9} & 53.7 & \\
+Sudoku, $10^{-5}$ & \phantom{0}1.2 & \textbf{\phantom{0}1.4} & \phantom{0}1.1 & \phantom{0}1.2 & \phantom{0}1.2 & \phantom{0}1.1 & \phantom{0}1.2 & \phantom{0}1.2 & \phantom{0}1.3 & \\
+K\&K, $3\times10^{-6}$ & 92.9 & 93.0 & \textbf{93.2} & 93.1 & 92.9 & 92.8 & 92.7 & 92.8 & 92.7 & \\
+Game24, $10^{-5}$ & 26.9 & 20.5 & 23.8 & 25.0 & 25.8 & 26.8 & 30.1 & 28.9 & \textbf{32.2} & \\\bottomrule\end{tabular}}\end{table}
 
 \subsection{Choice of the Game24 base checkpoint}
 \label{app:g24_sft}
@@ -156,72 +113,79 @@ $\gamma56$@64 & 4.2 & 37.4 & 41.0 & 42.8 & \textbf{45.0} & 39.8 & 34.7\\\bottomr
 
 \subsection{Knights-and-Knaves by number of people}
 \label{app:kk_by_n}
-Table~\ref{tab:kk_by_n} splits K\&K accuracy by the number of people in the puzzle. The base model is near-perfect on 4-person puzzles and weakest on 6-person ones; RL (GRPO and \jpc{}) improves all sizes by similar absolute amounts, and the fresh-problem loop closes most of the remaining gap on 6-person puzzles ($51.8\to88.4$), approaching the gold-supervised model (99.0) without ever seeing a gold label.
+Table~\ref{tab:kk_by_n} splits K\&K accuracy by the number of people in the puzzle. The base model is near-perfect on 4-person puzzles and weakest on 6-person ones; RL (GRPO and \jpc{}) improves all sizes by similar absolute amounts, and the fresh-problem loop closes the remaining gap on 6-person puzzles ($51.8\to97.6$), within 1.4 points of the gold-supervised model (99.0) without ever seeing a gold label.
 
 \begin{table}[H]\centering\small
-\caption{K\&K held-out accuracy by number of people (deployment sampler $\gamma56$@64; ODE-64 in parentheses for the SFT rows).}\label{tab:kk_by_n}
+\caption{K\&K held-out accuracy by number of people (deployment sampler $\gamma56$@64; ODE-64 in parentheses for the SFT and loop rows).}\label{tab:kk_by_n}
 \begin{tabular}{@{}lcccc@{}}\toprule
 model & all & 4 people & 5 people & 6 people\\\midrule
 SFT epoch 4 (base) & 67.5 (57.8) & 86.8 (80.8) & 63.5 (57.9) & 51.8 (34.2)\\
 GRPO, seed 3 (600 iterations) & 74.6 & 92.7 & 72.6 & 58.2\\
 \jpc{} 2D, seed 1 (250 iterations) & 70.3 & 92.1 & 68.6 & 50.0\\
-fresh-problem loop, round 5 & 94.9 & 99.7 & 96.6 & 88.4\\
+fresh-problem loop, round 5 (Table~\ref{tab:main}) & 99.1 (96.0) & 100.0 (100.0) & 99.7 (97.7) & 97.6 (90.1)\\
 gold SFT epoch 6 & 95.4 (88.8) & 99.9 (99.9) & 96.8 (91.8) & 89.6 (74.8)\\
 gold SFT epoch 8 & 99.7 (96.8) & 100.0 (100.0) & 100.0 (98.5) & 99.0 (91.8)\\\bottomrule\end{tabular}\end{table}
 
 \subsection{Countdown loop round by round}
 \label{app:cd_loop}
-Table~\ref{tab:cd_loop} lists every round of the Countdown loop at all four samplers, together with a three-round loop started from the SFT base without any RL (the earlier no-RL chain; pools sampled at $\gamma28$@32 for the first two rounds and $\gamma56$@64 for the third). Three regularities are visible. (i) The loop transfers the deployment gain of the RL policy to the cheap samplers at once: one round takes the ODE sampler from $35.4$ to $42.7$ and $\gamma4$@16 from $27.4$ to $39.8$ while the deployment sampler stays at the RL level. (ii) Plain self-sampling stalls at the deployment sampler after two rounds ($51.2\to51.1\to51.1$): the pool homogenises and its coverage shrinks (36.5k to 31.1k solved problems). Rounds 3--4 therefore sample the pool with critic-guided sampling (best-of-4 pruning at step 32 by the jointly trained critic, plus classifier guidance in the sense of \citealp{dhariwal2021guidance}: the gradient of the critic's value with respect to the noisy state is added to the velocity), which restores coverage (37.7k problems) and moves the deployment sampler again ($53.8$, $54.4$). (iii) The no-RL chain improves every sampler as well, but saturates about six points lower at the deployment sampler after three rounds ($48.9$ versus $54.4$), and its cheap samplers end where the RL-started loop is after one round.
+Table~\ref{tab:cd_loop} lists every round of the Countdown loop at all four samplers, together with the three controls of Table~\ref{tab:main}, which run the same four rounds from the SFT base, from the GRPO policy, and from the 2D policy on the gold labels of the same pools. Three regularities are visible. (i) The loop transfers the policy's ability to the cheap samplers at once: one round takes the ODE sampler from $34.6$ to $41.0$ and $\gamma4$@16 from $23.9$ to $38.6$ while the deployment sampler gives back two points. (ii) Plain self-sampling loses ground at the deployment sampler ($50.4\to47.9\to46.4$) and the pool's coverage shrinks (35.1k to 31.2k solved problems). (iii) Sampling the pool with the jointly trained 2D critic (best-of-4 pruning at the window's midpoint plus gradient guidance, Appendix~\ref{app:details}) restores coverage and lifts the deployment sampler ($\OURScdthree$ after round 3, $\OURScd$ after round 4). The plain chains from the base and from the GRPO policy show the first two regularities and stop at $45$--$47$; the gold-label chain falls from $50.4$ to $44.5$ in its first round and drifts to $42.6$ by round 4 (ODE-64 from $34.6$ to $27.3$): fine-tuning the RL policy on gold derivations undoes part of what RL changed rather than adding to it.
 
 \begin{table}[H]\centering\small
-\caption{Countdown amortisation loop, held-out accuracy at the end of each round (20 epochs of fine-tuning per round; the number of verifier-accepted sequences and distinct problems in each pool is given). Top: loop started from the \jpc{} scalar policy. Middle: loop started from the SFT base with no RL. Bottom: loop started from the GRPO policy (round 1 at the checkpoint carried into round 2).}\label{tab:cd_loop}
+\caption{Countdown amortisation loop, held-out accuracy at the end of each round (20 epochs of fine-tuning per round; verifier-accepted sequences and distinct problems in each pool). From top: loop from the 2D-critic policy (Table~\ref{tab:main}); from the SFT base with no RL; from the GRPO policy; from the 2D-critic policy on the gold labels of the same pools.}\label{tab:cd_loop}
 \resizebox{\linewidth}{!}{%
 \begin{tabular}{@{}llcccc@{}}\toprule
 round & pool & ODE64 & $\gamma4$@16 & $\gamma28$@32 & $\gamma56$@64\\\midrule
 SFT base (epoch 60) & & 28.1 & 23.1 & 38.0 & 42.2\\
-\jpc{} scalar policy (start) & & 35.4 & 27.4 & 41.8 & 51.2\\
-round 1 & deployment sampler, 96k sequences / 36.5k problems & 42.7 & 39.8 & 49.6 & 51.1\\
-round 2 & deployment sampler, 58.7k / 31.1k & 46.2 & 44.5 & 50.3 & 51.1\\
-round 3 & critic-guided sampler, 103.4k / 37.7k & 48.9 & 47.3 & 53.1 & 53.8\\
-round 4 & critic-guided sampler from round 3 & 51.1 & 48.8 & 54.8 & 54.4\\\midrule
-no-RL round 1 & $\gamma28$@32 samples of the base & 39.0 & 36.2 & 44.7 & 46.0\\
-no-RL round 2 & $\gamma28$@32 samples of round 1 & 44.2 & 41.5 & 46.7 & 47.1\\
-no-RL round 3 & $\gamma56$@64 samples of round 2 & 43.3 & 42.5 & 47.1 & 48.9\\\midrule
+\jpc{} 2D policy (start) & & 34.6 & 23.9 & 44.5 & 50.4\\
+round 1 & deployment sampler, 91.9k sequences / 35.1k problems & 41.0 & 38.6 & 46.4 & 47.9\\
+round 2 & deployment sampler, 57.4k / 31.2k & 42.5 & 41.4 & 44.9 & 46.4\\
+round 3 & 2D-critic-guided sampler, \OURSpoolthree & \OURScdthreeo & \OURScdthreeg & \OURScdthreet & \OURScdthree\\
+round 4 & 2D-critic-guided sampler, \OURSpoolfour & \OURScdo & \OURScdg & \OURScdt & \OURScd\\\midrule
+no-RL round 1 & deployment sampler, 82.4k / 34.2k & 39.8 & 35.8 & 44.7 & 46.1\\
+no-RL round 2 & 59.1k / 30.8k & 43.2 & 40.8 & 46.2 & 46.5\\
+no-RL round 3 & 52.2k / 30.8k & 43.8 & 42.7 & 45.6 & 46.7\\
+no-RL round 4 & 48.5k / 31.2k & 44.1 & 41.9 & 46.4 & 46.2\\\midrule
 GRPO policy (start; seed 3, iteration 500) & & 28.9 & 24.3 & 39.6 & 43.3\\
-GRPO round 1 & deployment sampler, 82.7k / 34.1k & 36.2 & 30.4 & 43.7 & 45.1\\
-GRPO round 2 & deployment sampler, 65.5k / 30.8k & 40.2 & 36.0 & 44.4 & 44.8\\\bottomrule\end{tabular}}\end{table}
+GRPO round 1 & deployment sampler, 82.7k / 34.1k & 41.3 & 37.0 & 45.6 & 45.9\\
+GRPO round 2 & 58.3k / 30.5k & 43.5 & 39.8 & 45.4 & 46.2\\
+GRPO round 3 & 51.3k / 30.4k & 44.5 & 41.1 & 45.4 & 46.2\\
+GRPO round 4 & 47.2k / 30.9k & 42.1 & 41.6 & 44.4 & 45.1\\\midrule
+gold round 1 & gold derivations, 50k / 50k & 28.3 & 24.7 & 39.3 & 44.5\\
+gold round 2 & & 28.3 & 23.2 & 39.9 & 42.1\\
+gold round 3 & & 27.0 & 23.2 & 38.8 & 42.0\\
+gold round 4 & & 27.3 & 21.9 & 37.6 & 42.6\\\bottomrule\end{tabular}}\end{table}
 
 \subsection{Per-position critic values as a credit map}
 \label{app:critic_maps}
-The 2D critic produces one value per generated position at every step of the trajectory. Figure~\ref{fig:critic_maps} shows $\sigma(R_i)$ for held-out rollouts of the jointly trained critics (Game24: seed-2 critic after 1000 iterations; Sudoku: after 500), and Table~\ref{tab:critic_maps} quantifies what these maps contain on 96 held-out rollouts per task. Two things are visible. First, the pooled value separates successful from failed trajectories progressively along the trajectory: the area under the ROC curve (AUC) of the pooled value against the final outcome rises from $0.60$ at $k{=}4$ to $0.998$ at $k{=}56$ of 64 on Game24, and from $0.78$ at $k{=}2$ to $1.00$ at $k{=}30$ of 32 on Sudoku, i.e.\ the critic has learned when the trajectory commits. Second, the per-position values carry \emph{some} localisation but are dominated by the sequence-level signal: on Sudoku, ranking all $7{,}776$ cells of the 96 samples by $\sigma(R_i)$ at the last step separates wrong from right cells with AUC $0.92$, but most of that comes from wrong samples being uniformly low; restricted to the cells \emph{within} incorrect samples the AUC is $0.56$--$0.63$ at every $k$. On Game24 the maps are organised by equation (values change at equation boundaries, and in the failed sample the low values concentrate on one equation), but they are not a step verifier. We therefore use the per-position values only as a measurement and filtering tool, as stated in \S\ref{sec:method}; the optimisation uses their mean.
+The 2D critic produces one value per generated position at every step of the trajectory. Figure~\ref{fig:critic_maps} shows $\mathrm{sig}(R_i)$ for held-out rollouts of the jointly trained critics (Game24: seed-2 critic after 1000 iterations; Sudoku: after 500), and Table~\ref{tab:critic_maps} quantifies what these maps contain on 96 held-out rollouts per task. Two things are visible. First, the pooled value separates successful from failed trajectories progressively along the trajectory: the area under the ROC curve (AUC) of the pooled value against the final outcome rises from $0.60$ at $k{=}4$ to $0.998$ at $k{=}56$ of 64 on Game24, and from $0.78$ at $k{=}2$ to $1.00$ at $k{=}30$ of 32 on Sudoku, i.e.\ the critic has learned when the trajectory commits. Second, the per-position values carry \emph{some} localisation but are dominated by the sequence-level signal: on Sudoku, ranking all $7{,}776$ cells of the 96 samples by $\mathrm{sig}(R_i)$ at the last step separates wrong from right cells with AUC $0.92$, but most of that comes from wrong samples being uniformly low; restricted to the cells \emph{within} incorrect samples the AUC is $0.56$--$0.63$ at every $k$. On Game24 the maps are organised by equation (values change at equation boundaries, and in the failed sample the low values concentrate on one equation), but they are not a step verifier. We therefore use the per-position values only as a measurement and filtering tool, as stated in \S\ref{sec:method}; the optimisation uses their mean.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.98\linewidth]{figures/fig_critic_maps.pdf}
-\caption{Per-position critic values $\sigma(R_i)$ (colour) along the deployment-sampler trajectory (rows: denoising step $k$; columns: generated positions, labelled by the decoded token for Game24 and by Sudoku row) for one correct and one incorrect held-out sample per task. The correct samples are the median-valued correct rollout; the incorrect Game24 sample is the median-valued failed rollout and the incorrect Sudoku sample the failed rollout with the fewest wrong cells (dotted lines and markers).}
+\caption{Per-position critic values $\mathrm{sig}(R_i)$ (colour) along the deployment-sampler trajectory (rows: denoising step $k$; columns: generated positions, labelled by the decoded token for Game24 and by Sudoku row) for one correct and one incorrect held-out sample per task. The correct samples are the median-valued correct rollout; the incorrect Game24 sample is the median-valued failed rollout and the incorrect Sudoku sample the failed rollout with the fewest wrong cells (dotted lines and markers).}
 \label{fig:critic_maps}
 \end{figure}
 
 \begin{table}[H]\centering\small
-\caption{What the critic maps contain (96 held-out rollouts per task, jointly trained critics). Sequence AUC: pooled $\sigma(R_i)$ against the final outcome. Sudoku cell AUC: $\sigma(R_i)$ against per-cell correctness, over all cells and within incorrect samples only.}\label{tab:critic_maps}
+\caption{What the critic maps contain (96 held-out rollouts per task, jointly trained critics). Sequence AUC: pooled $\mathrm{sig}(R_i)$ against the final outcome. Sudoku cell AUC: $\mathrm{sig}(R_i)$ against per-cell correctness, over all cells and within incorrect samples only.}\label{tab:critic_maps}
 \resizebox{\linewidth}{!}{%
 \begin{tabular}{@{}lcccccccc@{}}\toprule
 Game24, step $k$ of 64 & 4 & 8 & 16 & 24 & 32 & 40 & 48 & 56\\\midrule
 sequence AUC & 0.60 & 0.57 & 0.65 & 0.78 & 0.86 & 0.94 & 0.98 & 1.00\\
-mean $\sigma(R_i)$, correct / incorrect & 0.41/0.37 & 0.45/0.38 & 0.60/0.40 & 0.64/0.39 & 0.68/0.37 & 0.72/0.34 & 0.73/0.32 & 0.73/0.30\\\midrule
+mean $\mathrm{sig}(R_i)$, correct / incorrect & 0.41/0.37 & 0.45/0.38 & 0.60/0.40 & 0.64/0.39 & 0.68/0.37 & 0.72/0.34 & 0.73/0.32 & 0.73/0.30\\\midrule
 Sudoku, step $k$ of 32 & 2 & 4 & 8 & 12 & 16 & 20 & 24 & 30\\\midrule
 sequence AUC & 0.78 & 0.88 & 0.94 & 0.97 & 0.96 & 0.97 & 0.99 & 1.00\\
-mean $\sigma(R_i)$, correct / incorrect & 0.42/0.20 & 0.68/0.18 & 0.78/0.18 & 0.83/0.16 & 0.84/0.15 & 0.84/0.10 & 0.85/0.09 & 0.87/0.07\\
+mean $\mathrm{sig}(R_i)$, correct / incorrect & 0.42/0.20 & 0.68/0.18 & 0.78/0.18 & 0.83/0.16 & 0.84/0.15 & 0.84/0.10 & 0.85/0.09 & 0.87/0.07\\
 cell AUC, within incorrect samples & 0.63 & 0.61 & 0.56 & 0.60 & 0.60 & 0.61 & 0.63 & 0.63\\\bottomrule\end{tabular}}\end{table}
 
 \subsection{Training dynamics on Countdown and Knights-and-Knaves}
 \label{app:dynamics_cd_kk}
-Figure~\ref{fig:dynamics_cd_kk} completes Figure~\ref{fig:curves} with the two remaining tasks, for the same recipe (2D critic, $10^{-6}$, joint training). The pattern is the one described in \S\ref{sec:ablations}: held-out accuracy at the deployment sampler rises to a peak (Countdown $+6.2$ at 750 iterations, K\&K $+2.8$ at 250) while the replay-buffer success rate and the critic's value on the training batch move together; past the peak the held-out accuracy declines slowly and, on Countdown, collapses between 1250 and 1500 iterations ($45.4\to25.2$) before the training-side signals show a comparable drop (the buffer success rate is still $47$--$49\%$ at 1250), which is why the held-out set, not the training batch, decides the early-stopping point. K\&K is the task with the smallest RL gain for both \jpc{} and GRPO (Table~\ref{tab:full_kk}); its peak is early and shallow, and the fresh-problem loop, not RL, is what moves it (Appendix~\ref{app:kk_by_n}).
+Figure~\ref{fig:dynamics_cd_kk} completes Figure~\ref{fig:curves} with the two remaining tasks, for the same Algorithm~\ref{alg:jpc} runs (2D critic, cosine $10^{-6}\!\to\!10^{-7}$). Countdown (seed 3) rises to $47.1$ by 500 iterations and holds a plateau of $47.1$--$47.5$ to 1250 before dipping to $45.9$ at 1500, while the replay-buffer success rate keeps climbing from $46\%$ to $48$--$50\%$: the training batch improves after the held-out set has stopped, which is why the held-out set decides the reported checkpoint. K\&K (seed 1) rises monotonically ($75.2$, $78.4$, $79.3$, $79.5$) and is still at its peak when the schedule ends at 1000 iterations; its buffer success rate and critic value rise together over the whole run. Under the cosine schedule no run reaches the collapse that constant-learning-rate runs showed (Appendix~\ref{app:frozen}); the four seeds of Figures~\ref{fig:curves} and~\ref{fig:dynamics_cd_kk} end $0.0$--$5.2$ points below their peaks (Sudoku's seed 3 is the one that falls below its base, to $65.5$ at 1000 iterations).
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.85\linewidth]{figures/fig_dynamics_cd_kk.pdf}
-\caption{Training dynamics of \jpc{} (2D critic, $10^{-6}$) on Countdown (left) and K\&K (right): held-out accuracy at the deployment sampler per checkpoint (blue), replay-buffer success rate (grey), and the critic's value on the training batch (red, right axis); dotted line: SFT base.}
+\caption{Training dynamics of Algorithm~\ref{alg:jpc} (2D critic) on Countdown (left) and K\&K (right): held-out accuracy at the deployment sampler per checkpoint (blue), replay-buffer success rate (grey), and the critic's value on the training batch (red, right axis); dotted line: SFT base.}
 \label{fig:dynamics_cd_kk}
 \end{figure}
 
@@ -270,9 +234,9 @@ base model & method & Countdown & Sudoku & K\&K & Game24\\\midrule
 LLaDA-8B-Instruct & + task SFT & \PENDScd & \PENDSsd & \PENDSkk & \PENDSgt\\
 LLaDA-8B-Instruct & + task SFT + diffu-GRPO (best ckpt) & \PENDcd & \PENDsd & \PENDkk & \PENDgt\\\midrule
 ELF-B (105M) & task SFT (base) & 42.2 & 66.2 & 67.5 & 45.0\\
-ELF-B (105M) & + GRPO & \pendA & 67.8 & 71.6 & 47.0\\
-ELF-B (105M) & + \jpc{}, scalar critic & 47.7 & 55.6 & 70.5 & 47.4\\
-ELF-B (105M) & + \jpc{}, 2D critic & 47.9 & 69.7 & 70.5 & 58.7\\\bottomrule\end{tabular}}\end{table}
+ELF-B (105M) & + GRPO & 43.1 & 69.7 & 71.6 & 47.5\\
+ELF-B (105M) & + \jpc{}, scalar critic & 48.2 & 66.3 & 77.6 & 51.4\\
+ELF-B (105M) & + \jpc{}, 2D critic & 50.2 & 71.0 & 79.6 & 58.8\\\bottomrule\end{tabular}}\end{table}
 
 The 8B masked-diffusion model is far below the 105M flow model on every task, before and after RL; diffu-GRPO adds at most $+1$ to $+3$ points over its starting point on any task in either arm, and on Sudoku it never produces a solved grid. Two caveats apply. The comparison is across architectures \emph{and} training histories: LLaDA-8B-Instruct was never trained on these tasks, and our supervised stage for it is small (about two GPU-hours per task), whereas ELF-B was fine-tuned on the full training sets; a larger supervised budget would raise the LLaDA rows, and we make no claim about the ceiling of masked diffusion models. What the table does show is the behaviour of the estimator: diffu-GRPO moves the zero-shot model little on the arithmetic tasks within d1's own budget and lifts K\&K by a few points, consistent with d1's own results on its easier three-number Countdown and $4{\times}4$ Sudoku, where the reported gains are largest when the base already solves a sizeable fraction of problems.
 
@@ -288,24 +252,7 @@ Figure~\ref{fig:frozen} shows the exploit directly on Game24 (2D critic, $10^{-6
 \end{figure}
 
 \subsection{Negative results on stabilising the large-learning-rate regime}
-Against the collapse of 2D-critic runs at $3\times10^{-6}$ we tried: a lower critic learning rate; an EMA target critic for the actor objective; both; a 16k buffer; resuming the critic together with the actor at a lower learning rate; and refining a 2D-explored actor with a scalar critic. The 16k buffer keeps the first 750 iterations stable; every continuation beyond about 1000 total iterations collapses ($-14$ to $-19$ at $\gamma28/\gamma56$ on Countdown). The learning rate of $10^{-6}$ is the change that made the 2D critic usable, and it too collapses eventually (Countdown at 1000--1250 iterations, Sudoku at about 900, Game24 not within 1500), which is why the held-out peak is part of the recipe. Earlier in the Countdown campaign we also compared the one-step update with back-propagating through five to eight consecutive transitions (critic refreshed between updates, training at $\gamma4$@16): the multi-step form was never better than the one-step form at the same iteration count and degraded the heavier samplers within 600 iterations, so all reported runs use one random step (Appendix~\ref{app:pw_derivation}).
-
-\subsection{Hyper-parameter sweep of the 2D critic on Knights-and-Knaves}
-\label{app:kk_sweep}
-K\&K is the one task on which the 2D critic does not lead (Table~\ref{tab:main}). To test whether its $70.5$ is limited by the recipe's settings rather than by the task, we varied one setting at a time from the reference configuration (actor $10^{-6}$, 32 prompts per iteration, 2 critic steps per iteration, flow-step window $8$--$40$ of 64), one seed each, and evaluated every 250 iterations (Table~\ref{tab:kk_sweep}). No variant exceeds the reference seeds' $70.3$--$70.8$ by more than evaluation jitter, every variant is past its peak by 500 iterations, and the higher actor rate collapses; the two runs that were still in progress were stopped once their curves had turned down. Table~\ref{tab:main} therefore reports the reference configuration.
-
-\begin{table}[H]\centering\small
-\caption{K\&K, 2D critic: deployment-sampler accuracy by iteration for one-at-a-time changes to the reference configuration (base 67.5; ODE-64 in parentheses at the peak). ``--'': not run to that point.}\label{tab:kk_sweep}
-\begin{tabular}{@{}lcccc@{}}\toprule
-variant & @250 & @500 & @750 & @1000\\\midrule
-reference, seeds 1/2/3 & 70.3/70.3/70.8 (62.3/62.7/61.6) & 67.7/67.9/67.8 & --- & ---\\
-actor $5\times10^{-7}$ & 68.1 & 69.5 (61.6) & 68.7 & 65.8\\
-64 prompts per iteration & 69.3 (62.4) & 63.0 & --- & ---\\
-4 critic steps per iteration & 71.0 (62.6) & 69.0 & 69.0 & 68.0\\
-window $16$--$48$ & 68.8 (60.6) & 66.5 & 64.8 & 62.5\\
-window $4$--$32$ & 71.2 (63.8) & 69.2 & 65.1 & 66.0\\
-64 prompts, actor $2\times10^{-6}$ & 65.0 (63.0) & 53.6 & --- & ---\\
-\bottomrule\end{tabular}\end{table}
+Against the collapse of 2D-critic runs at $3\times10^{-6}$ we tried: a lower critic learning rate; an EMA target critic for the actor objective; both; a 16k buffer; resuming the critic together with the actor at a lower learning rate; and refining a 2D-explored actor with a scalar critic. The 16k buffer keeps the first 750 iterations stable; every continuation beyond about 1000 total iterations collapses ($-14$ to $-19$ at $\gamma28/\gamma56$ on Countdown). The learning rate of $10^{-6}$ is the change that made the 2D critic usable, and it too collapses eventually (Countdown at 1000--1250 iterations, Sudoku at about 900, Game24 not within 1500), which is why the held-out peak is part of the recipe; with the cosine schedule of Algorithm~\ref{alg:jpc} no run of Table~\ref{tab:main} declines before its last checkpoint, although the peak level is unchanged. Earlier in the Countdown campaign we also compared the one-step update with back-propagating through five to eight consecutive transitions (critic refreshed between updates, training at $\gamma4$@16): the multi-step form was never better than the one-step form at the same iteration count and degraded the heavier samplers within 600 iterations, so all reported runs use one random step (Appendix~\ref{app:pw_derivation}).
 
 \subsection{Critic quality metrics}
 \label{app:critic_quality}
