@@ -10,9 +10,9 @@ ELF also provides a stochastic sampler with churn parameter $\gamma$, which re-i
 \begin{equation}
 y_k=\alpha_k z_{k-1}+(1-\alpha_k)c_\sigma\varepsilon_k, z_k=y_k+(t_k-\tilde t_k)v_\theta(y_k,\tilde t_k,c;\hat x_{k-1})=:D_\theta(s_k), s_k=(y_k,\hat x_{k-1})
 \end{equation}
-where $\tilde t_k=\alpha_k t_{k-1}$, $\alpha_k=1-\gamma h_k$, and $\varepsilon_k=(\varepsilon_{k,i})_{i=1}^{|\mathcal G|}$ with $\varepsilon_{k,i}\overset{\mathrm{iid}}{\sim}\mathcal N(0,I_d)$. The states $s_k$ form a Markov chain with trajectory $\tau=(s_k)_{k=1}^{K-1}$ and exact Gaussian density:
+where $\tilde t_k=\alpha_k t_{k-1}$, $\alpha_k=1-\gamma h_k$, and $\varepsilon_k=(\varepsilon_{k,i})_{i=1}^{|\mathcal G|}$ with $\varepsilon_{k,i}\overset{\mathrm{iid}}{\sim}\mathcal N(0,I_d)$. The states $s_k$ form a Markov chain with trajectory $\tau=(s_k)_{k=1}^{K-1}$ and exact Gaussian density with $\sigma_k=(1-\alpha_k)c_\sigma$:
 \begin{equation}
-y_{k,i}=\alpha_kD_\theta(s_{k-1})_i+\sigma_k\varepsilon_{k,i}, p_\theta(\tau\mid c)=\prod_{k=1}^{K-1}\prod_{i=1}^{|\mathcal G|}\mathcal N\!\left(y_{k,i};\alpha_kD_\theta(s_{k-1})_i,\sigma_k^2I_d\right), \sigma_k=(1-\alpha_k)c_\sigma
+y_{k,i}=\alpha_kD_\theta(s_{k-1})_i+\sigma_k\varepsilon_{k,i}, \quad p_\theta(\tau\mid c)=\prod_{k=1}^{K-1}\prod_{i=1}^{|\mathcal G|}\mathcal N\!\left(y_{k,i};\alpha_kD_\theta(s_{k-1})_i,\sigma_k^2I_d\right)
 \label{eq:chain}
 \end{equation}
 where $k$ and $i$ denote the flow step and token position. The response $w=w_\theta(s_{K-1})$ is obtained deterministically by advancing $z_{K-1}=D_\theta(s_{K-1})$ to $t_K=1$ and applying decoder argmax.
