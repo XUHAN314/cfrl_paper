@@ -1,58 +1,57 @@
 \section{What the joint training needs}
 \label{sec:ablations}
-Table~\ref{tab:needs} removes one element of Algorithm~\ref{alg:jpc} at a time on Game24 and reads each row against the paragraph of \S\ref{sec:joint} that introduced the element; Figure~\ref{fig:frozen} shows the first row's failure directly. Rows are compared within their block, since the three blocks were run under successive versions of the recipe (Appendix~\ref{app:details}).
+Table~\ref{tab:needs} removes one element of Algorithm~\ref{alg:jpc} at a time on Game24 and reads each row against the paragraph of \S\ref{sec:joint} (or \S\ref{sec:pathwise}, \S\ref{sec:jpc_2d}) that introduced the element. The question for every row is the same, whether the run still reaches the reference level and whether it holds it, so the table reports where a run stands early, at its best and at its end; the full checkpoint trajectories are in Appendix~\ref{app:needs_full}. Rows are compared within their block, since the three blocks were run under successive versions of the recipe (Appendix~\ref{app:details}); Figure~\ref{fig:frozen} shows the failure of the first row of block C directly.
 
 \begin{table}[t]
 \centering\small
-\caption{Ablations of the joint training on Game24. Each cell is the held-out accuracy (\%) at the deployment sampler of the checkpoint saved after that many actor iterations, for one run with the named element of Algorithm~\ref{alg:jpc} changed; \emph{best} is the highest cell of the row; the SFT base is $45.0$. Reference rows are means of three seeds, the other rows single runs. The first column names the paragraph of \S\ref{sec:joint} (or \S\ref{sec:pathwise}, \S\ref{sec:jpc_2d}) whose choice the row tests. Blocks were run under three versions of the recipe and are compared within a block: A is Algorithm~\ref{alg:jpc}; B stores five evenly spaced steps of the window in the buffer instead of $k_{\rm hi}$; C is the first version (pooled loss term only, constant learning rate, no AUC check, 1000 iterations).}
+\caption{Ablations of the joint training on Game24, held-out accuracy (\%) at the deployment sampler. \emph{At 500}: the checkpoint after 500 actor iterations; \emph{best}: the highest checkpoint of the run, with its iteration; \emph{final}: the last checkpoint of the schedule (1500 iterations in blocks A and B, 1000 in C). Reference rows are means of three seeds (their \emph{best} is the mean of the per-seed peaks), the other rows single runs; the SFT base is $45.0$. Blocks are compared within themselves: A is Algorithm~\ref{alg:jpc}; B stores five evenly spaced steps of the window in the buffer instead of $k_{\rm hi}$; C is the first version (pooled loss term only, constant learning rate, no AUC check).}
 \label{tab:needs}
 \resizebox{\linewidth}{!}{%
-\begin{tabular}{@{}llcccccc|c@{}}
+\begin{tabular}{@{}llccc@{}}
 \toprule
-tests & variant & \multicolumn{6}{c}{accuracy after $n$ actor iterations} & best \\
- & & $n{=}250$ & 500 & 750 & 1000 & 1250 & 1500 & \\
+tests & variant & at 500 & best (iteration) & final \\
 \midrule
-\multicolumn{9}{@{}l}{\emph{A. Algorithm~\ref{alg:jpc} (single-step buffer, both loss terms, AUC check, cosine decay)}}\\
- & \hl{reference (3 seeds)} & 50.2 & 56.4 & 58.8 & 58.1 & 58.1 & 58.0 & \textbf{58.8} \\
-\S\ref{sec:pathwise}, objective & actor ascends $\mathrm{sig}(V_\phi)$ instead of $V_\phi$ & \ABp{1} & \ABp{2} & \ABp{3} & \ABp{4} & \ABp{5} & \ABp{6} & \ABp{7} \\
-\S\ref{sec:jpc_2d}, pooling & actor ascends $\min_iR_{k,i}$ instead of the mean & \ABm{1} & \ABm{2} & \ABm{3} & \ABm{4} & \ABm{5} & \ABm{6} & \ABm{7} \\
- & \emph{Countdown:} reference (3 seeds; base $42.2$) & 44.0 & 46.6 & 49.3 & 49.6 & 50.1 & 50.0 & 50.2 \\
-\S\ref{sec:pathwise}, objective & \emph{Countdown:} actor ascends $\mathrm{sig}(V_\phi)$ & \ABcp{1} & \ABcp{2} & \ABcp{3} & \ABcp{4} & \ABcp{5} & \ABcp{6} & \ABcp{7} \\
+\multicolumn{5}{@{}l}{\emph{A. Algorithm~\ref{alg:jpc} (single-step buffer, both loss terms, AUC check, cosine decay)}}\\
+ & \hl{reference (3 seeds)} & 56.4 & \textbf{58.8} (750) & 58.0 \\
+\S\ref{sec:pathwise}, objective & actor ascends $\mathrm{sig}(V_\phi)$ instead of $V_\phi$ & \ABp{2} & \ABp{7} (500) & \ABp{6} \\
+\S\ref{sec:jpc_2d}, pooling & actor ascends $\min_iR_{k,i}$ instead of the mean & \ABm{2} & \ABm{7} (1250) & \ABm{6} \\
+ & \emph{Countdown:} reference (3 seeds; base $42.2$) & 46.6 & 50.2 (1250) & 50.0 \\
+\S\ref{sec:pathwise}, objective & \emph{Countdown:} actor ascends $\mathrm{sig}(V_\phi)$ & \ABcp{2} & \ABcp{7} (1000) & \ABcp{6} \\
 \midrule
-\multicolumn{9}{@{}l}{\emph{B. Five-step buffer}}\\
-\S\ref{sec:joint}, where the head is refitted & reference (3 seeds) & 50.3 & 57.2 & 58.8 & 58.6 & 57.9 & 58.4 & 58.9 \\
-\S\ref{sec:jpc_2d}, supervision & pooled loss term only & 47.9 & 53.2 & 57.3 & 58.6 & 58.5 & 59.0 & 59.0 \\
-\S\ref{sec:joint}, critic ahead of actor & no AUC check & 49.6 & 55.1 & 58.2 & 58.7 & 58.7 & 57.7 & 58.7 \\
-\S\ref{sec:joint}, step size & constant learning rate $10^{-6}$ & 50.1 & 57.7 & 57.9 & 56.7 & 54.3 & 48.7 & 57.9 \\
-\S\ref{sec:joint}, step size & learning rate $3\times10^{-6}$ & 58.0 & 48.8 & 34.4 & 30.3 & --- & --- & 58.0 \\
+\multicolumn{5}{@{}l}{\emph{B. Five-step buffer}}\\
+\S\ref{sec:joint}, where the head is refitted & reference (3 seeds) & 57.2 & 58.9 (750) & 58.4 \\
+\S\ref{sec:jpc_2d}, supervision & pooled loss term only & 53.2 & 59.0 (1500) & 59.0 \\
+\S\ref{sec:joint}, critic ahead of actor & no AUC check & 55.1 & 58.7 (1000) & 57.7 \\
+\S\ref{sec:joint}, step size & constant learning rate $10^{-6}$ & 57.7 & 57.9 (750) & 48.7 \\
+\S\ref{sec:joint}, step size & learning rate $3\times10^{-6}$ (stopped at 1000) & 48.8 & 58.0 (250) & 30.3 \\
 \midrule
-\multicolumn{9}{@{}l}{\emph{C. Earlier recipe}}\\
- & reference (3 seeds) & 48.7 & 50.9 & 53.0 & 56.4 & --- & --- & 56.4 \\
-\S\ref{sec:joint}, critic must move & critic frozen after pre-training & 48.4 & 48.0 & \phantom{0}2.1 & \phantom{0}0.3 & --- & --- & 48.4 \\
-\S\ref{sec:joint}, critic ahead of actor & $m_{\rm c}{=}1$ head step per actor step & 48.0 & 51.7 & 48.6 & 51.1 & --- & --- & 51.7 \\
- & $m_{\rm c}{=}8$ & 47.0 & 52.3 & 54.7 & 55.2 & --- & --- & 55.2 \\
-\S\ref{sec:joint}, staleness & buffer $N_{\mathcal B}{=}4$k instead of 16k & 47.8 & 50.1 & 52.6 & 56.4 & --- & --- & 56.4 \\
-\S\ref{sec:joint}, one chain & trained under $\gamma4$@16, read at $\gamma56$@64 & 44.7 & 44.3 & 41.5 & 47.0 & --- & --- & 47.0 \\
- & \quad the same run read at $\gamma4$@16 (base $35.4$) & 35.1 & 38.7 & 41.3 & 42.5 & --- & --- & 42.5 \\
+\multicolumn{5}{@{}l}{\emph{C. Earlier recipe}}\\
+ & reference (3 seeds) & 50.9 & 56.4 (1000) & 56.4 \\
+\S\ref{sec:joint}, critic must move & critic frozen after pre-training & 48.0 & 48.4 (250) & \phantom{0}0.3 \\
+\S\ref{sec:joint}, critic ahead of actor & $m_{\rm c}{=}1$ head step per actor step & 51.7 & 51.7 (500) & 51.1 \\
+ & $m_{\rm c}{=}8$ & 52.3 & 55.2 (1000) & 55.2 \\
+\S\ref{sec:joint}, staleness & buffer $N_{\mathcal B}{=}4$k instead of 16k & 50.1 & 56.4 (1000) & 56.4 \\
+\S\ref{sec:joint}, one chain & trained under $\gamma4$@16, read at $\gamma56$@64 & 44.3 & 47.0 (1000) & 47.0 \\
+ & \quad the same run read at $\gamma4$@16 (base $35.4$) & 38.7 & 42.5 (1000) & 42.5 \\
 \bottomrule
 \end{tabular}}
 \end{table}
 
 \paragraph{The critic must move with the policy.}
-Frozen after pre-training, the critic is exploited exactly as~(\ref{eq:biasm}) predicts: the update helps for 500 iterations, then between iterations 500 and 800 the critic's value on the training batch climbs from $\approx3$ to $\approx90$ while the true success of the same batch falls to zero (Figure~\ref{fig:frozen}). Two head steps per actor step on the buffer keep the value calibrated; one step lags from 750 iterations on, eight match two, and a 4k buffer matches 16k.
+The first row of block C is the one that fails outright. Frozen after pre-training, the critic is exploited exactly as~(\ref{eq:biasm}) predicts, and Figure~\ref{fig:frozen} shows the sequence: the update helps for a few hundred iterations, then the critic's value on the training batch is driven towards certainty while the true success of the same batch falls to zero, and the held-out policy follows it down. The remaining rows of the block calibrate how much refitting is enough: two head steps per actor step on the buffer keep the value calibrated, one step falls behind from the middle of the run, eight match two, and a buffer a quarter of the size matches the full one, so within this range the refit is not the bottleneck; \S\ref{sec:exp_critic} shows the case, the pooled head on Countdown, where it becomes one.
 
 \paragraph{What the actor ascends.}
-Ascending the critic's probability $\mathrm{sig}(V_\phi)$ instead of its logit reaches $54.8$ at 500 iterations on Game24 and then drifts to $51.9$, seven points below the reference at the same schedule; on Countdown it trails the reference by one to three points throughout. The probability's gradient vanishes on the states whose outcome is nearly decided, and the actor's steps concentrate on the remaining ones; the log-odds keeps every state in play, as \S\ref{sec:pathwise} argues. Pooling the field by its minimum instead of its mean costs three points at every checkpoint ($55.7$ against $58.8$ at best): the minimum trains one position per state and the mean trains all of them.
+Two rows of block A test the objective. Ascending the critic's probability instead of its log-odds reaches a lower level early and then drifts down, on Game24 and on Countdown alike: the probability's gradient vanishes on the states whose outcome is nearly decided, so the actor's steps concentrate on the remaining ones and the decided states are left to drift, which is why \S\ref{sec:pathwise} ascends the logit. Pooling the field by its minimum instead of its mean costs about three points at every checkpoint: the minimum trains one position per state, the mean trains all of them, the reason \S\ref{sec:jpc_2d} keeps the mean for training and reserves the minimum for ranking single samples.
 
 \paragraph{Where the head is refitted, and the step size.}
-Refitting at the top of the window (block A) and at five steps of the window (block B) agree on Game24 within a point; on Countdown, where the outcome is not readable before the middle of the chain (held-out AUC $0.64$ at steps 8--24 against $0.90$ at step 40), the five-step buffer costs three points ($46.9/46.0/47.5$ against $50.1/50.2/50.4$ over three seeds). Both loss terms and the AUC check change the speed of the first 500 iterations by $2$--$4$ points and not the level. The step size is the setting that separates a run that holds from one that collapses: at $3\times10^{-6}$ the run reaches $58.0$ at 250 iterations and falls to $30.3$ by 1000; at a constant $10^{-6}$ it holds to 750 and loses nine points by 1500; with the cosine decay every seed of Table~\ref{tab:main} holds to its last checkpoint.
+Blocks A and B differ in where the buffer's states come from, the top of the window or five steps across it, and on Game24 the two agree within a point; on Countdown, where the outcome is not readable before the middle of the chain, the five-step buffer costs three points (Appendix~\ref{app:needs_full}), which is why Algorithm~\ref{alg:jpc} refits at $k_{\rm hi}$. The second loss term and the AUC check change how fast the first 500 iterations move, not the level reached. The step size is the setting that separates a run that holds from one that collapses, in both blocks: at three times the reference rate the run reaches the reference level in 250 iterations and loses half of it by 1000, at a constant rate it holds for 750 iterations and then loses nine points, and with the cosine decay every seed of Table~\ref{tab:main} holds to its last checkpoint. This is the bias argument of \S\ref{sec:joint}: the error of a refit critic is paid at every actor step in proportion to the step.
 
 \paragraph{One chain.}
-Trained under the cheap $\gamma4$@16 chain, the policy improves that chain by $+7.1$ and ends twelve points below the deployment-trained runs at the deployment sampler: the value, and with it the improvement, belongs to the chain it was defined on, which is why Algorithm~\ref{alg:jpc} trains under the sampler that will be deployed and why \S\ref{sec:loop} is needed for the others.
+The last two rows of block C train under the cheap $\gamma4$@16 chain. The policy improves that chain by seven points and, read at the deployment sampler, ends twelve points below the runs trained there: the value, and with it the improvement, belongs to the chain it was defined on. This is why Algorithm~\ref{alg:jpc} trains under the sampler that will be deployed, and why the loop of \S\ref{sec:loop} is needed to reach the others.
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.9\linewidth]{figures/fig_frozen.pdf}
-\caption{Frozen against jointly trained critic on Game24 (2D critic, $10^{-6}$). Red: the critic's value on the training batch; grey: the true success rate of that batch; blue: held-out accuracy at the deployment sampler. With a frozen critic the value is driven to $\approx90$ while success collapses to zero; with the head refitted after every actor step the value stays calibrated and the policy improves.}
+\caption{Frozen against jointly trained critic on Game24 (2D critic, $10^{-6}$). Red: the critic's value on the training batch; grey: the true success rate of that batch; blue: held-out accuracy at the deployment sampler. With a frozen critic the value is driven towards certainty while success collapses to zero; with the head refitted after every actor step the value stays calibrated and the policy improves.}
 \label{fig:frozen}
 \end{figure}
