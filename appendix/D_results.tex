@@ -144,6 +144,29 @@ AR GPT-2 (124M) + token-level GRPO/PPO & same estimator, AR actions & $+9.7$ \\
 \end{tabular}
 \end{table}
 
+\subsubsection{The two estimators on the same rollouts: SNR and half-split cosine}
+\label{app:snr}
+Table~\ref{tab:snr} gives the numbers behind Figure~\ref{fig:estimator}.
+\begin{table}[H]
+\centering\small
+\caption{The score-function~(\ref{eq:sf}) and pathwise~(\ref{eq:pw}) estimators on Game24 rollouts of the SFT policy at flow step $k{=}24$ of 64 (256 rollouts for the SNR, up to 2{,}048 for the half-split cosine; pathwise term with the pre-trained 2D critic). SNR: norm of the mean per-sample gradient over its root-mean-square deviation; a zero-mean estimator sits at $1/\sqrt N=0.0625$, the $A{=}1$ row. Half-split cosine: agreement between the mean gradients of two disjoint halves of the rollouts (mean$\pm$sd over 10 splits) as the number of rollouts grows; a genuine signal rises with $N$, a zero-mean estimator stays at $0$. Last row: the same statistic for GPT-2's token-level GRPO on Countdown. Other steps, the LLaDA gradient and the derivation are in Appendix~\ref{app:discrete_snr}.}
+\label{tab:snr}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lc|ccc@{}}
+\toprule
+ & SNR, $N{=}256$ & \multicolumn{3}{c}{half-split cosine} \\
+ & & $N{=}256$ & $N{=}1024$ & $N{=}2048$ \\
+\midrule
+score-function, mean-centred $A$ & 0.061 & $-0.03\pm0.03$ & $-0.04\pm0.03$ & $0.00\pm0.04$ \\
+score-function, GRPO $A$ (groups of 4) & 0.065 & $0.04\pm0.03$ & $0.02\pm0.03$ & $-0.04\pm0.03$ \\
+score-function, $A{=}1$ (zero-mean control) & 0.063 & $0.02\pm0.02$ & $0.04\pm0.02$ & $0.02\pm0.03$ \\
+pathwise, 2D critic & \textbf{0.177} & $\mathbf{0.79\pm0.03}$ & $\mathbf{0.94\pm0.01}$ & $\mathbf{0.97\pm0.01}$ \\
+\midrule
+GPT-2, token-level GRPO (Countdown) & --- & $0.05\pm0.05$ & $0.17\pm0.05$ & $0.27\pm0.02$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \subsubsection{Where the two gradients live}
 \label{app:grad_blocks}
 On the 256 Game24 rollouts of Table~\ref{tab:snr}, Table~\ref{tab:grad_blocks} splits the squared norm of each estimator's gradient by parameter block, for the mean gradient over rollouts (the reproducible part) and for the average per-sample gradient, together with the per-block signal-to-noise ratio. The score-function gradient of one transition is $\varepsilon_k$ times the features of the last layer: about $80\%$ of its energy is in the final linear projection ($394$k of $105$M parameters) and the SNR of every block is at the $1/\sqrt{256}$ floor. The pathwise gradient's per-sample energy is spread over the network (final projection $15\%$, blocks 6--11 $52\%$, blocks 0--5 $17\%$); its mean is most reproducible at the final projection (block SNR $0.40$--$0.42$) and above the floor in blocks 6--11 (SNR $0.09$--$0.27$); blocks 0--5 were not resolved.
@@ -235,6 +258,16 @@ sequence AUC & 0.78 & 0.88 & 0.94 & 0.97 & 0.96 & 0.97 & 0.99 & 1.00\\
 mean $\mathrm{sig}(R_i)$, correct / incorrect & 0.42/0.20 & 0.68/0.18 & 0.78/0.18 & 0.83/0.16 & 0.84/0.15 & 0.84/0.10 & 0.85/0.09 & 0.87/0.07\\
 cell AUC, within incorrect samples & 0.63 & 0.61 & 0.56 & 0.60 & 0.60 & 0.61 & 0.63 & 0.63\\\bottomrule\end{tabular}}\end{table}
 
+\subsubsection{Scalar against 2D critic over training, all tasks}
+\label{app:traj}
+Figure~\ref{fig:traj} extends the Countdown panels of Figure~\ref{fig:dyn} to the four tasks.
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{figures/fig_traj.pdf}
+\caption{Scalar against 2D critic over training: the runs of Table~\ref{tab:main}, three seeds each (thin) and their mean (thick). Top: held-out accuracy (\%) at the deployment sampler of the checkpoint after that many actor iterations; dashed: the SFT base. Bottom: AUC of the jointly trained head against the outcome on the newest 256 replay-buffer states, averaged over 250-iteration windows of the training logs; dotted: the floor $a_0=0.9$ below which Algorithm~\ref{alg:jpc} gives the critic extra steps. Bottom-row curves are means over the three seeds. On Countdown the pooled head falls behind the moving policy and its policy turns back; on Sudoku both heads keep their AUC and the scalar critic's policy declines from the start; on Game24 and K\&K both heads keep up and the scalar critic's gain is smaller.}
+\label{fig:traj}
+\end{figure}
+
 \subsubsection{The scalar and the 2D critic are interchangeable at a fixed policy}
 \label{app:critic_equiv}
 Table~\ref{tab:critic_equiv} collects the measurements that compare the pre-trained scalar and 2D critics of the Table~\ref{tab:main} runs on the same states of the same policy (Game24 unless stated; 256 rollouts of the SFT policy under the deployment chain, or the 128 Sudoku rollouts under $\gamma28$@32), and the jointly trained heads of the Table~\ref{tab:main} runs on fixed probe sets. None of the fixed-policy measurements separates the two critics: whatever distinguishes the policies they train (Figure~\ref{fig:traj}) is not visible in either critic's value, slope or stability at a fixed policy. The last row, which is not a fixed-policy measurement, shows that a frozen field is exploited faster than a frozen pooled value.
@@ -275,7 +308,7 @@ cosine of the two critics' $\|g_i\|$ profiles & & 0.94 & 0.94 & 0.94\\\bottomrul
 
 \subsubsection{Exchanging the critics}
 \label{app:swap_late}
-Table~\ref{tab:swap} gives the values behind the right panel of Figure~\ref{fig:frozen_swap}: a fourth seed of each recipe is stopped at iteration 250 and continued for the rest of the same schedule (cosine $0.94\times10^{-6}\to10^{-7}$ over the remaining 1{,}250 iterations) with its own critic or with the other recipe's pre-trained critic, whose head is refit from iteration 250 on as in Algorithm~\ref{alg:jpc}.
+Table~\ref{tab:swap} gives the values behind the right panel of Figure~\ref{fig:dyn}: a fourth seed of each recipe is stopped at iteration 250 and continued for the rest of the same schedule (cosine $0.94\times10^{-6}\to10^{-7}$ over the remaining 1{,}250 iterations) with its own critic or with the other recipe's pre-trained critic, whose head is refit from iteration 250 on as in Algorithm~\ref{alg:jpc}.
 \begin{table}[H]\centering\small
 \caption{Exchanging the critics on Game24 (seed 4). Each cell is the held-out accuracy (\%) at the deployment sampler after that many actor iterations in total.}\label{tab:swap}
 \begin{tabular}{@{}llcccccc@{}}\toprule
@@ -296,7 +329,7 @@ scalar & 57.0 & 56.4 & 56.2\\
 
 \subsubsection{Frozen versus joint critic}
 \label{app:frozen}
-Figure~\ref{fig:frozen_swap}, left (\S\ref{sec:exp_critic}), shows the exploit directly on Game24 (2D critic, $10^{-6}$). With the critic frozen at its pre-trained weights the pathwise update first helps ($+3.4$ at 250 and $+3.1$ at 500 iterations at the deployment sampler), then the actor finds the critic's blind spots: between iterations 500 and 800 the critic's value on the training batch climbs from $\approx3$ to $\approx90$ while the true success rate of the same batch falls to zero, and the held-out accuracy at iteration 750 is $3.7/2.9/1.9/2.1$ ($-42.9$ at deployment). The identical run with two critic steps per iteration on the replay buffer keeps the critic's value in the calibrated range and reaches $+15.7$. On Countdown the frozen scalar critic shows the milder version of the same failure: the value rises monotonically while held-out accuracy stays within $\pm1$ point of the base over 500 iterations, against $+9.0$ for the joint run. Increasing the frozen critic's quality (more pre-training rollouts, the 2D form) does not change this: whatever the critic is, the actor exploits it within a few hundred updates unless the critic is refreshed on the actor's own states.
+Figure~\ref{fig:frozen} (\S\ref{sec:exp_critic}) shows the exploit directly on Game24 (2D critic, $10^{-6}$). With the critic frozen at its pre-trained weights the pathwise update first helps ($+3.4$ at 250 and $+3.1$ at 500 iterations at the deployment sampler), then the actor finds the critic's blind spots: between iterations 500 and 800 the critic's value on the training batch climbs from $\approx3$ to $\approx90$ while the true success rate of the same batch falls to zero, and the held-out accuracy at iteration 750 is $3.7/2.9/1.9/2.1$ ($-42.9$ at deployment). The identical run with two critic steps per iteration on the replay buffer keeps the critic's value in the calibrated range and reaches $+15.7$. On Countdown the frozen scalar critic shows the milder version of the same failure: the value rises monotonically while held-out accuracy stays within $\pm1$ point of the base over 500 iterations, against $+9.0$ for the joint run. Increasing the frozen critic's quality (more pre-training rollouts, the 2D form) does not change this: whatever the critic is, the actor exploits it within a few hundred updates unless the critic is refreshed on the actor's own states.
 
 \subsubsection{The learning-rate regime}
 \label{app:lr_regime}
@@ -361,6 +394,65 @@ Figure~\ref{fig:curves} shows two runs of Algorithm~\ref{alg:jpc} (2D critic) on
 
 \subsection{The loop and the samplers}
 This group supports \S\ref{sec:exp_loop}: what the loop does to the cheap samplers, every round of the Countdown loop with its controls, and the sampler sweep behind the four reporting samplers.
+
+\subsubsection{The loop in full: rounds, controls and the guided sampler}
+\label{app:loop_full}
+Table~\ref{tab:loop_full} gives every round behind Table~\ref{tab:loop} with the pool's coverage and the three controls; Table~\ref{tab:guided} isolates the critic-guided sampler that drew Countdown's rounds 3--4, on the first 5{,}000 pool problems with the loop's starting policy and its jointly trained critic at $\gamma4$@16 (a chain the Countdown critic's features were pre-trained on, Appendix~\ref{app:details}): pruning four chains at random changes nothing; pruning them by the critic's minimum score~(\ref{eq:minscore}) doubles the acceptance rate and the coverage of missed problems, and the push~(\ref{eq:guide}) adds to both. The minimum was not compared with the pooled mean as the ranking score.
+\begin{table}[H]
+\centering\small
+\caption{The amortisation loop, held-out accuracy (\%) at three samplers. Each block is one task: the SFT base, the 2D-critic policy the loop starts from, the model at the end of each round of Algorithm~\ref{alg:loop} (Countdown: all four rounds; K\&K: first and last of five; Sudoku: its one round), and, indented, the controls at their last round, which run the same rounds without a critic from the SFT base, from the best GRPO seed, and on the gold derivations of the same pool. \emph{Covered}: pool problems (of 50k) with at least one verified sample in that round. Game24 has no pool (\S\ref{sec:exp_loop}, Appendix~\ref{app:g24_loop}). Sudoku's cheap chain is $\gamma14$@16 and its deployment chain $\gamma28$@32. All rounds are single runs; every round of every chain is in Appendix~\ref{app:cd_loop}.}
+\label{tab:loop_full}
+\setlength{\tabcolsep}{4.5pt}
+\begin{tabular}{@{}llcccc@{}}
+\toprule
+ & pool sampler & covered & 16-step chain & ODE-64 & deployment \\
+\midrule
+\multicolumn{6}{@{}l}{\emph{Countdown}}\\
+SFT base & & & 23.1 & 28.1 & 42.2 \\
+2D-critic policy (start) & & & 23.9 & 34.6 & 50.4 \\
+round 1 & deployment chain & 35.1k & 38.6 & 41.0 & 47.9 \\
+round 2 & deployment chain & 31.2k & 41.4 & 42.5 & 46.4 \\
+round 3 & critic-guided, $\gamma4$@16 & 37.2k & \OURScdthreeg & \OURScdthreeo & \OURScdthree \\
+round 4 & critic-guided, $\gamma4$@16 & 37.8k & \textbf{\OURScdg} & \textbf{\OURScdo} & \textbf{\OURScd} \\
+\quad control: from the SFT base & deployment chain & 31.2k & 41.9 & 44.1 & 46.2 \\
+\quad control: from the GRPO policy & deployment chain & 30.9k & 41.6 & 42.1 & 45.1 \\
+\quad control: gold derivations & (labels) & 50.0k & 21.9 & 27.3 & 42.6 \\
+\midrule
+\multicolumn{6}{@{}l}{\emph{K\&K}}\\
+SFT base & & & 58.1 & 57.8 & 67.5 \\
+2D-critic policy (start) & & & 68.8 & 70.4 & 80.0 \\
+round 1 & deployment chain & 41.1k & 74.5 & 78.0 & 83.2 \\
+round 5 & deployment chain & 48.8k & \textbf{\OURSkkg} & \textbf{\OURSkko} & \textbf{\OURSkk} \\
+\quad control: from the SFT base & deployment chain & 49.4k & 94.1 & 97.2 & 99.6 \\
+\quad control: from the GRPO policy & deployment chain & 48.3k & 92.2 & 94.7 & 98.3 \\
+\quad control: gold labels & (labels) & 50.0k & 94.8 & 98.2 & 99.7 \\
+\midrule
+\multicolumn{6}{@{}l}{\emph{Sudoku}}\\
+SFT base & & & 62.0 & 62.3 & 66.2 \\
+2D-critic policy (start) & & & 65.0 & 67.3 & 71.3 \\
+round 1 & deployment chain & 39.3k & 65.5 & 67.3 & 71.4 \\
+\quad control: from the SFT base & deployment chain & 36.1k & 61.7 & 62.0 & 65.5 \\
+\quad control: from the GRPO policy & deployment chain & 39.3k & 66.2 & 68.5 & 71.9 \\
+\quad control: gold solutions & (labels) & 50.0k & 66.3 & 67.0 & 72.2 \\
+\bottomrule
+\end{tabular}
+\end{table}
+\begin{table}[H]
+\centering\small
+\caption{The critic as a search heuristic. Each row is one way of drawing samples from the Countdown 2D-critic policy the loop starts from (Table~\ref{tab:loop_full}) and its jointly trained critic at $\gamma4$@16 on the first 5{,}000 pool problems, four samples per problem: \emph{acc.}, the fraction of samples the verifier accepts; \emph{coverage}, problems (of 5{,}000) with at least one accepted sample; \emph{distinct}, distinct accepted derivations.}
+\label{tab:guided}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+sampler & acc.\ (\%) & coverage & distinct \\
+\midrule
+plain & \GBa{1} & \GBa{2} & \GBa{3} \\
+best of 4 at step 8, random & \GBb{1} & \GBb{2} & \GBb{3} \\
+best of 4 at step 8, by the critic & \GBc{1} & \GBc{2} & \GBc{3} \\
+push~(\ref{eq:guide}) at every step & \GBd{1} & \GBd{2} & \GBd{3} \\
+best of 4 by the critic + push & \GBe{1} & \GBe{2} & \GBe{3} \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \subsubsection{Cheap samplers after the loop}
 \label{app:samplers}
