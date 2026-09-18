@@ -1,27 +1,25 @@
-"""Compact main-text figures for §6.
-fig_estimator.pdf : half-split cosine vs N for the estimators of Table tab:snr (legend carries the SNR at N=256).
-fig_frozen.pdf    : single panel, frozen critic on Game24 (value on the training batch, true success, held-out accuracy).
-fig_dyn.pdf       : three panels: Countdown held-out accuracy scalar vs 2D over training; Countdown critic AUC on the newest
-                    buffer states; Game24 critic exchange at iteration 250."""
+"""Compact main-text figures for §6 (round 2).
+fig_estimator.pdf : half-split cosine vs N (Game24; GPT-2 row on Countdown), 4 series, legend below, fonts >= 7 pt at 0.40 linewidth.
+fig_frozen.pdf    : frozen critic on Game24, single axis in %: predicted success 100*sig(V), true success of the training batch, held-out accuracy.
+fig_dyn.pdf       : two Game24 panels, shared y: scalar vs 2D held-out trajectories (3 seeds) | critics exchanged at iteration 250."""
 import re, glob, json, os, sys, numpy as np
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))); import style; style.apply()
 import matplotlib.pyplot as plt
 D = os.path.dirname(os.path.abspath(__file__)); R = "/cluster/tufts/liulab/xhan03/flow-nlp-rl"
-plt.rcParams.update({"font.size": 7.5})
-# ---------------- estimator ----------------
+F = 7.2; plt.rcParams.update({"font.size": F, "legend.fontsize": F, "axes.titlesize": F + 0.3, "axes.labelsize": F, "xtick.labelsize": F, "ytick.labelsize": F})
+SC, TD = style.VAL, style.ACC   # orange = scalar critic, blue = 2D critic, everywhere in §6
+# ---------------- estimator (placed at 0.40*5.5 = 2.2 in) ----------------
 N = [256, 1024, 2048]
-series = [("SF, mean-centred $A$  (SNR 0.061)", [-0.03, -0.04, 0.00], style.VAL, "-", "o"),
-          ("SF, GRPO $A$  (0.065)", [0.04, 0.02, -0.04], "#c9553d", "--", "s"),
-          ("SF, $A{=}1$ control  (0.063)", [0.02, 0.04, 0.02], style.BASE, ":", "x"),
-          ("pathwise, 2D critic  (0.177)", [0.79, 0.94, 0.97], style.ACC, "-", "o"),
-          ("GPT-2 token GRPO, Countdown", [0.05, 0.17, 0.27], "#2a9d8f", "-", "^")]
-fig, ax = plt.subplots(figsize=(2.15, 2.05))
-for lab, ys, c, ls, mk in series: ax.plot(N, ys, ls, color=c, marker=mk, ms=3.2, lw=1.4, label=lab)
-ax.axhline(0, color=style.BASE, lw=0.6); ax.set_xscale("log", base=2); ax.set_xticks(N); ax.set_xticklabels([str(n) for n in N])
-ax.set_xlabel("rollouts $N$", fontsize=7.5); ax.set_ylabel("half-split cosine", fontsize=7.5); ax.set_ylim(-0.12, 1.02); ax.tick_params(labelsize=7)
-ax.legend(fontsize=6.0, frameon=False, loc="center left", bbox_to_anchor=(0.0, 0.55), handlelength=1.6, borderaxespad=0.0, labelspacing=0.35)
+fig, ax = plt.subplots(figsize=(2.2, 2.05))
+ax.plot(N, [0.04, 0.02, -0.04], "-", color="#c9553d", marker="s", ms=3.2, lw=1.4, label="score-function, GRPO $A$")
+ax.plot(N, [0.02, 0.04, 0.02], ":", color=style.BASE, marker="x", ms=3.4, lw=1.3, label="score-function, $A{=}1$")
+ax.plot(N, [0.79, 0.94, 0.97], "-", color=TD, marker="o", ms=3.2, lw=1.6, label="pathwise, 2D critic")
+ax.plot(N, [0.05, 0.17, 0.27], "-", color="#2a9d8f", marker="^", ms=3.2, lw=1.4, label="GPT-2 token GRPO")
+ax.axhline(0, color=style.BASE, lw=0.6); ax.set_xscale("log", base=2); ax.set_xticks(N); ax.set_xticklabels([str(n) for n in N]); ax.minorticks_off()
+ax.set_xlabel("rollouts $N$"); ax.set_ylabel("half-split cosine"); ax.set_ylim(-0.12, 1.02); ax.set_title("Game24 (GPT-2: Countdown)", pad=3)
+ax.legend(frameon=False, loc="upper center", bbox_to_anchor=(0.5, -0.3), ncol=2, handlelength=1.5, columnspacing=0.9, labelspacing=0.3, borderaxespad=0.0)
 fig.savefig(os.path.join(D, "fig_estimator.pdf"), bbox_inches="tight", pad_inches=0.02); plt.close(fig)
-# ---------------- frozen ----------------
+# ---------------- frozen critic (placed at 0.42*5.5 = 2.3 in) ----------------
 def parse(log):
     it_v, it_t = [], []
     for l in open(log):
@@ -36,49 +34,47 @@ def evals(prefix, key="gamma56"):
             if key in os.path.basename(os.path.dirname(f)):
                 m = json.load(open(f)); v = m.get("all", m); a = v.get("solved", v.get("accuracy")); out.append((ck, 100 * a))
     return np.array(sorted(out))
-def smooth(x, w=5): return np.convolve(x, np.ones(w) / w, mode="same") if len(x) >= w else x
+def smooth_valid(x, y, w=5):
+    if len(y) < w: return x, y
+    return x[w // 2: len(y) - (w - 1 - w // 2)], np.convolve(y, np.ones(w) / w, mode="valid")
 v, t = parse(f"{R}/slurm/logs/cd-pathwise-3447085.out"); e = evals("eval_g24_g24_abl_frozen")
-fig, ax = plt.subplots(figsize=(2.0, 1.25)); ax2 = ax.twinx(); ax2.spines["top"].set_visible(False); ax2.grid(False)
-ax.plot(t[:, 0], smooth(t[:, 1]), color=style.TRUE, lw=1.2); ax.plot(e[:, 0], e[:, 1], "o-", color=style.ACC, lw=1.4, ms=3)
-ax2.plot(v[:, 0], smooth(v[:, 1]), color=style.VAL, lw=1.2); ax.axhline(45.0, color=style.BASE, ls=":", lw=0.8)
-ax.set_xlabel("actor iteration", fontsize=7.5); ax.set_ylabel("accuracy (%)", fontsize=7.5); ax2.set_ylabel("$V_\\phi$ (logit)", color=style.VAL, fontsize=7.5)
-ax.set_ylim(0, 78); ax.set_xlim(0, 1000); ax.tick_params(labelsize=7); ax2.tick_params(axis="y", colors=style.VAL, labelsize=7); ax2.spines["right"].set_color(style.VAL)
+fig, ax = plt.subplots(figsize=(2.3, 1.5)); ax2 = ax.twinx(); ax2.spines["top"].set_visible(False); ax2.grid(False)
+xt, yt = smooth_valid(t[:, 0], t[:, 1]); xv, yv = smooth_valid(v[:, 0], v[:, 1])
+ax.plot(xt, yt, color=style.TRUE, lw=1.3); ax.plot(e[:, 0], e[:, 1], "o-", color="#212529", lw=1.4, ms=3); ax2.plot(xv, yv, color="#6a4c93", lw=1.4)
+ax.axhline(45.0, color=style.BASE, ls=":", lw=0.8)
+ax.text(330, 78, "true success,\ntraining batch", color="#5c677d", fontsize=6.8, ha="center", va="bottom")
+ax.text(255, 51, "held-out accuracy", color="#212529", fontsize=6.8, ha="left", va="bottom")
+ax.text(985, 42, "SFT base", color=style.BASE, fontsize=6.8, ha="right", va="top")
+ax2.text(985, yv[-1] - 4, "critic value $V_\\phi$", color="#6a4c93", fontsize=6.8, ha="right", va="top")
+ax.set_xlabel("actor iteration"); ax.set_ylabel("accuracy (%)"); ax.set_ylim(0, 100); ax.set_xlim(0, 1000); ax.set_yticks([0, 25, 50, 75, 100])
+ax2.set_ylabel("$V_\\phi$ (logit)", color="#6a4c93"); ax2.tick_params(axis="y", colors="#6a4c93"); ax2.spines["right"].set_color("#6a4c93"); ax2.set_ylim(-5, 100); ax2.set_yticks([0, 50, 100])
 fig.savefig(os.path.join(D, "fig_frozen.pdf"), bbox_inches="tight", pad_inches=0.02); plt.close(fig)
-# ---------------- dynamics: Countdown acc, Countdown AUC, Game24 exchange ----------------
+# ---------------- Game24: trajectories | exchange (placed at 5.5 in) ----------------
 def acc(pre, run, c, sampler, mfile):
     f = f"{R}/outputs/eval_{pre}_{run}_ckpt{c}/{sampler}/{mfile}"
     if not os.path.exists(f): return None
-    d = json.load(open(f)); return 100 * d["accuracy"]
-gap = json.load(open(f"{R}/outputs/analysis/train_log_gap.json"))
-fig, axes = plt.subplots(1, 3, figsize=(5.5, 1.9), gridspec_kw=dict(wspace=0.55, width_ratios=[1.1, 1, 1.15]))
-C = {"2D": style.ACC, "scalar": style.VAL}; S64 = "sde-steps64-cfg2-ts_uniform-gamma56.0-cond"
-ax = axes[0]
-for lab, pat in (("scalar", "cd5_K40S_s%d"), ("2D", "cd5_K40_s%d")):
+    return 100 * json.load(open(f))["accuracy"]
+S64 = "sde-steps64-cfg2-ts_uniform-gamma56.0-cond"
+fig, (ax, bx) = plt.subplots(1, 2, figsize=(5.5, 2.05), sharey=True, gridspec_kw=dict(wspace=0.10))
+for lab, pat, col in (("scalar critic", "g24_TS_s%d", SC), ("2D critic", "g24_T_s%d", TD)):
     curves = []
     for s in (1, 2, 3):
         xs, ys = [], []
         for c in range(250, 1501, 250):
-            a = acc("cd5", pat % s, c, S64, "countdown_metrics.json")
+            a = acc("g24", pat % s, c, S64, "countdown_metrics.json")
             if a is not None: xs.append(c); ys.append(a)
-        ax.plot(xs, ys, color=C[lab], lw=0.6, alpha=0.3); curves.append(dict(zip(xs, ys)))
+        ax.plot(xs, ys, color=col, lw=0.7, alpha=0.55); curves.append(dict(zip(xs, ys)))
     allx = sorted(set(x for cv in curves for x in cv)); mean = [np.mean([cv[x] for cv in curves if x in cv]) for x in allx]
-    ax.plot(allx, mean, color=C[lab], lw=1.7, marker="o", ms=2.8, label=f"{lab} critic")
-ax.axhline(42.2, color=style.BASE, ls="--", lw=0.8); ax.set_title("Countdown: held-out accuracy", fontsize=7, pad=3); ax.set_ylabel("accuracy (%)", fontsize=7)
-ax.set_xlabel("actor iteration", fontsize=7.5); ax.tick_params(labelsize=7); ax.set_xticks([500, 1000, 1500]); ax.legend(fontsize=6.3, frameon=False, loc="lower right", handlelength=1.5, borderaxespad=0.2)
-ax = axes[1]
-for lab in ("scalar", "2D"):
-    per_seed = gap["Countdown"][lab]; ws = sorted(set(int(w) for ws_, _, _ in per_seed for w in ws_))
-    auc = [np.nanmean([ws_[str(w)]["auc"] for ws_, _, _ in per_seed if str(w) in ws_]) for w in ws]
-    ax.plot(ws, auc, color=C[lab], lw=1.6, marker="o", ms=2.5, label=f"{lab} critic")
-ax.axhline(0.9, color=style.BASE, ls=":", lw=0.8); ax.set_title("Countdown: head AUC", fontsize=7, pad=3); ax.set_ylabel("AUC, newest buffer states", fontsize=7)
-ax.set_ylim(0.85, 1.0); ax.set_yticks([0.85, 0.9, 0.95, 1.0]); ax.set_xticks([500, 1000, 1500]); ax.set_xlabel("actor iteration", fontsize=7.5); ax.tick_params(labelsize=7)
-ax.text(0.04, 0.08, "floor $a_0$", transform=ax.transAxes, fontsize=6, color=style.BASE)
-ax = axes[2]
+    ax.plot(allx, mean, color=col, lw=1.8, marker="o", ms=3, label=lab)
+ax.axhline(45.0, color=style.BASE, ls="--", lw=0.8); ax.text(1480, 45.6, "SFT base", color=style.BASE, fontsize=6.8, ha="right", va="bottom")
+ax.set_title("scalar against 2D critic, three seeds", pad=3); ax.set_xlabel("actor iteration"); ax.set_ylabel("held-out accuracy (%)")
+ax.set_xticks([250, 500, 750, 1000, 1250, 1500]); ax.legend(frameon=False, loc="upper left", handlelength=1.6, borderaxespad=0.3)
 its = [250, 500, 750, 1000, 1250, 1500]
-for lab, ys, c, ls in [("scalar throughout", [47.7, 49.8, 51.6, 49.8, 49.9, 50.8], style.VAL, "-"), ("scalar $\\to$ 2D at 250", [47.7, 51.3, 51.5, 54.2, 55.8, 56.4], style.ACC, "--"),
-                       ("2D throughout", [49.8, 52.3, 52.4, 56.1, 56.7, 57.3], style.ACC, "-"), ("2D $\\to$ scalar at 250", [49.8, 51.7, 51.8, 50.1, 50.1, 51.3], style.VAL, "--")]:
-    ax.plot(its, ys, ls, color=c, lw=1.5, marker="o", ms=2.6, label=lab)
-ax.axvline(250, color=style.BASE, ls=":", lw=0.8); ax.set_title("Game24: critics exchanged", fontsize=7, pad=3); ax.set_ylabel("accuracy (%)", fontsize=7)
-ax.set_xlim(200, 1550); ax.set_ylim(46.5, 61); ax.set_xticks([250, 750, 1250]); ax.set_xlabel("actor iteration", fontsize=7.5); ax.tick_params(labelsize=7)
-ax.legend(fontsize=5.8, frameon=False, loc="upper left", bbox_to_anchor=(0.0, 1.0), ncol=2, columnspacing=0.8, handlelength=1.6, borderaxespad=0.1, labelspacing=0.25)
+for lab, ys, col, ls in [("scalar throughout", [47.7, 49.8, 51.6, 49.8, 49.9, 50.8], SC, "-"), ("scalar$\\to$2D at 250", [47.7, 51.3, 51.5, 54.2, 55.8, 56.4], TD, "--"),
+                         ("2D throughout", [49.8, 52.3, 52.4, 56.1, 56.7, 57.3], TD, "-"), ("2D$\\to$scalar at 250", [49.8, 51.7, 51.8, 50.1, 50.1, 51.3], SC, "--")]:
+    bx.plot(its, ys, ls, color=col, lw=1.6, marker="o", ms=3, label=lab)
+bx.axvline(250, color=style.BASE, ls=":", lw=0.9); bx.axhline(45.0, color=style.BASE, ls="--", lw=0.8)
+bx.set_title("critics exchanged at iteration 250", pad=3); bx.set_xlabel("actor iteration"); bx.set_xticks([250, 500, 750, 1000, 1250, 1500]); bx.set_xlim(200, 1550)
+ax.set_ylim(44, 62.5)
+bx.legend(frameon=False, loc="upper left", ncol=2, columnspacing=1.0, handlelength=1.8, borderaxespad=0.3, labelspacing=0.3)
 fig.savefig(os.path.join(D, "fig_dyn.pdf"), bbox_inches="tight", pad_inches=0.02); print("compact figures written")
