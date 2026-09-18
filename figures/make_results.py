@@ -29,4 +29,4 @@ for xi,v in zip(x,ar):
     else: ax.text(xi+2.6*w,v,f"GPT-2 + PPO  {v:.1f}",fontsize=6.8,va="center",ha="left")
 ax.set_xticks(x); ax.set_xticklabels(tasks); ax.set_ylabel("deployment-sampler accuracy (%)"); ax.set_ylim(0,104); ax.set_xlim(-0.5,3.95)
 ax.legend(fontsize=7.5,frameon=False,ncol=5,loc="lower center",bbox_to_anchor=(0.5,-0.24),handlelength=1.4,columnspacing=1.2)
-fig.tight_layout(rect=(0,0.02,1,0.99)); fig.savefig("fig_results.pdf"); fig.savefig("fig_results.png",dpi=200); print("fig_results ok")
+fig.tight_layout(rect=(0,0.02,1,0.99)); import os; _d=os.path.dirname(os.path.abspath(__file__)); fig.savefig(os.path.join(_d,"fig_results.pdf")); print("fig_results ok")
