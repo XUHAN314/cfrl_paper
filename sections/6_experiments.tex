@@ -55,13 +55,13 @@ The score-function and the pathwise term of a transition have the same expectati
 \resizebox{\linewidth}{!}{%
 \begin{tabular}{@{}lcccc@{}}
 \toprule
-critic & Pearson & pick@$V$ & RL best & RL final \\
+critic & Pearson & pick@$V$ & best & final \\
 \midrule
-fine-tuned copy, $(y_k,\hat x_{k-1})$, refit in RL (Alg.~\ref{alg:jpc}) & \CDa{1} & \CDa{3} & \CDa{5} & \CDa{6} \\
-\quad without the estimate $\hat x_{k-1}$ & \CDb{1} & \CDb{3} & \CDb{5} & \CDb{6} \\
-\quad copy frozen in pre-training (head only) & \CDc{1} & \CDc{3} & \CDc{5} & \CDc{6} \\
+fine-tuned copy reading $(y_k,\hat x_{k-1})$, refit in RL & \CDa{1} & \CDa{3} & \CDa{5} & \CDa{6} \\
+\quad without $\hat x_{k-1}$ in the input & \CDb{1} & \CDb{3} & \CDb{5} & \CDb{6} \\
+\quad copy frozen in pre-training & \CDc{1} & \CDc{3} & \CDc{5} & \CDc{6} \\
 \quad random initialisation & \CDd{1} & \CDd{3} & --- & --- \\
-\quad frozen in RL (no refit)$^\dagger$ & --- & --- & 48.4 & \phantom{0}0.3 \\
+\quad frozen in RL$^\dagger$ & --- & --- & 48.4 & \phantom{0}0.3 \\
 \bottomrule
 \end{tabular}}
 \end{minipage}\hfill
@@ -69,7 +69,7 @@ fine-tuned copy, $(y_k,\hat x_{k-1})$, refit in RL (Alg.~\ref{alg:jpc}) & \CDa{1
 \centering
 \includegraphics[width=\linewidth]{figures/fig_frozen.pdf}
 \end{minipage}
-\caption{\textbf{Left:} critic design on Game24, one element changed at a time, each critic pre-trained on the same 16k rollouts. Offline, on held-out rollouts of the base policy at step 32 of 64: Pearson correlation of the pooled value with the outcome and pick@$V$, how often the rollout ranked highest among eight of the same prompt succeeds (random: about $0.55$). Online: held-out accuracy (\%) at the deployment sampler of one run of Algorithm~\ref{alg:jpc} with that critic, at its best and final checkpoint. \textbf{Right:} the last row over training (2D critic, actor learning rate $10^{-6}$, $^\dagger$earlier recipe, Appendix~\ref{app:details}): true success of the training batch (grey), held-out accuracy (blue), critic value on the training batch (red, right axis); dotted: SFT base.}
+\caption{\textbf{Left:} critic design on Game24, one element changed at a time, each critic pre-trained on the same 16k rollouts. Offline, on held-out rollouts of the base policy at step 32 of 64: Pearson correlation of the pooled value with the outcome and pick@$V$, how often the rollout ranked highest among eight of the same prompt succeeds (random: about $0.55$). Online: held-out accuracy (\%) at the deployment sampler of one run of Algorithm~\ref{alg:jpc} with that critic (the first row is the critic of Algorithm~\ref{alg:jpc}), at its best and final checkpoint. \textbf{Right:} the last row over training (2D critic, actor learning rate $10^{-6}$, $^\dagger$earlier recipe, Appendix~\ref{app:details}): true success of the training batch (grey), held-out accuracy (blue), critic value on the training batch (red, right axis); dotted: SFT base.}
 \label{tab:critic_design}
 \end{table}
 
