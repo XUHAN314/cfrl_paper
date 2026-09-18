@@ -63,14 +63,14 @@ for lab, pat in (("scalar", "cd5_K40S_s%d"), ("2D", "cd5_K40_s%d")):
         ax.plot(xs, ys, color=C[lab], lw=0.6, alpha=0.3); curves.append(dict(zip(xs, ys)))
     allx = sorted(set(x for cv in curves for x in cv)); mean = [np.mean([cv[x] for cv in curves if x in cv]) for x in allx]
     ax.plot(allx, mean, color=C[lab], lw=1.7, marker="o", ms=2.8, label=f"{lab} critic")
-ax.axhline(42.2, color=style.BASE, ls="--", lw=0.8); ax.set_title("Countdown: held-out accuracy (%)", fontsize=6.8, pad=3)
+ax.axhline(42.2, color=style.BASE, ls="--", lw=0.8); ax.set_title("Countdown: held-out accuracy", fontsize=7, pad=3); ax.set_ylabel("accuracy (%)", fontsize=7)
 ax.set_xlabel("actor iteration", fontsize=7.5); ax.tick_params(labelsize=7); ax.set_xticks([500, 1000, 1500]); ax.legend(fontsize=6.3, frameon=False, loc="lower right", handlelength=1.5, borderaxespad=0.2)
 ax = axes[1]
 for lab in ("scalar", "2D"):
     per_seed = gap["Countdown"][lab]; ws = sorted(set(int(w) for ws_, _, _ in per_seed for w in ws_))
     auc = [np.nanmean([ws_[str(w)]["auc"] for ws_, _, _ in per_seed if str(w) in ws_]) for w in ws]
     ax.plot(ws, auc, color=C[lab], lw=1.6, marker="o", ms=2.5, label=f"{lab} critic")
-ax.axhline(0.9, color=style.BASE, ls=":", lw=0.8); ax.set_title("Countdown: head AUC, newest states", fontsize=6.8, pad=3)
+ax.axhline(0.9, color=style.BASE, ls=":", lw=0.8); ax.set_title("Countdown: head AUC", fontsize=7, pad=3); ax.set_ylabel("AUC, newest buffer states", fontsize=7)
 ax.set_ylim(0.85, 1.0); ax.set_yticks([0.85, 0.9, 0.95, 1.0]); ax.set_xticks([500, 1000, 1500]); ax.set_xlabel("actor iteration", fontsize=7.5); ax.tick_params(labelsize=7)
 ax.text(0.04, 0.08, "floor $a_0$", transform=ax.transAxes, fontsize=6, color=style.BASE)
 ax = axes[2]
@@ -78,7 +78,7 @@ its = [250, 500, 750, 1000, 1250, 1500]
 for lab, ys, c, ls in [("scalar throughout", [47.7, 49.8, 51.6, 49.8, 49.9, 50.8], style.VAL, "-"), ("scalar $\\to$ 2D at 250", [47.7, 51.3, 51.5, 54.2, 55.8, 56.4], style.ACC, "--"),
                        ("2D throughout", [49.8, 52.3, 52.4, 56.1, 56.7, 57.3], style.ACC, "-"), ("2D $\\to$ scalar at 250", [49.8, 51.7, 51.8, 50.1, 50.1, 51.3], style.VAL, "--")]:
     ax.plot(its, ys, ls, color=c, lw=1.5, marker="o", ms=2.6, label=lab)
-ax.axvline(250, color=style.BASE, ls=":", lw=0.8); ax.set_title("Game24: critics exchanged at 250", fontsize=6.8, pad=3)
-ax.set_xlim(200, 1550); ax.set_ylim(46.5, 59); ax.set_xticks([250, 750, 1250]); ax.set_xlabel("actor iteration", fontsize=7.5); ax.tick_params(labelsize=7)
-ax.legend(fontsize=5.8, frameon=False, loc="upper left", handlelength=1.8, borderaxespad=0.2, labelspacing=0.3)
+ax.axvline(250, color=style.BASE, ls=":", lw=0.8); ax.set_title("Game24: critics exchanged", fontsize=7, pad=3); ax.set_ylabel("accuracy (%)", fontsize=7)
+ax.set_xlim(200, 1550); ax.set_ylim(46.5, 61); ax.set_xticks([250, 750, 1250]); ax.set_xlabel("actor iteration", fontsize=7.5); ax.tick_params(labelsize=7)
+ax.legend(fontsize=5.8, frameon=False, loc="upper left", bbox_to_anchor=(0.0, 1.0), ncol=2, columnspacing=0.8, handlelength=1.6, borderaxespad=0.1, labelspacing=0.25)
 fig.savefig(os.path.join(D, "fig_dyn.pdf"), bbox_inches="tight", pad_inches=0.02); print("compact figures written")
