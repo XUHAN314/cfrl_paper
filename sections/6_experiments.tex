@@ -119,7 +119,7 @@ choice it tests & variant & best / final & reference \\
 \label{sec:exp_loop}
 Table~\ref{tab:loop} reports the amortisation loop of Algorithm~\ref{alg:loop} on the three tasks that have a pool of unlabelled problems; Game24's split by number set leaves none, and rounds run on re-orderings of its training sets re-fit known derivations (Appendix~\ref{app:g24_loop}). On Countdown, RL improved the deployment chain and left the cheap chain where it was, the finding of the last row of Table~\ref{tab:needs}; on K\&K and Sudoku the RL gain carried to every sampler. The rounds lift the cheap chain by ten to twenty-five points from every start, RL or not, to or above the deployment accuracy the base had; what the deployment chain does follows the pool's coverage (Proposition~\ref{prop:em}). On K\&K fresh puzzles raise coverage every round and the rounds close the task from any start. On Countdown two plain rounds shrink coverage and give back part of the RL gain. Rounds 3 and 4, drawn with the critic-guided cheap chain of \S\ref{sec:loop}, raise coverage past its start and return the deployment chain to the RL level, four to five points above sampling plainly from the base or the GRPO policy; chain and guidance change together in those rounds, and Appendix~\ref{app:loop_full} gives every round, the controls, and the pruning comparison in which pruning by the critic doubles acceptance and coverage while pruning at random changes nothing. On Sudoku one round covers three quarters of the pool from every start and changes nothing at any sampler, as the gold-solution control confirms.
 
-\begin{table}[b]
+\begin{table}[H]
 \centering\small
 \setlength{\tabcolsep}{5pt}
 \begin{tabular}{@{}lcc@{\hskip 12pt}cc@{\hskip 12pt}cc@{}}
