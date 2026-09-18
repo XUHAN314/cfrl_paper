@@ -7,11 +7,9 @@ Four program-verified tasks (Appendix~\ref{app:datasets}): \textbf{Countdown}, \
 
 \begin{table}[t]
 \centering\small
-\begin{minipage}[t]{0.605\linewidth}
+\begin{minipage}[c]{0.62\linewidth}
 \centering
-\caption{Held-out accuracy (\%) at the deployment sampler: the best evaluated checkpoint, mean of three seeds for the ELF-B RL rows (seed spread in Appendix~\ref{app:seeds}), single runs otherwise. The two \jpc{} rows differ only in the order of head and mean.}
-\label{tab:main}
-\small\setlength{\tabcolsep}{3.5pt}
+\setlength{\tabcolsep}{4pt}
 \resizebox{\linewidth}{!}{%
 \begin{tabular}{@{}lcccc@{}}
 \toprule
@@ -33,13 +31,12 @@ task SFT (base) & 42.2 & 66.2 & 67.5 & 45.0 \\
 \bottomrule
 \end{tabular}}
 \end{minipage}\hfill
-\begin{minipage}[t]{0.375\linewidth}
+\begin{minipage}[c]{0.36\linewidth}
 \centering
-\vspace{0pt}
 \includegraphics[width=\linewidth]{figures/fig_estimator.pdf}
-\captionof{figure}{Agreement between the mean gradients of two disjoint halves of $N$ Game24 rollouts (SFT policy, flow step 24 of 64), for the score-function (SF) estimator under three advantages, the pathwise estimator with the pre-trained 2D critic, and GPT-2's token-level GRPO on Countdown. A genuine signal rises with $N$; a zero-mean estimator stays at $0$. Legend: SNR at $N{=}256$, where the zero-mean floor is $1/\sqrt N=0.063$. Full table in Appendix~\ref{app:snr}.}
-\label{fig:estimator}
 \end{minipage}
+\caption{\textbf{Left:} held-out accuracy (\%) at the deployment sampler, the best evaluated checkpoint; ELF-B RL rows are means of three seeds (spread in Appendix~\ref{app:seeds}), the others single runs; the two \jpc{} rows differ only in the order of head and mean. \textbf{Right:} agreement (cosine) between the mean gradients of two disjoint halves of $N$ Game24 rollouts of the SFT policy at flow step 24 of 64, for the score-function (SF) estimator under three advantages, the pathwise estimator with the pre-trained 2D critic, and GPT-2's token-level GRPO on Countdown; a genuine signal rises with $N$, a zero-mean estimator stays at $0$. Legend: SNR at $N{=}256$, whose zero-mean floor is $1/\sqrt N=0.063$ (full table in Appendix~\ref{app:snr}).}
+\label{tab:main}
 \end{table}
 
 \subsection{Main result}
@@ -48,21 +45,19 @@ Read the ELF-B block of Table~\ref{tab:main} downwards. GRPO gains a few points 
 
 \subsection{The estimator: the same rollouts, two gradients}
 \label{sec:exp_estimator}
-The score-function and the pathwise term of a transition have the same expectation and differ in the factor that multiplies the denoiser Jacobian, the injected noise against the critic's slope (\S\ref{sec:pathwise}). Figure~\ref{fig:estimator} measures both on the same Game24 rollouts with one differentiable denoiser call, as in Algorithm~\ref{alg:jpc}, by how well the mean gradients of two halves of the rollouts agree. The ruler is the $A{=}1$ control: an estimator whose true mean is zero, whose halves do not agree at any $N$. The flow model's score-function gradient is indistinguishable from it under every form of the advantage, up to sixteen GRPO batches of rollouts. GPT-2's token-level gradient looks the same at $N{=}256$ and then separates as $N$ grows, the signature of a weak but genuine per-sample signal: the estimator is the same, the action space is not. The pathwise gradient through the same denoiser call agrees with itself already at $N{=}256$, with an SNR three times the floor. These statistics measure variance, not bias: a pathwise gradient through a wrong critic is just as reproducible, so whether the critic's slope is the right one is the question of the next two subsections, and Table~\ref{tab:main} is the end-to-end check. Appendix~\ref{app:grad_blocks} splits both gradients by parameter block; Appendix~\ref{app:discrete_snr} gives the same measurement for LLaDA's surrogate gradient.
+The score-function and the pathwise term of a transition have the same expectation and differ in the factor that multiplies the denoiser Jacobian, the injected noise against the critic's slope (\S\ref{sec:pathwise}). The right panel of Table~\ref{tab:main} measures both on the same Game24 rollouts with one differentiable denoiser call, as in Algorithm~\ref{alg:jpc}, by how well the mean gradients of two halves of the rollouts agree. The ruler is the $A{=}1$ control: an estimator whose true mean is zero, whose halves do not agree at any $N$. The flow model's score-function gradient is indistinguishable from it under every form of the advantage, up to sixteen GRPO batches of rollouts. GPT-2's token-level gradient looks the same at $N{=}256$ and then separates as $N$ grows, the signature of a weak but genuine per-sample signal: the estimator is the same, the action space is not. The pathwise gradient through the same denoiser call agrees with itself already at $N{=}256$, with an SNR three times the floor. These statistics measure variance, not bias: a pathwise gradient through a wrong critic is just as reproducible, so whether the critic's slope is the right one is the question of the next two subsections, and Table~\ref{tab:main} is the end-to-end check. Appendix~\ref{app:grad_blocks} splits both gradients by parameter block; Appendix~\ref{app:discrete_snr} gives the same measurement for LLaDA's surrogate gradient.
 
 \begin{table}[t]
 \centering\small
-\begin{minipage}[t]{0.645\linewidth}
+\begin{minipage}[c]{0.66\linewidth}
 \centering
-\caption{Critic design on Game24, one element changed at a time, each critic pre-trained on the same 16k rollouts. Offline, on held-out rollouts of the base policy at step 32 of 64: Pearson correlation of the pooled value with the outcome, and pick@$V$, how often the rollout ranked highest among eight of the same prompt succeeds (random: about $0.55$). Online: held-out accuracy (\%) at the deployment sampler of one run of Algorithm~\ref{alg:jpc} with that critic, best and final checkpoint. $^\dagger$Earlier recipe (Appendix~\ref{app:details}); its trajectory is Figure~\ref{fig:frozen}.}
-\label{tab:critic_design}
-\small\setlength{\tabcolsep}{3pt}
+\setlength{\tabcolsep}{3.5pt}
 \resizebox{\linewidth}{!}{%
 \begin{tabular}{@{}lcccc@{}}
 \toprule
-critic & Pearson & pick@$V$ & best & final \\
+critic & Pearson & pick@$V$ & RL best & RL final \\
 \midrule
-fine-tuned copy, $(y_k,\hat x_{k-1})$, refit in RL & \CDa{1} & \CDa{3} & \CDa{5} & \CDa{6} \\
+fine-tuned copy, $(y_k,\hat x_{k-1})$, refit in RL (Alg.~\ref{alg:jpc}) & \CDa{1} & \CDa{3} & \CDa{5} & \CDa{6} \\
 \quad without the estimate $\hat x_{k-1}$ & \CDb{1} & \CDb{3} & \CDb{5} & \CDb{6} \\
 \quad copy frozen in pre-training (head only) & \CDc{1} & \CDc{3} & \CDc{5} & \CDc{6} \\
 \quad random initialisation & \CDd{1} & \CDd{3} & --- & --- \\
@@ -70,18 +65,17 @@ fine-tuned copy, $(y_k,\hat x_{k-1})$, refit in RL & \CDa{1} & \CDa{3} & \CDa{5}
 \bottomrule
 \end{tabular}}
 \end{minipage}\hfill
-\begin{minipage}[t]{0.335\linewidth}
+\begin{minipage}[c]{0.32\linewidth}
 \centering
-\vspace{0pt}
 \includegraphics[width=\linewidth]{figures/fig_frozen.pdf}
-\captionof{figure}{The critic of Algorithm~\ref{alg:jpc} frozen after pre-training, Game24 (2D critic, actor learning rate $10^{-6}$, earlier recipe): true success of the training batch (grey), held-out accuracy at the deployment sampler (blue), critic value on the training batch (red, right axis); dotted: SFT base.}
-\label{fig:frozen}
 \end{minipage}
+\caption{\textbf{Left:} critic design on Game24, one element changed at a time, each critic pre-trained on the same 16k rollouts. Offline, on held-out rollouts of the base policy at step 32 of 64: Pearson correlation of the pooled value with the outcome and pick@$V$, how often the rollout ranked highest among eight of the same prompt succeeds (random: about $0.55$). Online: held-out accuracy (\%) at the deployment sampler of one run of Algorithm~\ref{alg:jpc} with that critic, at its best and final checkpoint. \textbf{Right:} the last row over training (2D critic, actor learning rate $10^{-6}$, $^\dagger$earlier recipe, Appendix~\ref{app:details}): true success of the training batch (grey), held-out accuracy (blue), critic value on the training batch (red, right axis); dotted: SFT base.}
+\label{tab:critic_design}
 \end{table}
 
 \subsection{What the critic must be}
 \label{sec:exp_critic}
-Table~\ref{tab:critic_design} changes one element of the critic at a time, pre-trains each variant on the same rollouts, and reads it twice: offline, by how well its pooled value predicts the outcome of held-out rollouts, and online, by what it does to the policy under Algorithm~\ref{alg:jpc}. The two readings agree in their order. The critic of Algorithm~\ref{alg:jpc}, a fine-tuned copy of the denoiser reading the re-noised state together with the denoiser's own estimate, predicts the outcome well within the actor's window and trains the policy to the level of Table~\ref{tab:main}. Remove the estimate from its input, or freeze the copy and fit the head only, and the offline correlation drops by a third to nearly a half while the policy first improves and then collapses to less than a third of the base (one seed each); a randomly initialised copy reads the outcome only weakly. The estimate is what the critic reads the outcome from, and the denoiser is the network that can read it (\S\ref{sec:jpc_scalar}). The last row and Figure~\ref{fig:frozen} show that the critic must also move: frozen after pre-training, it is exploited as~(\ref{eq:biasm}) predicts, the update helping for a few hundred iterations before the true success of the training batch collapses, between 500 and 750 iterations, and the critic's value on it is driven to certainty, the held-out policy following the collapse. Refitting the head (\S\ref{sec:joint}) repairs this; it cannot repair features that never read the outcome.
+Table~\ref{tab:critic_design} changes one element of the critic at a time, pre-trains each variant on the same rollouts, and reads it twice: offline, by how well its pooled value predicts the outcome of held-out rollouts, and online, by what it does to the policy under Algorithm~\ref{alg:jpc}. The two readings agree in their order. The critic of Algorithm~\ref{alg:jpc}, a fine-tuned copy of the denoiser reading the re-noised state together with the denoiser's own estimate, predicts the outcome well within the actor's window and trains the policy to the level of Table~\ref{tab:main}. Remove the estimate from its input, or freeze the copy and fit the head only, and the offline correlation drops by a third to nearly a half while the policy first improves and then collapses to less than a third of the base (one seed each); a randomly initialised copy reads the outcome only weakly. The estimate is what the critic reads the outcome from, and the denoiser is the network that can read it (\S\ref{sec:jpc_scalar}). The last row, drawn over training in the right panel, shows that the critic must also move: frozen after pre-training, it is exploited as~(\ref{eq:biasm}) predicts, the update helping for a few hundred iterations before the true success of the training batch collapses, between 500 and 750 iterations, and the critic's value on it is driven to certainty, the held-out policy following the collapse. Refitting the head (\S\ref{sec:joint}) repairs this; it cannot repair features that never read the outcome.
 
 \subsection{The 2D critic keeps the update improving}
 \label{sec:exp_2d}
@@ -100,50 +94,39 @@ Table~\ref{tab:loop} reports the amortisation loop of Algorithm~\ref{alg:loop} o
 
 \begin{table}[t]
 \centering\small
-\begin{minipage}[t]{0.375\linewidth}
-\centering
-\caption{The loop: held-out accuracy (\%) of the SFT base, the 2D-critic policy it starts from (best seed), and the model after the rounds (Countdown 4, K\&K 5, Sudoku 1; single runs) at the 16-step chain, ODE-64 and the deployment chain. Every round and the controls in Appendix~\ref{app:loop_full}.}
+\setlength{\tabcolsep}{3pt}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{@{}lccc@{\hskip 8pt}ccc@{\hskip 8pt}ccc@{}}
+\toprule
+ & \multicolumn{3}{c}{Countdown (4 rounds)} & \multicolumn{3}{c}{K\&K (5 rounds)} & \multicolumn{3}{c}{Sudoku (1 round)} \\
+ & 16-step & ODE-64 & deploy. & 16-step & ODE-64 & deploy. & 16-step & ODE-64 & deploy. \\
+\midrule
+SFT base & 23.1 & 28.1 & 42.2 & 58.1 & 57.8 & 67.5 & 62.0 & 62.3 & 66.2 \\
+2D-critic policy (loop start) & 23.9 & 34.6 & 50.4 & 68.8 & 70.4 & 80.0 & 65.0 & 67.3 & 71.3 \\
+\hl{+ amortisation loop} & \textbf{\OURScdg} & \textbf{\OURScdo} & \textbf{\OURScd} & \textbf{\OURSkkg} & \textbf{\OURSkko} & \textbf{\OURSkk} & 65.5 & 67.3 & 71.4 \\
+\bottomrule
+\end{tabular}}
+\caption{The amortisation loop: held-out accuracy (\%) at the cheap 16-step chain, ODE-64 and the deployment chain, for the SFT base, the 2D-critic policy the loop starts from (best seed) and the model after the rounds (single runs). Every round, the pool's coverage, the three controls and the guided-sampler comparison are in Appendix~\ref{app:loop_full}.}
 \label{tab:loop}
-\small\setlength{\tabcolsep}{3pt}
-\resizebox{\linewidth}{!}{%
-\begin{tabular}{@{}lccc@{}}
+\end{table}
+
+\begin{table}[t]
+\centering\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{@{}llcc@{}}
 \toprule
- & 16-step & ODE-64 & deploy. \\
+choice it tests & variant & best / final & reference \\
 \midrule
-\multicolumn{4}{@{}l}{\emph{Countdown}}\\
-SFT base & 23.1 & 28.1 & 42.2 \\
-2D-critic policy & 23.9 & 34.6 & 50.4 \\
-\hl{+ loop} & \textbf{\OURScdg} & \textbf{\OURScdo} & \textbf{\OURScd} \\
-\multicolumn{4}{@{}l}{\emph{K\&K}}\\
-SFT base & 58.1 & 57.8 & 67.5 \\
-2D-critic policy & 68.8 & 70.4 & 80.0 \\
-\hl{+ loop} & \textbf{\OURSkkg} & \textbf{\OURSkko} & \textbf{\OURSkk} \\
-\multicolumn{4}{@{}l}{\emph{Sudoku}}\\
-SFT base & 62.0 & 62.3 & 66.2 \\
-2D-critic policy & 65.0 & 67.3 & 71.3 \\
-\hl{+ loop} & 65.5 & 67.3 & 71.4 \\
+\S\ref{sec:pathwise}, objective & actor ascends $\mathrm{sig}(V_\phi)$ instead of $V_\phi$ & \ABp{7} / \ABp{6} & 58.8 / 58.0 \\
+\S\ref{sec:jpc_2d}, pooling & actor ascends $\min_iR_{k,i}$ instead of the mean & \ABm{7} / \ABm{6} & 58.8 / 58.0 \\
+\S\ref{sec:joint}, where the head is refitted & buffer at five window steps (Countdown, 3 seeds) & 46.9 / 45.1 & 50.2 / 50.0 \\
+\S\ref{sec:joint}, step size & learning rate $3\times10^{-6}$ (run to 1000) & 58.0 / 30.3 & 58.9 / 58.4 \\
+\S\ref{sec:joint}, step size & constant learning rate $10^{-6}$ & 57.9 / 48.7 & 58.9 / 58.4 \\
+\S\ref{sec:joint}, one chain & trained under $\gamma4$@16, read at $\gamma56$@64 & 47.0 / 47.0 & 56.4 / 56.4 \\
 \bottomrule
-\end{tabular}}
-\end{minipage}\hfill
-\begin{minipage}[t]{0.605\linewidth}
-\centering
-\caption{Ablations of Algorithm~\ref{alg:jpc} on Game24 (Countdown where marked), held-out accuracy (\%) at the deployment sampler at the run's best and final checkpoint, beside the three-seed reference trained under the same recipe version (Appendix~\ref{app:details}). The last row was trained under $\gamma4$@16, where it lifts the base from $35.4$ to $42.5$, and is read at the deployment chain. Full trajectories and the remaining ablations in Appendix~\ref{app:needs_full}.}
+\end{tabular}
+\caption{Ablations of Algorithm~\ref{alg:jpc} on Game24 (Countdown where marked): held-out accuracy (\%) at the deployment sampler at the run's best and final checkpoint, beside the three-seed reference trained under the same recipe version (Appendix~\ref{app:details}). The last row was trained under $\gamma4$@16, where it lifts the base from $35.4$ to $42.5$, and is read at the deployment chain. Full trajectories and the remaining ablations in Appendix~\ref{app:needs_full}.}
 \label{tab:needs}
-\small\setlength{\tabcolsep}{3pt}
-\resizebox{\linewidth}{!}{%
-\begin{tabular}{@{}lcc@{}}
-\toprule
-variant (choice it tests) & best / final & ref. \\
-\midrule
-ascend $\mathrm{sig}(V_\phi)$, not $V_\phi$ (\S\ref{sec:pathwise}) & \ABp{7} / \ABp{6} & 58.8 / 58.0 \\
-pool by $\min_iR_{k,i}$, not the mean (\S\ref{sec:jpc_2d}) & \ABm{7} / \ABm{6} & 58.8 / 58.0 \\
-five-step buffer, Countdown, 3 seeds (\S\ref{sec:joint}) & 46.9 / 45.1 & 50.2 / 50.0 \\
-lr $3\times10^{-6}$, run to 1000 (\S\ref{sec:joint}) & 58.0 / 30.3 & 58.9 / 58.4 \\
-constant lr $10^{-6}$ (\S\ref{sec:joint}) & 57.9 / 48.7 & 58.9 / 58.4 \\
-trained $\gamma4$@16, read $\gamma56$@64 (\S\ref{sec:joint}) & 47.0 / 47.0 & 56.4 / 56.4 \\
-\bottomrule
-\end{tabular}}
-\end{minipage}
 \end{table}
 
 \subsection{What else the joint training needs}

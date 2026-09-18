@@ -15,7 +15,7 @@ series = [("SF, mean-centred $A$  (SNR 0.061)", [-0.03, -0.04, 0.00], style.VAL,
           ("SF, $A{=}1$ control  (0.063)", [0.02, 0.04, 0.02], style.BASE, ":", "x"),
           ("pathwise, 2D critic  (0.177)", [0.79, 0.94, 0.97], style.ACC, "-", "o"),
           ("GPT-2 token GRPO, Countdown", [0.05, 0.17, 0.27], "#2a9d8f", "-", "^")]
-fig, ax = plt.subplots(figsize=(2.35, 2.0))
+fig, ax = plt.subplots(figsize=(2.15, 2.05))
 for lab, ys, c, ls, mk in series: ax.plot(N, ys, ls, color=c, marker=mk, ms=3.2, lw=1.4, label=lab)
 ax.axhline(0, color=style.BASE, lw=0.6); ax.set_xscale("log", base=2); ax.set_xticks(N); ax.set_xticklabels([str(n) for n in N])
 ax.set_xlabel("rollouts $N$", fontsize=7.5); ax.set_ylabel("half-split cosine", fontsize=7.5); ax.set_ylim(-0.12, 1.02); ax.tick_params(labelsize=7)
@@ -38,7 +38,7 @@ def evals(prefix, key="gamma56"):
     return np.array(sorted(out))
 def smooth(x, w=5): return np.convolve(x, np.ones(w) / w, mode="same") if len(x) >= w else x
 v, t = parse(f"{R}/slurm/logs/cd-pathwise-3447085.out"); e = evals("eval_g24_g24_abl_frozen")
-fig, ax = plt.subplots(figsize=(2.15, 1.75)); ax2 = ax.twinx(); ax2.spines["top"].set_visible(False); ax2.grid(False)
+fig, ax = plt.subplots(figsize=(2.0, 1.25)); ax2 = ax.twinx(); ax2.spines["top"].set_visible(False); ax2.grid(False)
 ax.plot(t[:, 0], smooth(t[:, 1]), color=style.TRUE, lw=1.2); ax.plot(e[:, 0], e[:, 1], "o-", color=style.ACC, lw=1.4, ms=3)
 ax2.plot(v[:, 0], smooth(v[:, 1]), color=style.VAL, lw=1.2); ax.axhline(45.0, color=style.BASE, ls=":", lw=0.8)
 ax.set_xlabel("actor iteration", fontsize=7.5); ax.set_ylabel("accuracy (%)", fontsize=7.5); ax2.set_ylabel("$V_\\phi$ (logit)", color=style.VAL, fontsize=7.5)
