@@ -11,10 +11,10 @@ SC, TD = style.VAL, style.ACC   # orange = scalar critic, blue = 2D critic, ever
 # ---------------- estimator (placed at 0.40*5.5 = 2.2 in) ----------------
 N = [256, 1024, 2048]
 fig, ax = plt.subplots(figsize=(2.1, 1.9))
-ax.plot(N, [0.04, 0.02, -0.04], "-", color="#c9553d", marker="s", ms=3.2, lw=1.4, label="score-function, GRPO $A$")
-ax.plot(N, [0.02, 0.04, 0.02], ":", color=style.BASE, marker="x", ms=3.4, lw=1.3, label="score-function, $A{=}1$")
+ax.plot(N, [0.04, 0.02, -0.04], "-", color="#c9553d", marker="o", ms=3.2, lw=1.4, label="score-function, GRPO $A$")
+ax.plot(N, [0.02, 0.04, 0.02], ":", color=style.BASE, marker="o", ms=3.2, lw=1.3, label="score-function, $A{=}1$")
 ax.plot(N, [0.79, 0.94, 0.97], "-", color=TD, marker="o", ms=3.2, lw=1.6, label="pathwise, 2D critic")
-ax.plot(N, [0.05, 0.17, 0.27], "-", color="#2a9d8f", marker="^", ms=3.2, lw=1.4, label="GPT-2 token GRPO")
+ax.plot(N, [0.05, 0.17, 0.27], "-", color="#2a9d8f", marker="o", ms=3.2, lw=1.4, label="GPT-2 token GRPO")
 ax.axhline(0, color=style.BASE, lw=0.6); ax.set_xscale("log", base=2); ax.set_xticks(N); ax.set_xticklabels([str(n) for n in N]); ax.minorticks_off()
 ax.set_xlabel("rollouts $N$"); ax.set_ylabel("half-split cosine"); ax.set_ylim(-0.12, 1.02); ax.set_title("Game24 (GPT-2: Countdown)", pad=3)
 fig.savefig(os.path.join(D, "fig_estimator.pdf"), bbox_inches="tight", pad_inches=0.02); plt.close(fig)
@@ -37,7 +37,7 @@ def smooth_valid(x, y, w=5):
     if len(y) < w: return x, y
     return x[w // 2: len(y) - (w - 1 - w // 2)], np.convolve(y, np.ones(w) / w, mode="valid")
 v, t = parse(f"{R}/slurm/logs/cd-pathwise-3447085.out"); e = evals("eval_g24_g24_abl_frozen")
-fig, ax = plt.subplots(figsize=(2.3, 1.4)); ax2 = ax.twinx(); ax2.spines["top"].set_visible(False); ax2.grid(False)
+fig, ax = plt.subplots(figsize=(1.95, 1.2)); ax2 = ax.twinx(); ax2.spines["top"].set_visible(False); ax2.grid(False)
 xt, yt = smooth_valid(t[:, 0], t[:, 1]); xv, yv = smooth_valid(v[:, 0], v[:, 1])
 h1, = ax.plot(xt, yt, color=style.TRUE, lw=1.3, label="batch success")
 h2, = ax.plot(e[:, 0], e[:, 1], "o-", color="#212529", lw=1.4, ms=3, label="held-out acc.")
@@ -63,7 +63,7 @@ for lab, pat, col in (("scalar critic", "g24_TS_s%d", SC), ("2D critic", "g24_T_
         ax.plot(xs, ys, color=col, lw=0.7, alpha=0.55); curves.append(dict(zip(xs, ys)))
     allx = sorted(set(x for cv in curves for x in cv)); mean = [np.mean([cv[x] for cv in curves if x in cv]) for x in allx]
     ax.plot(allx, mean, color=col, lw=1.8, marker="o", ms=3, label=lab)
-ax.axhline(45.0, color=style.BASE, ls="--", lw=0.8); ax.text(260, 45.4, "SFT base", color=style.BASE, fontsize=7, ha="left", va="bottom")
+ax.axhline(45.0, color=style.BASE, ls="--", lw=0.8); ax.text(260, 45.4, "base", color=style.BASE, fontsize=7, ha="left", va="bottom")
 ax.set_title("scalar against 2D critic, three seeds", pad=3); ax.set_xlabel("actor iteration"); ax.set_ylabel("held-out accuracy (%)")
 ax.set_xticks([250, 500, 750, 1000, 1250, 1500])
 its = [250, 500, 750, 1000, 1250, 1500]
