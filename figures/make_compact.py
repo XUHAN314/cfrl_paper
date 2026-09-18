@@ -76,5 +76,5 @@ bx.axvline(250, color=style.BASE, ls=":", lw=0.9); bx.axhline(45.0, color=style.
 bx.set_title("critics exchanged at iteration 250", pad=3); bx.set_xlabel("actor iteration"); bx.set_xticks([250, 500, 750, 1000, 1250, 1500]); bx.set_xlim(200, 1550)
 ax.set_ylim(43.5, 60)
 H1, L1 = ax.get_legend_handles_labels(); H2, L2 = bx.get_legend_handles_labels()
-fig.legend(H1 + H2, L1 + L2, frameon=False, loc="upper center", bbox_to_anchor=(0.5, 0.0), ncol=3, columnspacing=1.6, handlelength=1.8, labelspacing=0.3)
+fig.legend(H1 + H2, L1 + L2, frameon=False, loc="upper center", bbox_to_anchor=(0.5, -0.08), ncol=3, columnspacing=1.6, handlelength=1.8, labelspacing=0.3)
 fig.savefig(os.path.join(D, "fig_dyn.pdf"), bbox_inches="tight", pad_inches=0.02); print("compact figures written")
