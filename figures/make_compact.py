@@ -10,14 +10,13 @@ F = 8.0; plt.rcParams.update({"font.size": F, "legend.fontsize": F, "axes.titles
 SC, TD = style.VAL, style.ACC   # orange = scalar critic, blue = 2D critic, everywhere in §6
 # ---------------- estimator (placed at 0.40*5.5 = 2.2 in) ----------------
 N = [256, 1024, 2048]
-fig, ax = plt.subplots(figsize=(2.1, 2.0))
+fig, ax = plt.subplots(figsize=(2.1, 1.9))
 ax.plot(N, [0.04, 0.02, -0.04], "-", color="#c9553d", marker="s", ms=3.2, lw=1.4, label="score-function, GRPO $A$")
 ax.plot(N, [0.02, 0.04, 0.02], ":", color=style.BASE, marker="x", ms=3.4, lw=1.3, label="score-function, $A{=}1$")
 ax.plot(N, [0.79, 0.94, 0.97], "-", color=TD, marker="o", ms=3.2, lw=1.6, label="pathwise, 2D critic")
 ax.plot(N, [0.05, 0.17, 0.27], "-", color="#2a9d8f", marker="^", ms=3.2, lw=1.4, label="GPT-2 token GRPO")
 ax.axhline(0, color=style.BASE, lw=0.6); ax.set_xscale("log", base=2); ax.set_xticks(N); ax.set_xticklabels([str(n) for n in N]); ax.minorticks_off()
 ax.set_xlabel("rollouts $N$"); ax.set_ylabel("half-split cosine"); ax.set_ylim(-0.12, 1.02); ax.set_title("Game24 (GPT-2: Countdown)", pad=3)
-ax.legend(frameon=False, loc="upper center", bbox_to_anchor=(0.5, -0.32), ncol=1, handlelength=1.5, labelspacing=0.25, borderaxespad=0.0)
 fig.savefig(os.path.join(D, "fig_estimator.pdf"), bbox_inches="tight", pad_inches=0.02); plt.close(fig)
 # ---------------- frozen critic (placed at 0.42*5.5 = 2.3 in) ----------------
 def parse(log):
@@ -38,7 +37,7 @@ def smooth_valid(x, y, w=5):
     if len(y) < w: return x, y
     return x[w // 2: len(y) - (w - 1 - w // 2)], np.convolve(y, np.ones(w) / w, mode="valid")
 v, t = parse(f"{R}/slurm/logs/cd-pathwise-3447085.out"); e = evals("eval_g24_g24_abl_frozen")
-fig, ax = plt.subplots(figsize=(2.3, 1.55)); ax2 = ax.twinx(); ax2.spines["top"].set_visible(False); ax2.grid(False)
+fig, ax = plt.subplots(figsize=(2.3, 1.4)); ax2 = ax.twinx(); ax2.spines["top"].set_visible(False); ax2.grid(False)
 xt, yt = smooth_valid(t[:, 0], t[:, 1]); xv, yv = smooth_valid(v[:, 0], v[:, 1])
 h1, = ax.plot(xt, yt, color=style.TRUE, lw=1.3, label="batch success")
 h2, = ax.plot(e[:, 0], e[:, 1], "o-", color="#212529", lw=1.4, ms=3, label="held-out acc.")
@@ -46,7 +45,6 @@ h3, = ax2.plot(xv, yv, color="#6a4c93", lw=1.4, label="critic $V_\\phi$ (right)"
 h4 = ax.axhline(45.0, color=style.BASE, ls=":", lw=0.8, label="SFT base")
 ax.set_xlabel("actor iteration"); ax.set_ylabel("%"); ax.set_ylim(0, 100); ax.set_xlim(0, 1000); ax.set_yticks([0, 50, 100])
 ax2.tick_params(axis="y", colors="#6a4c93"); ax2.spines["right"].set_color("#6a4c93"); ax2.set_ylim(-5, 100); ax2.set_yticks([0, 50, 100]); ax2.set_ylabel("logit", color="#6a4c93", labelpad=1)
-ax.legend([h1, h2, h3, h4], [h.get_label() for h in (h1, h2, h3, h4)], frameon=False, loc="upper center", bbox_to_anchor=(0.5, -0.3), ncol=2, handlelength=1.4, columnspacing=0.8, labelspacing=0.25, borderaxespad=0.0)
 fig.savefig(os.path.join(D, "fig_frozen.pdf"), bbox_inches="tight", pad_inches=0.02); plt.close(fig)
 # ---------------- Game24: trajectories | exchange (placed at 5.5 in) ----------------
 def acc(pre, run, c, sampler, mfile):
@@ -54,7 +52,7 @@ def acc(pre, run, c, sampler, mfile):
     if not os.path.exists(f): return None
     return 100 * json.load(open(f))["accuracy"]
 S64 = "sde-steps64-cfg2-ts_uniform-gamma56.0-cond"
-fig, (ax, bx) = plt.subplots(1, 2, figsize=(5.5, 2.05), sharey=True, gridspec_kw=dict(wspace=0.10))
+fig, (ax, bx) = plt.subplots(1, 2, figsize=(5.5, 1.85), sharey=True, gridspec_kw=dict(wspace=0.10))
 for lab, pat, col in (("scalar critic", "g24_TS_s%d", SC), ("2D critic", "g24_T_s%d", TD)):
     curves = []
     for s in (1, 2, 3):
@@ -75,6 +73,4 @@ for lab, ys, col, ls in [("scalar throughout", [47.7, 49.8, 51.6, 49.8, 49.9, 50
 bx.axvline(250, color=style.BASE, ls=":", lw=0.9); bx.axhline(45.0, color=style.BASE, ls="--", lw=0.8)
 bx.set_title("critics exchanged at iteration 250", pad=3); bx.set_xlabel("actor iteration"); bx.set_xticks([250, 500, 750, 1000, 1250, 1500]); bx.set_xlim(200, 1550)
 ax.set_ylim(43.5, 60)
-H1, L1 = ax.get_legend_handles_labels(); H2, L2 = bx.get_legend_handles_labels()
-fig.legend(H1 + H2, L1 + L2, frameon=False, loc="upper center", bbox_to_anchor=(0.5, -0.08), ncol=3, columnspacing=1.6, handlelength=1.8, labelspacing=0.3)
 fig.savefig(os.path.join(D, "fig_dyn.pdf"), bbox_inches="tight", pad_inches=0.02); print("compact figures written")

@@ -36,7 +36,7 @@ task SFT (base) & 42.2 & 66.2 & 67.5 & 45.0 \\
 \centering
 \includegraphics[width=\linewidth]{figures/fig_estimator.pdf}
 \end{minipage}
-\caption{\textbf{Left:} held-out accuracy (\%) under the deployment chain, best evaluated checkpoint; ELF\mbox{-}B RL rows are means of three seeds (Appendix~\ref{app:seeds}), other rows single runs; bold: best ELF\mbox{-}B row per column; blue: this paper's recipe. \textbf{Right:} half-split cosine of the gradient on Game24 rollouts of the base at flow step 24 of 64 (GPT-2: Countdown, its own sampler): score-function with the GRPO advantage and with the $A{=}1$ control, pathwise through the pre-trained 2D critic; mean of 10 random splits (sd $\le0.05$). A genuine signal rises with $N$, a zero-mean estimator stays at $0$ (numbers, SNR and per-block split in Appendix~\ref{app:snr}--\ref{app:discrete_snr}).}
+\caption{\textbf{Left:} held-out accuracy (\%) under the deployment chain, best evaluated checkpoint; ELF\mbox{-}B RL rows are means of three seeds (Appendix~\ref{app:seeds}), other rows single runs; bold: best ELF\mbox{-}B row per column; blue: this paper's recipe. \textbf{Right:} half-split cosine of the gradient on Game24 rollouts of the base at flow step 24 of 64 (GPT-2: Countdown, its own sampler): score-function with the GRPO advantage (\lk{cgrpo}) and with the $A{=}1$ control (\lk[densely dotted]{cctrl}), pathwise through the pre-trained 2D critic (\lk{ctwod}), GPT-2's token-level GRPO (\lk{cgpt}); mean of 10 random splits (sd $\le0.05$). A genuine signal rises with $N$, a zero-mean estimator stays at $0$ (numbers, SNR and per-block split in Appendix~\ref{app:snr}--\ref{app:discrete_snr}).}
 \label{tab:main}
 \end{table}
 
@@ -69,7 +69,7 @@ fine-tuned copy, reads $(y_k,\hat x_{k-1})$ & \CDa{1} & \CDa{3} & \CDa{5} & \CDa
 \centering
 \includegraphics[width=\linewidth]{figures/fig_frozen.pdf}
 \end{minipage}
-\caption{\textbf{Left:} critic design on Game24, one element changed at a time; bold: the critic of Algorithm~\ref{alg:jpc}. Offline, on held-out rollouts of the base under the deployment chain at step 32 of 64: correlation of the pooled value with the outcome, and pick@$V$, how often the top-ranked of eight rollouts succeeds (chance $0.55$ on this rollout set). Online: held-out accuracy (\%) of one run of Algorithm~\ref{alg:jpc} with that critic refit in RL, best and final checkpoint (random initialisation not run online). \textbf{Right:} the frozen critic of the last row over training on Game24 ($^\dagger$earlier recipe, Appendix~\ref{app:details}): verifier success of the training batch (grey, smoothed), held-out accuracy under the deployment chain (black), the critic's pooled value on the same batch in logits (purple, right axis); dotted: SFT base.}
+\caption{\textbf{Left:} critic design on Game24, one element changed at a time; bold: the critic of Algorithm~\ref{alg:jpc}. Offline, on held-out rollouts of the base under the deployment chain at step 32 of 64: correlation of the pooled value with the outcome, and pick@$V$, how often the top-ranked of eight rollouts succeeds (chance $0.55$ on this rollout set). Online: held-out accuracy (\%) of one run of Algorithm~\ref{alg:jpc} with that critic refit in RL, best and final checkpoint (random initialisation not run online). \textbf{Right:} the frozen critic of the last row over training on Game24 ($^\dagger$earlier recipe, Appendix~\ref{app:details}): verifier success of the training batch (\lkn{cgrey}, smoothed), held-out accuracy under the deployment chain (\lk{cblack}), the critic's pooled value on the same batch in logits (\lkn{cpurple}, right axis); dotted: the base.}
 \label{tab:critic_design}
 \end{table}
 
@@ -80,7 +80,7 @@ Table~\ref{tab:critic_design} reads the critic of Algorithm~\ref{alg:jpc} and th
 \begin{figure}[t]
 \centering
 \includegraphics[width=\linewidth]{figures/fig_dyn.pdf}
-\caption{Game24, held-out accuracy (\%) under the deployment chain. \textbf{Left:} the scalar- and 2D-critic runs of Table~\ref{tab:main} after that many actor iterations, three seeds (thin) and their mean (thick). \textbf{Right:} a fourth seed of each recipe stopped at iteration 250 and continued with its own critic (solid) or with the other recipe's pre-trained critic, refit from 250 on (dashed); colour marks the critic in charge after the exchange; dotted vertical: the exchange. Both panels: dashed, SFT base. Values in Appendix~\ref{app:swap_late}.}
+\caption{Game24, held-out accuracy (\%) under the deployment chain; scalar critic \lk{cscalar}, 2D critic \lk{ctwod}. \textbf{Left:} the runs of Table~\ref{tab:main} after that many actor iterations, three seeds (thin) and their mean (thick). \textbf{Right:} a fourth seed of each recipe stopped at iteration 250 (dotted vertical) and continued with its own critic (solid) or with the other recipe's pre-trained critic, refit from 250 on (dashed: \lk[dashed]{ctwod} scalar-trained policy under the 2D critic, \lk[dashed]{cscalar} 2D-trained policy under the scalar critic); colour marks the critic in charge after the exchange. Both panels: dashed grey, the base. Values in Appendix~\ref{app:swap_late}.}
 \label{fig:dyn}
 \end{figure}
 

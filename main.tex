@@ -19,6 +19,12 @@
 \newcommand{\jpc}{\textsc{JPC}}
 \newcommand{\dep}{\gamma56@64}
 \newcommand{\hl}[1]{\textcolor{blue!70!black}{#1}}
+% ---- line keys for captions (colours match figures/style.py and make_compact.py)
+\definecolor{ctwod}{HTML}{2A6F97}\definecolor{cscalar}{HTML}{E76F51}\definecolor{cgrpo}{HTML}{C9553D}\definecolor{cctrl}{HTML}{495057}
+\definecolor{cgpt}{HTML}{2A9D8F}\definecolor{cgrey}{HTML}{8D99AE}\definecolor{cblack}{HTML}{212529}\definecolor{cpurple}{HTML}{6A4C93}
+\newcommand{\lk}[2][solid]{\tikz[baseline=-0.6ex]{\draw[#2,line width=1.1pt,#1] (0,0)--(1.5em,0); \fill[#2] (0.75em,0) circle (1.5pt);}}
+\newcommand{\lkn}[2][solid]{\tikz[baseline=-0.6ex]{\draw[#2,line width=1.1pt,#1] (0,0)--(1.5em,0);}}
+
 % Loop cells (final values of the 2D-policy chains)
 \newcommand{\OURScd}{50.2}\newcommand{\OURScdo}{46.4}\newcommand{\OURScdg}{44.7}\newcommand{\OURScdt}{50.0}
 \newcommand{\OURSkk}{99.1}\newcommand{\OURSkko}{96.0}\newcommand{\OURSkkg}{93.7}\newcommand{\OURSkkt}{98.0}\newcommand{\OURSkkfour}{97.5}
