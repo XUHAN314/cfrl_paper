@@ -14,7 +14,7 @@ def acc(pre, run, c, sampler, mfile):
     if not os.path.exists(f): return None
     d = json.load(open(f)); return 100 * (d["all"]["solved"] if "all" in d else d["accuracy"])
 gap = json.load(open(f"{R}/outputs/analysis/train_log_gap.json"))
-fig, axes = plt.subplots(2, 4, figsize=(7.2, 3.3), sharex="col", gridspec_kw=dict(height_ratios=[1.35, 1], hspace=0.12, wspace=0.32))
+fig, axes = plt.subplots(2, 4, figsize=(5.5, 3.4), sharex="col", gridspec_kw=dict(height_ratios=[1.35, 1], hspace=0.12, wspace=0.32))
 C = {"2D": style.ACC, "scalar": style.VAL}
 for j, (name, pre, p2d, psc, sampler, mfile, base) in enumerate(TASKS):
     ax, ax2 = axes[0, j], axes[1, j]
@@ -33,11 +33,10 @@ for j, (name, pre, p2d, psc, sampler, mfile, base) in enumerate(TASKS):
         per_seed = gap[name][lab]; ws = sorted(set(int(w) for ws_, _, _ in per_seed for w in ws_))
         auc = [np.nanmean([ws_[str(w)]["auc"] for ws_, _, _ in per_seed if str(w) in ws_]) for w in ws]
         ax2.plot(ws, auc, color=C[lab], lw=1.6, marker="o", ms=2.5)
-    ax.axhline(base, color=style.BASE, ls="--", lw=0.8); ax.text(0.98, 0.04 if name != "Sudoku" else 0.9, "SFT base", transform=ax.transAxes, ha="right", va="bottom", fontsize=6.5, color=style.BASE)
+    ax.axhline(base, color=style.BASE, ls="--", lw=0.8)
     ax2.axhline(0.9, color=style.BASE, ls=":", lw=0.8)
-    ax.set_title(name, fontsize=9, pad=3); ax2.set_xlabel("actor iteration", fontsize=7.5); ax2.set_ylim(0.85, 1.0); ax2.set_yticks([0.85, 0.9, 0.95, 1.0])
-    ax2.set_xticks([500, 1000, 1500] if name in ("Countdown", "Game24") else [250, 500, 750, 1000]); ax2.tick_params(labelsize=6.5); ax.tick_params(labelsize=6.5)
+    ax.set_title(name, fontsize=8.5, pad=3); ax2.set_xlabel("actor iteration", fontsize=7.5); ax2.set_ylim(0.85, 1.0); ax2.set_yticks([0.85, 0.9, 0.95, 1.0])
+    ax2.set_xticks([500, 1000, 1500] if name in ("Countdown", "Game24") else [500, 1000]); ax2.tick_params(labelsize=7); ax.tick_params(labelsize=7)
     if j == 0: ax.set_ylabel("held-out accuracy (%)", fontsize=7.5); ax2.set_ylabel("critic AUC,\nnewest buffer states", fontsize=7.5)
-axes[0, 0].legend(frameon=False, fontsize=7, loc="lower right" if False else "upper left", handlelength=1.6, borderaxespad=0.2)
-axes[1, 0].text(0.03, 0.06, "AUC floor $a_0$", transform=axes[1, 0].transAxes, fontsize=6.5, color=style.BASE)
+axes[0, 0].legend(frameon=False, fontsize=7, loc="upper left", handlelength=1.6, borderaxespad=0.2)
 out = os.path.join(os.path.dirname(__file__), "fig_traj.pdf"); fig.savefig(out, bbox_inches="tight", pad_inches=0.02); print("wrote", out)
