@@ -308,7 +308,7 @@ cosine of the two critics' $\|g_i\|$ profiles & & 0.94 & 0.94 & 0.94\\\bottomrul
 
 \subsubsection{Exchanging the critics}
 \label{app:swap_late}
-Table~\ref{tab:swap} gives the values behind the right panel of Figure~\ref{fig:dyn}: a fourth seed of each recipe is stopped at iteration 250 and continued for the rest of the same schedule (cosine $0.94\times10^{-6}\to10^{-7}$ over the remaining 1{,}250 iterations) with its own critic or with the other recipe's pre-trained critic, whose head is refit from iteration 250 on as in Algorithm~\ref{alg:jpc}.
+Table~\ref{tab:swap} gives the values behind the right panel of Figure~\ref{fig:dyn}: a fourth seed of each recipe is stopped at iteration 250 and continued for the rest of the same schedule (cosine $0.94\times10^{-6}\to10^{-7}$ over the remaining 1{,}250 iterations) with its own critic or with the other recipe's pre-trained critic, whose head is refit from iteration 250 on as in Algorithm~\ref{alg:jpc}. In these four runs the 2D critic's head was refit with the pooled term of~(\ref{eq:critic2d_loss}) only, the variant that the ablation of Appendix~\ref{app:needs_full} shows to be equivalent on Game24; the unchanged 2D run ends at $57.3$ against $58.8$ for the three reference seeds.
 \begin{table}[H]\centering\small
 \caption{Exchanging the critics on Game24 (seed 4). Each cell is the held-out accuracy (\%) at the deployment sampler after that many actor iterations in total.}\label{tab:swap}
 \begin{tabular}{@{}llcccccc@{}}\toprule
