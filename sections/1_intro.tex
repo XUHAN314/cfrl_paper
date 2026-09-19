@@ -15,6 +15,6 @@ The third stage addresses a limitation exposed by Stage 2: a scalar critic indic
 We evaluate all three RL stages under a unified protocol on four program-verifiable reasoning tasks: Countdown, Sudoku, Knights-and-Knaves, and Game24. We additionally train an AR model with standard RL post-training and a masked diffusion model on the same data. Our contributions are:
 \begin{itemize}
     \item We formulate the RL action-space and credit-assignment problem for continuous flow language models and present, to our knowledge, the first demonstration that RL post-training can reliably improve them. We systematically investigate with three successive stages.
-    \item We introduce a complete pathwise RL post-training framework that combines a 2D critic which assigns credit across flow steps and token positions with an amortisation loop which distils RL gains across samplers.
-    \item We study and characterize all three stages across four program-verifiable reasoning tasks, finding that JPC-2D yields the strongest and most consistent gains.
+    \item We introduce a complete pathwise RL post-training framework that combines a 2D critic which assigns credit across flow steps and token positions with an amortisation loop which distils reward improvement across samplers.
+    \item We study and characterize all three stages across four program-verifiable reasoning tasks, finding that JPC-2D yields the strongest and most consistent reward improvement.
 \end{itemize}
