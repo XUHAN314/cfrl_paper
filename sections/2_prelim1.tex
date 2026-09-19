@@ -6,11 +6,12 @@ We study ELF \citep{hu2026elf}, a continuous flow language model that generates 
 $\varepsilon\sim\mathcal N(0,I)$, $t\in[0,1]$, and $c_\sigma$ is a fixed noise scale. Its denoiser defines a velocity field $v_\theta(z_t,t;\hat x_{\rm prev})$, self-conditioned on its previous clean-sequence estimate, that jointly updates all position embeddings without selecting tokens. At the endpoint, a decoder maps each embedding to vocabulary logits $\ell_i\in\mathbb R^{|\mathcal V|}$, yielding $w_i=\arg\max\ell_i$. Throughout, $\mathrm{sig}(\cdot)$ denotes the logistic function and $\mathrm{logit}=\mathrm{sig}^{-1}$.
 
 \paragraph{The SDE sampler.}
-ELF provides a stochastic sampler with churn parameter $\gamma$, which injects noise at each step. Given $z_{k-1}$, the sampler first re-noises the state and then integrates the velocity forward:
+ELF provides a stochastic sampler in which, given $z_{k-1}$, each step perturbs the state with noise controlled by the churn parameter 
+$\gamma$ and then integrates the velocity forward:
 \begin{equation}
 y_k=\alpha_k z_{k-1}+(1-\alpha_k)c_\sigma\varepsilon_k, z_k=y_k+(t_k-\tilde t_k)v_\theta(y_k,\tilde t_k,c;\hat x_{k-1})=:D_\theta(s_k), s_k=(y_k,\hat x_{k-1})
 \end{equation}
-where $\tilde t_k=\alpha_k t_{k-1}$, $\alpha_k=1-\gamma h_k$, and $\varepsilon_k=(\varepsilon_{k,i})_{i=1}^{|\mathcal G|}$ with $\varepsilon_{k,i}\overset{\mathrm{iid}}{\sim}\mathcal N(0,I_d)$. The states $s_k$ form a Markov chain with trajectory $\tau=(s_k)_{k=1}^{K-1}$ and exact Gaussian density with $\sigma_k=(1-\alpha_k)c_\sigma$:
+where $\tilde t_k=\alpha_k t_{k-1}$, $\alpha_k=1-\gamma \Delta t_k$, and $\varepsilon_k=(\varepsilon_{k,i})_{i=1}^{|\mathcal G|}$ with $\varepsilon_{k,i}\overset{\mathrm{iid}}{\sim}\mathcal N(0,I_d)$. The states $s_k$ form a Markov chain with trajectory $\tau=(s_k)_{k=1}^{K-1}$ and exact Gaussian density with $\sigma_k=(1-\alpha_k)c_\sigma$:
 \begin{equation}
 y_{k,i}=\alpha_kD_\theta(s_{k-1})_i+\sigma_k\varepsilon_{k,i}, \quad p_\theta(\tau\mid c)=\prod_{k=1}^{K-1}\prod_{i=1}^{|\mathcal G|}\mathcal N\!\left(y_{k,i};\alpha_kD_\theta(s_{k-1})_i,\sigma_k^2I_d\right)
 \label{eq:chain}
@@ -27,15 +28,15 @@ Because subsequent flow steps inject Gaussian noise, the same intermediate state
 \begin{equation}
 r\mid s_k,t_k,c
 \sim
-\operatorname{Bernoulli}\!\left(V(s_k)\right),
+\operatorname{Bernoulli}\!\left(V(s_k, t_k, c)\right),
 \qquad
-V(s_k)
+V(s_k, t_k, c)
 =
 \mathbb E_{\tau\sim p_\theta(\cdot\mid s_k,t_k,c)}
 \!\left[r\bigl(w_\theta(\tau),c\bigr)\right].
 \label{eq:value}
 \end{equation}
-The terminal value $V(s_{K-1})=r(w_\theta(s_{K-1}),c)$ is piecewise constant, whereas earlier values depend on $\theta$ through subsequent transitions and satisfy $V(s_{k-1})=\mathbb E_{\varepsilon_k} \left[V(s_k)\mid s_{k-1},c\right]$. Gaussian re-noising smooths the bounded terminal reward over intermediate states (Appendix~\ref{app:pw_derivation}).
+For notational simplicity, we write \(V(s_k):=V(s_k,t_k,c)\). The terminal value $V(s_{K-1})=r(w_\theta(s_{K-1}),c)$ is piecewise constant, whereas earlier values depend on $\theta$ through subsequent transitions and satisfy $V(s_{k-1})=\mathbb E_{\varepsilon_k} \left[V(s_k)\mid s_{k-1},c\right]$. Gaussian re-noising smooths the bounded terminal reward over intermediate states (Appendix~\ref{app:pw_derivation}).
 
 \paragraph{Two gradient estimators.}
-The \emph{score-function} identity differentiates the density: $\nabla_\theta J=\mathbb E_\tau[A\,\nabla_\theta\log p_\theta(\tau\mid c)]$, where a baseline-adjusted advantage $A$ preserves the expected gradient \citep{williams1992reinforce}. For an AR model, $\tau$ is the token sequence with $\log p_\theta(w\mid c)=\sum_j\log\pi^{\rm AR}_\theta(w_j\mid w_{<j},c)$, so each term corresponds to a categorical token decision. For the flow the chain~(\ref{eq:chain}), the same identity applies to the exact Gaussian density. The \emph{pathwise} identity instead differentiates the sample. Writing $\tau=F_\theta(c,\varepsilon)$  gives $\nabla_\theta\mathbb E[g(\tau)]=\mathbb E_\varepsilon[\nabla_\theta g(F_\theta(c,\varepsilon))]$ under standard regularity conditions. It needs a differentiable path from $\theta$ to $g$. The terminal reward is nondifferentiable due to decoder $\arg\max$ and program verification, whereas the state value in~(\ref{eq:value}) is differentiable.
+The \emph{score-function} estimator differentiates the density: $\nabla_\theta J=\mathbb E_\tau[A\,\nabla_\theta\log p_\theta(\tau\mid c)]$, where $A(\tau,c)=r(w_\theta(\tau),c)-b(c)$ and any baseline $b(c)$ independent of the sampled trajectory leaves the expected gradient unchanged \citep{williams1992reinforce}. For an AR model, $\log p_\theta(w\mid c)=\sum_j\log\pi^{\rm AR}_\theta(w_j\mid w_{<j},c)$, so each term corresponds to a categorical token decision. For the flow the chain~(\ref{eq:chain}), the same identity applies to the exact Gaussian density. The \emph{pathwise} estimator instead differentiates the sample. Writing the sampler as $\tau=F_\theta(c,\varepsilon)$, the pathwise estimator differentiates a smooth reward estimate g: $\nabla_\theta\mathbb E[g(\tau)]=\mathbb E_\varepsilon[\nabla_\theta g(F_\theta(c,\varepsilon))]$ under regularity conditions. It needs a differentiable path from $\theta$ to $g$. The terminal reward is nondifferentiable due to decoder $\arg\max$ and program verification, whereas the state value in~(\ref{eq:value}) is differentiable.
