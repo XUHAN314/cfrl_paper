@@ -19,14 +19,20 @@ y_{k,i}=\alpha_kD_\theta(s_{k-1})_i+\sigma_k\varepsilon_{k,i}, \quad p_\theta(\t
 where $k$ and $i$ denote the flow step and token position. The response $w=w_\theta(s_{K-1})$ is obtained deterministically by advancing $z_{K-1}=D_\theta(s_{K-1})$ to $t_K=1$ and applying decoder argmax.
 
 \paragraph{RL objective and value.}
-A program verifier scores the decoded response: $r=r(w,c)\in\{0,1\}$. RL post-training maximises the expected reward,
+Let $C$ denote a random prompt and $c$ a realization. A program verifier assigns response $w$ a binary reward $r(w,c)$. RL post-training maximises the expected reward,
 \begin{equation}
-J(\theta)=\mathbb E_c\,\mathbb E_{\tau\sim p_\theta(\cdot\mid c)}\big[r\big(w_\theta(s_{K-1}),c\big)\big].
+J(\theta)
+=
+\mathbb E_C
+\mathbb E_{\tau\sim p_\theta(\cdot\mid C)}
+\left[
+r\bigl(w_\theta(\tau),C\bigr)
+\right].
 \label{eq:objective}
 \end{equation}
-Because subsequent flow steps inject Gaussian noise, the same intermediate state $s_k$ can produce different responses. Thus the verifier outcome conditioned on $s_k$ is random:
+Fix a prompt $c$ and an intermediate state $s_k$ at time $t_k$. Because subsequent flow steps inject Gaussian noise, the same intermediate state $s_k$ can produce different responses. Thus the verifier outcome conditioned on $s_k$ is random:
 \begin{equation}
-r\mid s_k,t_k,c
+r\bigl(w_\theta(\tau),c\bigr)
 \sim
 \operatorname{Bernoulli}\!\left(V(s_k, t_k, c)\right),
 \qquad
