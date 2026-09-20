@@ -207,6 +207,36 @@ GPT-2, exact AR likelihood & GRPO $(r-\bar r)/\mathrm{sd}$ & 256 & 0.35 & 0.22 &
  & $A{=}1$ (control) & 2048 & 0.29 & 0.21 & 0.023 & 0.0221 & $0.02\pm0.03$\\
 \bottomrule\end{tabular}}\end{table}
 
+\subsubsection{One step along each gradient}
+\label{app:onestep}
+The half-split cosine says that the pathwise gradient is reproducible, not that it points the right way. The lower right panel of Table~\ref{tab:main} tests the direction by intervention, at iteration~0 of RL: the SFT base and the pre-trained 2D critic, no training. We draw $1{,}024$ rollouts of $128$ training prompts under the deployment chain and compute, on the same rollouts and the same four flow steps of the window of Algorithm~\ref{alg:jpc} per rollout, the mean score-function gradient of~(\ref{eq:grpo_loss}) and the mean pathwise gradient of $V_\phi(s_k)$; finite differences confirm both as ascent directions of their objectives (ratio $1.000$). The policy is then moved once, $\theta'=\theta+\eta\,g/\lVert g\rVert$, and evaluated on the held-out prompts under the deployment chain with the sampler's random stream fixed, so that every $\theta'$ sees the same prompts and the same noise as the base (a checkpoint rewritten with $\eta{=}0$ reproduces the base's outputs string for string). The length $\eta$ is measured against $D$, the parameter distance that a 2D-critic run of Table~\ref{tab:main} travels from the base; one AdamW step at the initial learning rate can move at most $0.008\,D$. Each gradient is applied in two forms: raw, and as AdamW applies a first step (global clipping at $1$, then $g/(|g|+\epsilon)$ per coordinate), both rescaled to the same length; a Gaussian random direction is the control.
+
+Table~\ref{tab:onestep} gives the paired change in accuracy. In the form the optimiser uses, one pathwise step gains four points on Game24 at a quarter to a half of $D$ and three to four on Countdown from a half of $D$ on, with intervals that exclude zero; the score-function step from the same rollouts stays within its interval of zero on Countdown and at its edge on Game24, and the random step does nothing at any length. The raw gradients are a different matter: the raw pathwise gradient never helps and destroys the policy from about $D/4$ while the critic's own value rises along it, and the raw score-function gradient is inert at short lengths and harmful at long ones. The reason is concentration: $0.91$--$0.92$ of the squared norm of the pathwise gradient ($0.94$--$0.95$ for the score-function gradient) lies in one percent of the coordinates, against $0.012$ after the per-coordinate normalisation, so that a raw step of any useful length moves a few coordinates far outside the region where the critic was fitted. The pathwise update of Algorithm~\ref{alg:jpc} is therefore the AdamW-normalised step, and the normalisation is part of what makes it work. On Game24 the gain turns over at $\eta{=}D$: a single direction from a critic that is not refit cannot be followed as far as training goes (\S\ref{sec:joint}). The gradients behind the table reproduce the right panel's statistic on a second sample: the cosine between a 128-rollout gradient and the mean of the other seven batches is $0.86$--$0.90$ (Game24) and $0.66$--$0.78$ (Countdown) for the pathwise gradient and $-0.03$ to $+0.07$ and $-0.06$ to $+0.05$ for the score-function gradient; the two mean gradients are orthogonal to each other (cosine $0.01$ and $0.05$). The experiment uses one batch of rollouts per task and the starting point of RL only; the base accuracies differ slightly from Table~\ref{tab:main} because evaluating the deployment chain alone draws a different random stream.
+\begin{table}[H]\centering\small
+\caption{One step from the base along each mean gradient of $1{,}024$ rollouts. Each cell is the paired change in held-out accuracy (points) against the base under the deployment chain with the sampling noise fixed; brackets: $95\%$ bootstrap interval over prompts. \emph{AdamW}: the direction of a first AdamW step of that gradient; \emph{raw}: the gradient itself; all steps have length $\eta$.}\label{tab:onestep}
+\begin{tabular}{@{}lccccc@{}}\toprule
+$\eta/D$ & pathwise, AdamW & score-function, AdamW & random & pathwise, raw & score-function, raw \\\midrule
+\multicolumn{6}{@{}l}{\emph{Game24} (base $43.0$, $D=1.30$ over $750$ iterations, 1601 prompts)}\\
+$1/256$ & $+0.0$ {\scriptsize[-0.5, +0.5]} & $+0.2$ {\scriptsize[-0.2, +0.7]} & $+0.5$ & $+0.5$ & $+0.1$ \\
+$1/128$ & $+0.1$ {\scriptsize[-0.5, +0.7]} & $+0.3$ {\scriptsize[-0.2, +0.9]} & $+0.3$ & $-0.2$ & $+0.1$ \\
+$1/64$ & $+0.0$ {\scriptsize[-0.7, +0.7]} & $+0.2$ {\scriptsize[-0.2, +0.7]} & $+0.7$ & $-0.6$ & $+0.3$ \\
+$1/32$ & $+0.9$ {\scriptsize[+0.0, +1.9]} & $+0.8$ {\scriptsize[+0.2, +1.5]} & $+0.0$ & $-1.3$ & $+0.4$ \\
+$1/16$ & $+1.0$ {\scriptsize[-0.2, +2.1]} & $+0.9$ {\scriptsize[+0.2, +1.7]} & $+0.4$ & $-2.1$ & $+0.4$ \\
+$1/4$ & $+4.2$ {\scriptsize[+2.4, +5.9]} & $+1.2$ {\scriptsize[-0.1, +2.5]} & $+0.4$ & $-13.1$ & $+0.3$ \\
+$1/2$ & $+4.4$ {\scriptsize[+2.2, +6.6]} & $+1.6$ {\scriptsize[-0.1, +3.4]} & $+0.2$ & $-43.0$ & $-2.1$ \\
+$1$ & $-1.2$ {\scriptsize[-3.7, +1.3]} & $+0.1$ {\scriptsize[-1.9, +2.2]} & $+0.2$ & $-43.0$ & $-2.1$ \\
+\midrule
+\multicolumn{6}{@{}l}{\emph{Countdown} (base $42.2$, $D=1.39$ over $1500$ iterations, 2000 prompts)}\\
+$1/256$ & $-0.1$ {\scriptsize[-0.9, +0.5]} & $+0.1$ {\scriptsize[-0.7, +0.7]} & $+0.2$ & $-0.5$ & $-0.2$ \\
+$1/128$ & $+0.1$ {\scriptsize[-0.6, +0.9]} & $-0.1$ {\scriptsize[-0.9, +0.5]} & $+0.3$ & $+0.1$ & $+0.2$ \\
+$1/64$ & $-0.1$ {\scriptsize[-0.8, +0.7]} & $-0.1$ {\scriptsize[-0.8, +0.6]} & $+0.3$ & $-0.3$ & $-0.1$ \\
+$1/32$ & $+0.2$ {\scriptsize[-0.5, +1.1]} & $-0.1$ {\scriptsize[-1.0, +0.7]} & $+0.4$ & $-0.9$ & $+0.2$ \\
+$1/16$ & $+0.7$ {\scriptsize[-0.4, +1.7]} & $+0.4$ {\scriptsize[-0.8, +1.5]} & $+0.6$ & $-0.9$ & $+0.0$ \\
+$1/4$ & $+2.6$ {\scriptsize[+1.0, +4.3]} & $-0.1$ {\scriptsize[-1.7, +1.4]} & $-0.4$ & $-6.7$ & $-0.4$ \\
+$1/2$ & $+3.3$ {\scriptsize[+1.4, +5.3]} & $+0.2$ {\scriptsize[-1.8, +2.1]} & $+0.0$ & $-36.7$ & $-0.7$ \\
+$1$ & $+3.9$ {\scriptsize[+1.6, +6.2]} & $-2.1$ {\scriptsize[-4.5, +0.1]} & $-0.4$ & $-42.2$ & $-4.1$ \\
+\bottomrule\end{tabular}\end{table}
+
 \subsection{The critic and the joint training}
 This group supports \S\ref{sec:exp_critic} and \S\ref{sec:ablations}: how the critic's value develops along the chain and over positions, the measurements showing that the scalar and the 2D critic are interchangeable at a fixed policy, the late critic exchange, the frozen-critic and learning-rate failures, the full ablation trajectories, and the training dynamics of the reference runs.
 
@@ -330,6 +360,19 @@ scalar & 57.0 & 56.4 & 56.2\\
 \subsubsection{Frozen versus joint critic}
 \label{app:frozen}
 The right panel of Table~\ref{tab:critic_design} (\S\ref{sec:exp_critic}) shows the exploit directly on Game24 (2D critic, $10^{-6}$). With the critic frozen at its pre-trained weights the pathwise update first helps ($+3.4$ at 250 and $+3.1$ at 500 iterations at the deployment sampler), then the actor finds the critic's blind spots: between iterations 500 and 750 the critic's value on the training batch climbs from $\approx3$ to $\approx90$ while the true success rate of the same batch falls to zero, and the held-out accuracy at iteration 750 is $3.7/2.9/1.9/2.1$ ($-42.9$ at deployment). The identical run with two critic steps per iteration on the replay buffer keeps the critic's value in the calibrated range and reaches the level of the joint reference of that recipe ($+11.4$, Appendix~\ref{app:needs_full}). On Countdown the frozen scalar critic shows the milder version of the same failure: the value rises monotonically while held-out accuracy stays within $\pm1$ point of the base over 500 iterations, against $+9.0$ for the joint run. Increasing the frozen critic's quality (more pre-training rollouts, the 2D form) does not change this: whatever the critic is, the actor exploits it within a few hundred updates unless the critic is refreshed on the actor's own states.
+
+\subsubsection{Which parts of the critic are trained, and from where}
+\label{app:critic_training}
+Table~\ref{tab:critic_training} separates the two choices behind the critic of Algorithm~\ref{alg:jpc}: that its network starts as a copy of the denoiser, and that during RL only its head is refit. All four runs share the frozen text encoder, the actor, the critic architecture, the pre-training rollouts and epochs, and the head refit of Algorithm~\ref{alg:jpc}; they differ only in how the critic's network is initialised before pre-training and in whether it receives gradients during RL (learning rate $10^{-5}$, that of pre-training). Training the copy during RL costs eight points and its gain does not carry to the cheap chain ($33.6$ against $35.4$ for the base). A randomly initialised network, pre-trained on the same rollouts, reads the outcome only weakly (Table~\ref{tab:critic_design}) and takes the policy below the base. Training it during RL then acts as a stabiliser and not as a remedy: with its network frozen the weak critic is exploited to collapse, the failure shown in the right panel of Table~\ref{tab:critic_design}, and with its network trained the policy settles twelve points under the base.
+\begin{table}[H]\centering\small
+\caption{How the critic's network is obtained and trained (Game24, seed~1, Algorithm~\ref{alg:jpc} otherwise). Each cell is the held-out accuracy (\%) at the deployment sampler after that many actor iterations; the base is $45.0$. The random initialisation resets every attention, feed-forward and embedding weight of the network; its few learned prefix tokens and normalisation gains keep their values.}\label{tab:critic_training}
+\begin{tabular}{@{}llcccccc@{}}\toprule
+network before pre-training & network during RL & 250 & 500 & 750 & 1000 & 1250 & 1500 \\\midrule
+\hl{copy of the denoiser} & \hl{frozen} & 49.8 & 57.2 & 58.2 & 56.2 & 56.5 & 57.5 \\
+copy of the denoiser & trained & 47.2 & 49.7 & 47.3 & 47.4 & 48.8 & 49.3 \\
+random & trained & 39.2 & 35.4 & 34.2 & 33.5 & 33.4 & 33.4 \\
+random & frozen & 37.9 & 24.2 & \phantom{0}1.4 & \phantom{0}0.8 & \phantom{0}2.6 & \phantom{0}4.1 \\
+\bottomrule\end{tabular}\end{table}
 
 \subsubsection{The learning-rate regime}
 \label{app:lr_regime}
