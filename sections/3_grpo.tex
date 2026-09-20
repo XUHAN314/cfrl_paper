@@ -1,4 +1,4 @@
-\section{Stage 1: Score-Function RL for Continuous Flows}
+\section{\methodGRPO{}}
 \label{sec:grpo}
 The chain~(\ref{eq:chain}) enables a direct adaptation of GRPO \citep{shao2024deepseekmath} to continuous flow language models. At step $k$, the action is the re-noised state $y_k\sim\mathcal N(\alpha_kD_\theta(y_{k-1}),\sigma_k^2I)$. During RL, tokens are sampled from the decoder at the end, giving a joint density over Gaussian transitions and categorical readout. Stage~1 optimizes~(\ref{eq:objective}) using this sampled readout.
 

@@ -16,7 +16,8 @@
 \usepackage{algorithmic}
 \usepackage{wrapfig}
 \input{math_commands.tex}
-\newcommand{\jpc}{\textsc{JPC}}
+% Compatibility for legacy appendix labels; visible method names use the macros above.
+\newcommand{\jpc}{\method}
 \newcommand{\dep}{\gamma56@64}
 \newcommand{\hl}[1]{\textcolor{blue!70!black}{#1}}
 % ---- line keys for captions (colours match figures/style.py and make_compact.py)
@@ -51,7 +52,7 @@
 \newtheorem{proposition}{Proposition}
 \newtheorem{remark}{Remark}
 
-\title{Reinforcement Learning for Continuous Flow Language Models with 2D Critic}
+\title{\method{}: Reinforcement Learning for Continuous Flow Language Models}
 \author{Anonymous authors\\ Paper under double-blind review}
 
 \hyphenation{Appendix Algorithm}
@@ -63,7 +64,7 @@
 \input{sections/3_grpo}
 \input{sections/4_jpc1}
 \input{sections/5_amortise1}
-\input{sections/6_experiments}
+\input{sections/6_experiments1}
 \input{sections/7_related}
 \input{sections/8_conclusion}
 

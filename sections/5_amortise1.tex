@@ -1,6 +1,7 @@
 \section{Amortising the RL Policy Across Samplers}
 \label{sec:loop}
-Pathwise RL improves the policy most under its training sampler; and their gains may not transfer to cheaper samplers. We amortise these gains into the model parameters through verified self-training across all times $t$ rather than along one chain, so that cheaper samplers inherit them. The 2D critic can additionally guide candidate generation before verification.
+
+The policy is improved the most under the training sampler, and reward improvement may not transfer to cheaper samplers. We amortise these reward improvemens into the model parameters through verified self-training across all times $t$ rather than along one chain, so that cheaper samplers inherit them. The 2D critic can additionally guide candidate generation before verification.
 
 \paragraph{Amortising loop.} Let $\pi_\theta(w\mid c)$ denote the response distribution induced by the chosen sampler. From a pool $\mathcal C$ of training prompts, we sample $n$ responses per prompt, retain deduplicated ones accepted by the verifier, and fine-tune the current policy on the resulting pairs with the original supervised objective of ELF \citep{hu2026elf} (Algorithm~\ref{alg:loop}):
 \begin{align}
@@ -23,7 +24,7 @@ The 2D critic can improve pool coverage by ranking and guiding partial states. W
 u(s_k)
 =
 \min_{i\in\mathcal G}
-\mathrm{sig}(R_{k,i}), \quad 
+R_{k,i}, \quad 
 y_k
 \leftarrow
 y_k
@@ -35,3 +36,45 @@ y_k
 \end{equation}
 For pruning, $n_{\rm g}$ chains are run to step $k_p$, after which only the highest-scoring chain continues. This guidance is applied directly to the sampled state at inference instead of training. Scaling by $\sigma_k$ adapts the update to the transition's noise level. Guidance requires additional critic backward passes and parallel prefixes, so we apply it with a cheaper sampling chain. 
 % Verification and fine-tuning remain unchanged.
+
+\noindent
+\begin{minipage}[t]{0.49\textwidth}
+\begin{algorithm}[H]
+\caption{\method{} with a jointly trained SVG critic}
+\label{alg:jpc}
+\small
+\begin{algorithmic}[1]
+\REQUIRE policy $\theta$; pre-trained critic $V_\phi$; verifier $r$; prompt set $\mathcal C$; window $\mathcal W=[k_{\rm lo},k_{\rm hi}]$; batch sizes $B$, $B'$; replay buffer $\mathcal B$ of capacity $N_{\mathcal B}$; critic steps $m_{\rm c}$; learning rates $\eta_\theta$, $\eta_\phi$
+\FOR{iteration $=1,\dots,T$}
+  \STATE \textbf{Actor.} Sample prompts $c_B \sim \mathcal C$ and step $k\sim\mathcal U(\mathcal W)$. For each $c \in c_B$ roll out the chain to $y_{k-1}$ without gradients, then compute $y_k$ from $y_{k-1}$ with gradients Eq~\ref{eq:chain}.
+  \STATE $\theta\leftarrow\theta+\eta_\theta\,\mathrm{AdamW}\Big(\nabla_\theta\frac1B\sum_{b=1}^{B}V_\phi(y_k^{(b)})\Big)$
+  \STATE \textbf{Buffer.} Sample $c'_B \sim \mathcal C$; roll out, verify \STATE $\mathcal B \leftarrow \operatorname{Tail}_{N_{\mathcal B}}\!\left(\operatorname{Append}\!\left(\mathcal B,(y_{k_{\rm hi}},\tilde t_{k_{\rm hi}},r)\right)\right)$
+  \STATE \textbf{Critic.} Draw $B'$ states uniformly from $\mathcal B$ 
+  \STATE $\phi\leftarrow\phi-\eta_\phi\,\mathrm{AdamW}(\nabla_\phi\mathcal L_{\phi})$ Eq~\ref{eq:bce}, Eq~\ref{eq:critic2d_loss}
+  \STATE Repeat critic updates $m_{\rm c}$ times
+\ENDFOR
+\STATE \textbf{return} the saved checkpoints $(\theta,\phi)$
+\end{algorithmic}
+\end{algorithm}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.49\textwidth}
+\begin{algorithm}[H]
+\caption{Amortisation loop}
+\label{alg:loop}
+\small
+\begin{algorithmic}[1]
+\REQUIRE policy $\theta^0$; 2D critic $V_\phi$; verifier $r$; prompt pool $\mathcal C$; responses per prompt $n$; cap $M$; rounds $n_{\rm r}$; guidance constants $(n_{\rm g},k_p,\kappa)$
+\FOR{round $\rho=0, \dots,n_{\rm r}-1$}
+  \FOR{each prompt $c\in\mathcal C$ } 
+  \FOR{chains $i=1, \dots, n$}
+    \STATE Rollout under $\theta_\rho$
+    \STATE If with guidance, apply~(\ref{eq:minscore}) at every step for $n_{\rm g}$ chains and prune at step $k_p$; decode 
+  \ENDFOR
+  \ENDFOR
+  \STATE $\mathcal A\leftarrow$ the verified, distinct responses Eq~\ref{eq:accept}
+  \STATE $\theta^{\rho+1}\leftarrow\arg\min_{\theta'}\mathcal L_{\rm ELF}(\theta';\mathcal A)$
+\ENDFOR
+\STATE \textbf{return} $\theta^{n_{\rm r}}$
+\end{algorithmic}
+\end{algorithm}
+\end{minipage}

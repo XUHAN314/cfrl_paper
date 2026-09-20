@@ -1,6 +1,6 @@
-\section{Stages 2 and 3: \jpc{}, pathwise RL with a jointly trained critic}
+\section{\method{} with Stochastic Value Gradients}
 \label{sec:method}
-This section differentiates the chain itself to avoid the noise factor $\varepsilon_{k,i}^{\top}/\sigma_k$ in Stage 1. Each state in~(\ref{eq:chain}) is a differentiable function of the parameters and sampled noise, but the terminal reward has zero gradient almost everywhere because it depends on decoder $\arg\max$ and program verification. State value~(\ref{eq:value}) avoid this obstruction. In this section, we propose Joint Pathwise Critic (\jpc{}) which learns a differentiable value estimate $V_\phi$ and ascends it through one sampled transition.
+The SVG variants differentiate the chain itself, avoiding the noise factor $\varepsilon_{k,i}^{\top}/\sigma_k$ in \methodGRPO{}. Each state in~(\ref{eq:chain}) is a differentiable function of the parameters and sampled noise, but the terminal reward has zero gradient almost everywhere because it depends on decoder $\arg\max$ and program verification. State value~(\ref{eq:value}) avoids this obstruction: \methodSVGScalar{} and \methodSVGTwoD{} learn differentiable value estimates $V_\phi$ and ascend them through one sampled transition.
 
 \begin{figure}[t]
 \centering
@@ -9,65 +9,59 @@ This section differentiates the chain itself to avoid the noise factor $\varepsi
 \label{fig:mechanism}
 \end{figure}
 
-\paragraph{Transition-wise pathwise decomposition.}
-The true value $V(s_k)$ summarizes the expected reward of all continuations from $s_k$. Unrolling the standard stochastic value-gradient recursion \citep{heess2015svg} then decomposes the policy gradient into transition-wise contributions. Temporarily assigning transition $k$ its own parameter copy $\theta_k$, tied across steps after differentiation, gives
+\paragraph{Transition-wise value-gradient decomposition.}
+The true value $V_k^*(y_k)$ summarizes the expected reward of all continuations from $y_k$. Unrolling the standard stochastic value-gradient (SVG) recursion \citep{heess2015svg} then decomposes the policy gradient into transition-wise contributions. Temporarily assigning transition $k$ its own parameter copy $\theta_k$, tied across steps after differentiation:
 \begin{equation}
 \label{eq:pw_exact}
 \nabla_\theta J
 =
 \sum_{k=2}^{K-1}\frac{\partial J}{\partial\theta_k},
-\frac{\partial J}{\partial\theta_k}
-=
-\mathbb E\!\left[\nabla_{\theta_k}V(s_k)\right] 
-=
-\mathbb E\!\left[
-\alpha_k\lambda_{k-1}\nabla_{y_k}V(s_k)
-+
-\nabla_{\hat x_{k-1}}V(s_k)
-\right]^{\!\top}
-\frac{\partial\hat x_{k-1}}{\partial\theta_k}.
-\end{equation}
-Sampling one transition estimates this sum up to a constant factor and consequently avoids back-propagation through the full chain. Gaussian integration by parts shows that the first, re-noised-state term has the same expectation as its score-function counterpart (Appendix~\ref{app:pw_derivation}). At coordinate $(k,i)$, the score-function factor is $V(s_k)\varepsilon_{k,i}/\sigma_k$, which is noisy at every coordinate, whereas the pathwise factor is $\partial V(s_k)/\partial y_{k,i}$, which vanishes wherever the value is locally insensitive.
-
-
-JPC replaces $V$ in Eq~\ref{eq:pw_exact} by a critic that is trained with BCE loss, so its raw output approximates the log-odds of success $V_\phi(s_k)\approx\mathrm{logit}\,V(s_k)$. Accordingly, \jpc{} ascends
-\begin{equation}
-\tilde J_k(\theta)
-=
-\mathbb E\!\left[\mathrm{logit}\,V(s_k)\right],
 \qquad
-\nabla_{\theta_k}\mathrm{logit}\,V(s_k)
-=
-\frac{\nabla_{\theta_k}V(s_k)}
-     {V(s_k)(1-V(s_k))}.
-\label{eq:logodds}
+\frac{\partial J}{\partial\theta_k}
+= 
+\mathbb E_{y_{k-1},\,\varepsilon_k}\!\left[
+\alpha_k
+\nabla_{y_k}V_k^*(y_k)^\top
+\frac{\partial D_{\theta_k}(y_{k-1})}{\partial\theta_k}
+\right].
 \end{equation}
-Thus, the log-odds and reward gradients have the same direction at each state but weight states differently. We use the log-odds because it is the scale learned directly by the BCE-trained critic.
+Sampling one transition estimates this sum up to a constant factor and consequently avoids back-propagation through the full chain. Gaussian integration by parts shows that this expression has the same expectation as its score-function counterpart (Appendix~\ref{app:pw_derivation}). At coordinate $(k,i)$, the score-function factor is $V_k^*(y_k)\varepsilon_{k,i}/\sigma_k$, which is noisy at every coordinate, whereas the pathwise factor is $\partial V_k^*(y_k)/\partial y_{k,i}$, which vanishes wherever the value is locally insensitive.
+
+
+% JPC replaces $V^*$ in Eq~\ref{eq:pw_exact} by a critic that is trained with BCE loss, so its raw output approximates the log-odds of success $V_\phi(s_k)\approx\mathrm{logit}\,V(s_k)$. Accordingly, \jpc{} ascends
+% \begin{equation}
+% \tilde J_k(\theta)
+% =
+% \mathbb E\!\left[\mathrm{logit}\,V(s_k)\right],
+% \qquad
+% \nabla_{\theta_k}\mathrm{logit}\,V(s_k)
+% =
+% \frac{\nabla_{\theta_k}V(s_k)}
+%      {V(s_k)(1-V(s_k))}.
+% \label{eq:logodds}
+% \end{equation}
+% Thus, the log-odds and reward gradients have the same direction at each state but weight states differently. We use the log-odds because it is the scale learned directly by the BCE-trained critic.
 
 \paragraph{Single-transition actor update.}
 We sample $k\sim\mathcal U(\mathcal W)$ from a window
-$\mathcal W=\{k_{\rm lo},\dots,k_{\rm hi}\}$ and use $\hat g_{\rm PW}=\nabla_\theta V_\phi(s_k),s_k=
-\bigl(
-\alpha_kD_\theta(s_{k-1})+\sigma_k\varepsilon_k,
-\hat x_{k-1}
-\bigr)$. With an exact critic, its expectation is the window-averaged transition gradient. We use the middle of the chain, excluding early states with nearly flat values and late states whose outcomes are nearly determined. 
+$\mathcal W=\{k_{\rm lo},\dots,k_{\rm hi}\}$ and use $\hat g_{\rm PW}=\nabla_\theta V_\phi(y_k)$. With an exact critic, its expectation is the window-averaged transition gradient. We use the middle of the chain, excluding early states with nearly flat values and late states whose outcomes are nearly determined. 
 
-\subsection{Stage 2: a scalar critic on the states of the chain}
+\subsection{\methodSVGScalar{}: a scalar critic on the flow state}
 \label{sec:jpc_scalar}
 
 \paragraph{Critic network.}
-Predicting success from a noisy state requires anticipating its decoded output, which the denoiser already does. The critic therefore uses a separate copy $\hat X_\phi$ of the policy denoiser, initialized from $\hat X_\theta$ and evaluated without guidance, to read the complete state $s_k=(y_k,\hat x_{k-1})$ and time $\tilde t_k$. Its per-position feature is $f_i(s_k)$ and the scalar critic pools these features before applying a time-conditioned head:
+Predicting success from a noisy state requires anticipating its decoded output, which the denoiser already does. The critic therefore uses a separate copy $\hat D_\phi$ of the policy denoiser, initialized from $\hat D_\theta$ and evaluated without guidance, to read the input $y_k$ and $\tilde t_k$. Its per-position feature is $f_i(y_k)$ and the scalar critic pools these features before applying a time-conditioned head:
 \begin{equation}
-f_i(s_k)
+f_i(y_k)
 =
-\hat X_\phi(y_k,\tilde t_k;\hat x_{k-1})_i
+\hat D_\phi(y_k,\tilde t_k)_i
 \in\mathbb R^d,
 \quad i\in\mathcal G, 
-\quad V_\phi(s_k)
+\quad V_\phi(y_k)
 =
 h_\phi\!\left(
 \frac{1}{|\mathcal G|}
-\sum_{i\in\mathcal G}f_i(s_k),
+\sum_{i\in\mathcal G}f_i(y_k),
 \tilde t_k
 \right).
 \label{eq:critic1d}
@@ -81,33 +75,28 @@ Each stored intermediate state is paired with its rollout's terminal outcome, so
 \mathcal L_{\rm V}(\phi)
 =
 \mathbb E\!\left[
-\mathrm{BCE}\bigl(\mathrm{sig}(V_\phi(s_k)),r\bigr)
+\mathrm{BCE}\bigl(V_\phi(y_k),r\bigr)
 \right].
 \label{eq:bce}
 \end{equation}
-Its population optimum satisfies
-$\mathrm{sig}(V_\phi(s_k))=V_k(s_k)$, so the raw critic estimates
-$\mathrm{logit}\,V_k$. Before RL, the denoiser copy and head are pretrained
-jointly on rollouts of the initial policy; during RL, the copy is frozen and
-only the head is updated with the policy (\S\ref{sec:joint};
-Appendix~\ref{app:details}).
+Before RL, the denoiser copy and head are pretrained jointly on rollouts of the initial policy; during RL, the copy is frozen and only the head is updated with the policy (\S\ref{sec:joint}; Appendix~\ref{app:details}).
 
-\subsection{Stage 3: 2D critic for token position and flow step}
+\subsection{\methodSVGTwoD{}: a critic over position and flow step}
 \label{sec:jpc_2d}
 \paragraph{2D critic.}
 We propose a 2D critic motivated by the two-axis structure of flow generation: each state lies on a grid of flow steps and token positions (Figure~\ref{fig:mechanism}). AR methods index credit by token position, whereas diffusion and flow methods index it by denoising step and treat the full sequence state as one action \citep{liu2025flowgrpo,xue2025dancegrpo}. The scalar critic retains only the flow-step axis by pooling position features before value estimation. Our 2D critic restores the position axis by applying the value head before pooling:
 \begin{equation}
 R_{k,i}
 =
-h_\phi\bigl(f_i(s_k),\tilde t_k\bigr),
+h_\phi\bigl(f_i(y_k),\tilde t_k\bigr),
 \qquad
-V_\phi(s_k)
+V_\phi(y_k)
 =
 \frac{1}{|\mathcal G|}
 \sum_{i\in\mathcal G}R_{k,i}.
 \label{eq:critic2d}
 \end{equation}
-Each $R_{k,i}$ reads the outcome log-odds from position $i$, while their mean is the value ascended by the actor. The features and training procedure are unchanged from Stage~2. With the 2D cricit, \emph{Every position is pushed along its own direction.} By the chain rule the actor's signal at position $i$ is $\sum_{j\in\mathcal G}(\partial V_\phi/\partial f_j)(\partial f_j/\partial y_{k,i})$. The scalar critic applies the same head gradient to every position, whereas the 2D critic evaluates the head at each position's feature:
+Each $R_{k,i}$ reads the outcome log-odds from position $i$, while their mean is the value ascended by the actor. The features and training procedure are unchanged from \methodSVGScalar{}. With the 2D critic, \emph{every position is pushed along its own direction.} By the chain rule the actor's signal at position $i$ is $\sum_{j\in\mathcal G}(\partial V_\phi/\partial f_j)(\partial f_j/\partial y_{k,i})$. The scalar critic applies the same head gradient to every position, whereas the 2D critic evaluates the head at each position's feature:
 \begin{equation}
 \text{head after the mean: }\ \frac{\partial V_\phi}{\partial f_j}=\frac{\nabla h_\phi(\mathrm{mean}(f))}{|\mathcal G|}\ ,\quad \text{head before the mean: }\ \frac{\partial V_\phi}{\partial f_j}=\frac{\nabla h_\phi(f_j)}{|\mathcal G|}.
 \label{eq:headgrad}
@@ -116,58 +105,18 @@ Thus, the scalar critic pushes all position features in one direction, while the
 
 \emph{Outcome-supervised position values.} Both the pooled value and per-position readings are trained from the same terminal outcome:
 \begin{equation}
-\mathcal L_{\rm 2D}(\phi)=\tfrac12\,\mathrm{BCE}\big(\mathrm{sig}(V_\phi(s_k)),r\big)+\tfrac12\,\frac1{|\mathcal G|}\sum_{i\in\mathcal G}\mathrm{BCE}\big(\mathrm{sig}(R_{k,i}),r\big).
+\mathcal L_{\rm 2D}(\phi)=\tfrac12\,\mathrm{BCE}\bigl(V_\phi(y_k),r\bigr)+\tfrac12\,\frac1{|\mathcal G|}\sum_{i\in\mathcal G}\mathrm{BCE}\bigl(R_{k,i},r\bigr).
 \label{eq:critic2d_loss}
 \end{equation}
 The second term provides no token-correctness labels; it calibrates each position's reading of sequence-level success, preventing the field from drifting while preserving its mean.
 
 \subsection{Joint policy--critic training}
 \label{sec:joint}
-Replacing the true log-odds with the learned critic introduces the gradient bias
-\begin{equation}
-\mathbb E\big[\nabla_\theta\,(V_\phi-\mathrm{logit}\,V)(s_k)\big],
-\label{eq:biasm}
-\end{equation}
-which vanishes when their slopes agree on states visited by the current policy. As the policy changes, both these states and their true values change, allowing a stale critic to be exploited. We therefore update the critic jointly with the policy. After each actor update, fresh rollouts are decoded and verified, and their states at $k_{\rm hi}$ are added with their outcomes to a recent replay buffer. We update the critic head on buffer minibatches, taking extra steps when its AUC on recent states falls below a threshold. The denoiser copy remains frozen, and a decaying actor learning rate limits movement between critic updates. Because values depend on the sampling chain, actor and critic are trained under the sampler used for final evaluation, which we call the deployment sampler. Algorithm~\ref{alg:jpc} summarizes the procedure; further details appear in Appendix~\ref{app:details}.
+% Replacing the true log-odds with the learned critic introduces the gradient bias
+% \begin{equation}
+% \mathbb E\big[\nabla_\theta\,(V_\phi-\mathrm{logit}\,V)(y_k)\big],
+% \label{eq:biasm}
+% \end{equation}
+% which vanishes when their slopes agree on states visited by the current policy. 
+We update the critic jointly with the policy because as the policy changes, both states and their true values change, allowing a stale critic to be exploited. After each actor update, fresh rollouts are decoded and verified, and their states at $k_{\rm hi}$ are added with their outcomes to a recent replay buffer. We update the critic head on buffer minibatches, and the denoiser copy remains frozen. Because values depend on the sampling chain, actor and critic are trained under the sampler used for final evaluation, which we call the deployment sampler. Algorithm~\ref{alg:jpc} summarizes the procedure; further details appear in Appendix~\ref{app:details}.
 
-\noindent
-\begin{minipage}[t]{0.49\textwidth}
-\begin{algorithm}[H]
-\caption{\jpc{}}
-\label{alg:jpc}
-\small
-\begin{algorithmic}[1]
-\REQUIRE policy $\theta$; pre-trained critic $V_\phi$; verifier $r$; prompt set $\mathcal C$; window $\mathcal W=[k_{\rm lo},k_{\rm hi}]$; batch sizes $B$, $B'$; replay buffer $\mathcal B$ of capacity $N_{\mathcal B}$; critic steps $m_{\rm c}$; learning rates $\eta_\theta$, $\eta_\phi$
-\FOR{iteration $=1,\dots,T$}
-  \STATE \textbf{Actor.} Sample prompts $c_B \sim \mathcal C$ and step $k\sim\mathcal U(\mathcal W)$. For each $c \in c_B$ roll out the chain to $s_{k-1}$ without gradients, then compute $s_k$ from $s_{k-1}$ with gradients Eq~\ref{eq:chain}.
-  \STATE $\theta\leftarrow\theta+\eta_\theta\,\mathrm{AdamW}\Big(\nabla_\theta\frac1B\sum_{b=1}^{B}V_\phi(s_k^{(b)})\Big)$
-  \STATE \textbf{Buffer.} Sample $c'_B \sim \mathcal C$; roll out, verify \STATE $\mathcal B \leftarrow \operatorname{Tail}_{N_{\mathcal B}}\!\left(\operatorname{Append}\!\left(\mathcal B,(s_{k_{\rm hi}},\tilde t_{k_{\rm hi}},r)\right)\right)$
-  \STATE \textbf{Critic.} Draw $B'$ states uniformly from $\mathcal B$ 
-  \STATE $\phi\leftarrow\phi-\eta_\phi\,\mathrm{AdamW}(\nabla_\phi\mathcal L_{\phi})$ Eq~\ref{eq:bce}, Eq~\ref{eq:critic2d_loss}
-  \STATE Repeat critic updates $m_{\rm c}$ times
-\ENDFOR
-\STATE \textbf{return} the saved checkpoints $(\theta,\phi)$
-\end{algorithmic}
-\end{algorithm}
-\end{minipage}\hfill
-\begin{minipage}[t]{0.49\textwidth}
-\begin{algorithm}[H]
-\caption{Amortisation loop}
-\label{alg:loop}
-\small
-\begin{algorithmic}[1]
-\REQUIRE policy $\theta^0$; 2D critic $V_\phi$; verifier $r$; prompt pool $\mathcal C$; responses per prompt $n$; cap $M$; rounds $n_{\rm r}$; guidance constants $(n_{\rm g},k_p,\kappa)$
-\FOR{round $\rho=0, \dots,n_{\rm r}-1$}
-  \FOR{each prompt $c\in\mathcal C$ } 
-  \FOR{chains $i=1, \dots, n$}
-    \STATE Rollout under $\theta_\rho$
-    \STATE If with guidance, apply~(\ref{eq:minscore}) at every step for $n_{\rm g}$ chains and prune at step $k_p$; decode 
-  \ENDFOR
-  \ENDFOR
-  \STATE $\mathcal A\leftarrow$ the verified, distinct responses Eq~\ref{eq:accept}
-  \STATE $\theta^{\rho+1}\leftarrow\arg\min_{\theta'}\mathcal L_{\rm ELF}(\theta';\mathcal A)$
-\ENDFOR
-\STATE \textbf{return} $\theta^{n_{\rm r}}$
-\end{algorithmic}
-\end{algorithm}
-\end{minipage}
