@@ -10,7 +10,7 @@ The true value $V_k^*(y_k)$ summarizes the expected reward of all continuations 
 =\alpha_k\lambda_{k-1}\nabla_{y}V_k^*(y_k)\frac{\partial\hat x_{k-1}}{\partial\theta_k},
 \label{eq:pw_exact}
 \end{equation}\eqalias{eq:chainrule}
-Sampling one transition estimates this sum up to a constant factor and consequently avoids back-propagation through the full chain. Gaussian integration by parts shows that this expression has the same expectation as its score-function counterpart (Appendix~\ref{app:pw_derivation}). At coordinate $(k,i)$, the score-function factor is $V_k^*(y_k)\varepsilon_{k,i}/\sigma_k$, which is noisy at every coordinate, whereas the pathwise factor is $\partial V_k^*(y_k)/\partial y_{k,i}$, which vanishes wherever the value is locally insensitive.
+Sampling one transition consequently avoids back-propagation through the full chain. Gaussian integration by parts shows that this expression has the same expectation as its score-function counterpart (Appendix~\ref{app:pw_derivation}). At coordinate $(k,i)$, the score-function factor is $V_k^*(y_k)\varepsilon_{k,i}/\sigma_k$, which is noisy at every coordinate, whereas the pathwise factor is $\partial V_k^*(y_k)/\partial y_{k,i}$, which vanishes wherever the value is locally insensitive.
 
 \paragraph{Single-transition actor update.}
 We sample $k\sim\mathcal U(\mathcal W)$ from a window
@@ -18,7 +18,7 @@ $\mathcal W=\{k_{\rm lo},\dots,k_{\rm hi}\}$ and use $\hat g_{\rm PW}=\nabla_\th
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.84\linewidth]{figures/flow-rl-figure1.pdf}
+\includegraphics[width=\textwidth]{figures/flow-rl-figure1.pdf}
 \caption{Where the reward lands: (a) along the token axis in an AR model; (b) along the denoising-step axis in RL for discrete diffusion; (c) in \method{}-2D the value is indexed by both, $R_{k,i}$ for flow step $k$ and position $i$, each an estimate of the whole response's outcome as read at position $i$, pooled into the actor's objective $V_\phi$.}
 \label{fig:mechanism}
 \end{figure}
@@ -59,7 +59,7 @@ The critic is pre-trained on rollouts of the initial policy, copy and head toget
 \begin{algorithmic}[1]
 \REQUIRE SFT policy $\hat X_\theta$; pre-trained critic $V_\phi$ (frozen copy $\hat X_\phi$, trainable head $h_\phi$); verifier $r$; sampler $(\gamma,K)$; window $\mathcal W=\{k_{\rm lo},\dots,k_{\rm hi}\}$; replay buffer $\mathcal B$ holding the newest $N_{\mathcal B}$ states
 \FOR{iteration $=1,\dots,T$}
-  \STATE \textbf{Actor.} For $B$ prompts and one $k\sim\mathcal U(\mathcal W)$: roll out to $y_{k-1}$ without gradients, take the denoiser call at $y_{k-1}$ with gradients to form $y_k$, and set $\theta\leftarrow\theta+\eta_\theta\,\mathrm{AdamW}\big(\nabla_\theta\frac1B\sum_{b}V_\phi(y_{k,b})\big)$ 
+  \STATE \textbf{Actor.} For $B$ prompts and one $k\sim\mathcal U(\mathcal W)$: roll out to $y_{k-1}$ without gradients, compute $y_k$ from $y_{k-1}$ with gradients, and set $\theta\leftarrow\theta+\eta_\theta\,\mathrm{AdamW}\big(\nabla_\theta\frac1B\sum_{b}V_\phi(y_{k,b})\big)$ (clipped, $\eta_\theta$ decays) 
   \STATE \textbf{Buffer.} Roll out $B$ fresh prompts to the end, decode, verify; push each $(y_{k_{\rm hi}},r)$ into $\mathcal B$
   \STATE \textbf{Critic.} $m_{\rm c}$ head steps $\phi\leftarrow\phi-\eta_\phi\,\mathrm{AdamW}(\nabla_\phi\mathcal L_{\rm 2D})$ on minibatches of $B'$ states of $\mathcal B$; every $n_q$ iterations, $m'_{\rm c}$ more if the AUC of $V_\phi$ on the newest $N_q$ states is below $a_0$ \hfill (eq.~\ref{eq:critic2d_loss})
 \ENDFOR
@@ -68,4 +68,4 @@ The critic is pre-trained on rollouts of the initial policy, copy and head toget
 
 \paragraph{Amortising the reward improvements into the model.}
 \label{sec:loop}
-The reward improvement of the SVG variants is tied to their training chain. An optional amortisation step transfers it to other samplers through the model's supervised objective, which trains the denoiser across all times $t$. Each round samples responses from the policy on a pool of unlabelled prompts, retains distinct verified responses, and fine-tunes the model with ELF's original loss (Algorithm~\ref{alg:loop}, Appendix~\ref{app:loop}). With the RL policy as the sampler,this is rejection-sampling fine-tuning \citep{yuan2023rft} corresponding to an EM M-step whose reward lower bound is tight at the current model (Proposition~\ref{prop:em}). Because prompts without accepted responses provide no training signal, improvement depends on pool coverage. The 2D critic can increase coverage by scoring chains through their least confident position, $\min_{i}R_{k,i}$, pruning weak chains, and guiding intermediate states before decoding. This permits pool generation with a cheaper chain, assuming the critic's ranking transfers to its states (Appendix~\ref{app:joint_details}).
+The reward improvement of the SVG variants is tied to their training chain. An optional amortisation step transfers it to other samplers through the model's supervised objective, which trains the denoiser across all times $t$. Each round samples responses from the policy on a pool of unlabelled prompts, retains distinct verified responses, and fine-tunes the model with ELF's original loss (Algorithm~\ref{alg:loop}, Appendix~\ref{app:loop}). With the RL policy as the sampler, this is rejection-sampling fine-tuning \citep{yuan2023rft} corresponding to an EM M-step whose reward lower bound is tight at the current model (Proposition~\ref{prop:em}). Because prompts without accepted responses provide no training signal, improvement depends on pool coverage. The 2D critic can increase coverage by scoring chains through their least confident position, $\min_{i}R_{k,i}$, pruning weak chains, and guiding intermediate states before decoding. This permits pool generation with a cheaper chain, assuming the critic's ranking transfers to its states (Appendix~\ref{app:joint_details}).

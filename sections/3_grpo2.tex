@@ -1,6 +1,6 @@
 \section{\method{}-GRPO: the score-function variant}
 \label{sec:grpo}
-The exact density of the chain~(\ref{eq:chain}) permits a direct adaptation of GRPO \citep{shao2024deepseekmath}. A rollout comprises Gaussian transition actions $y_k\sim\mathcal N(\alpha_kD_\theta(s_{k-1}),\sigma_k^2I)$ and endpoint tokens $w_i\sim p_\theta(\cdot\mid z_K)=\mathrm{softmax}(\ell_i)$. Each update uses all generated tokens, weighted by $\nu_u=1/|\mathcal G|$, and a random subset $\mathcal K\subseteq\{2,\dots,K-1\}$ of the transitions, each with weight $\nu_u=1$.
+The exact density of the chain~(\ref{eq:chain}) permits a direct adaptation of GRPO \citep{shao2024deepseekmath}. A rollout comprises Gaussian transition actions $y_k\sim\mathcal N(\alpha_kD_\theta(y_{k-1}),\sigma_k^2I)$ and endpoint tokens $w_i\sim p_\theta(\cdot\mid z_K)=\mathrm{softmax}(\ell_i)$. Each update uses all generated tokens, weighted by $\nu_u=1/|\mathcal G|$, and a random subset $\mathcal K\subseteq\{2,\dots,K-1\}$ of the transitions, each with weight $\nu_u=1$.
 
 \paragraph{GRPO.}
 For each prompt GRPO draws $G$ rollouts from the current policy $\pi_{\theta_{\rm old}}$, forms the group-normalised advantages $A^g=\frac{r^g-\operatorname{mean}(r^{1:G})}{\operatorname{std}(r^{1:G})}$, and takes several steps on
