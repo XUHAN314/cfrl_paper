@@ -1,6 +1,6 @@
 \section{\method{} with Stochastic Value Gradients}
 \label{sec:method}
-The SVG variants differentiate the chain itself, avoiding the noise factor $\varepsilon_{k,i}^{\top}/\sigma_k$ in \methodGRPO{}. Each state in~(\ref{eq:chain}) is a differentiable function of the parameters and sampled noise, but the terminal reward has zero gradient almost everywhere because it depends on decoder $\arg\max$ and program verification. State value~(\ref{eq:value}) avoids this obstruction: \methodSVGScalar{} and \methodSVGTwoD{} learn differentiable value estimates $V_\phi$ and ascend them through one sampled transition.
+We now introduce the SVG-based actor-critic variants, which differentiate the chain itself, avoiding the noise factor $\varepsilon_{k,i}^{\top}/\sigma_k$ in \methodGRPO{}. Each state in~(\ref{eq:chain}) is a differentiable function of the parameters and sampled noise, but the terminal reward has zero gradient almost everywhere because it depends on decoder $\arg\max$ and program verification. State value~(\ref{eq:value}) avoids this obstruction: \methodSVGScalar{} and \methodSVGTwoD{} learn differentiable value estimates $V_\phi$ and ascend them through one sampled transition.
 
 \begin{figure}[t]
 \centering
