@@ -15,9 +15,9 @@ We write $\hat X_\theta$ for one denoiser call. At the endpoint, a decoder maps 
 ELF provides a stochastic sampler in which, given $z_{k-1}$, each step perturbs the state with noise controlled by the churn parameter 
 $\gamma$ and then integrates the velocity forward:
 \begin{equation}
-y_k=\alpha_k z_{k-1}+\sigma_k\varepsilon_k, z_0:=y_0, \hat x_k=\hat X_\theta(y_k,\tilde t_k), z_k=y_k+\frac{t_k-\tilde t_k}{1-\tilde t_k}\big(\hat x_k-y_k\big)=:D_\theta(y_k)
+y_k=\alpha_k z_{k-1}+\sigma_k\varepsilon_k, z_0:=y_0, \hat x_k=\hat X_\theta(y_k,\tilde t_k), z_k=y_k+\lambda_k\big(\hat x_k-y_k\big)=:D_\theta(y_k)
 \end{equation}
-where $\tilde t_k=\alpha_k t_{k-1}$, $\alpha_k=1-\gamma \Delta t_k$, $\sigma_k=(1-\alpha_k)c_\sigma$ and $\varepsilon_k \sim \mathcal N(0,I)$. The final step is deterministic followed by the decoder.The states $y_k$ form a Markov chain with trajectory $\tau=(y_k)_{k=1}^{K-1}$ and exact Gaussian density:
+where $\tilde t_k=\alpha_k t_{k-1}$, $\alpha_k=1-\gamma \Delta t_k$, $\sigma_k=(1-\alpha_k)c_\sigma$, $\lambda_k=\frac{t_k-\tilde t_k}{1-\tilde t_k}$ and $\varepsilon_k \sim \mathcal N(0,I)$. The final step is deterministic followed by the decoder.The states $y_k$ form a Markov chain with trajectory $\tau=(y_k)_{k=1}^{K-1}$ and exact Gaussian density:
 \begin{equation}
 y_{k,i}=\alpha_kD_\theta(y_{k-1})_i+\sigma_k\varepsilon_{k,i}, \quad p_\theta(\tau)=p(y_1)\prod_{k=2}^{K-1}\prod_{i=1}^{|\mathcal G|}\mathcal N\!\left(y_{k,i};\alpha_kD_\theta(y_{k-1})_i,\sigma_k^2I_d\right)
 \label{eq:chain}
