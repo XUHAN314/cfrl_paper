@@ -16,9 +16,9 @@ def bar(off,vals,color,label):
     ax.bar(xs,ms,w,color=color,label=label,yerr=es,capsize=2,error_kw=dict(lw=0.8))
     for xi,mi,ei in zip(xs,ms,es): ax.text(xi,mi+ei+1.0,f"{mi:.1f}",ha="center",va="bottom",fontsize=6.1,zorder=5,bbox=dict(facecolor="white",edgecolor="none",pad=0.3))
 bar(-2*w,base,"#bbbbbb","SFT base")
-bar(-1*w,grpo,"#e08a3c","GRPO (score-function)")
-bar(0,scal,"#8fb3e0","JPC, scalar critic")
-bar(1*w,jpc,"#2b6cb0","JPC, 2D critic (ours)")
+bar(-1*w,grpo,"#e08a3c","CFRL-GRPO")
+bar(0,scal,"#8fb3e0","CFRL-SVG-Scalar")
+bar(1*w,jpc,"#2b6cb0","CFRL-SVG-2D (ours)")
 bar(2*w,loop,"#1a9c5b","2D policy + amortisation loop")
 place={0:("left",4.2),1:("right",0),2:("left",1.6),3:("right",0)}  # label above the line at the group's left edge, or to the right of the group
 for xi,v in zip(x,ar):

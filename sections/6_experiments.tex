@@ -1,10 +1,9 @@
 \section{Experiments}
 \label{sec:experiments}
-\suppressfloats[t]
 Each subsection puts one claim of \S\S\ref{sec:grpo}--\ref{sec:method} against one table or figure. Unless a table marks another task, the diagnostics are run on Game24, the task with the largest gap between the variants; the other tasks are in Appendix~\ref{app:results}.
 
 \paragraph{Setup.}
-Four program-verified tasks (Appendix~\ref{app:datasets}): \textbf{Countdown}, \textbf{Sudoku}, \textbf{Knights-and-Knaves} (K\&K) and \textbf{Game24}, the last split by number set so that no evaluation set is seen in training. Every run starts from ELF-B (105M) fine-tuned on the task, the base. Accuracy is measured on 2{,}000 held-out prompts (1{,}601 for Game24) under the deployment chain ($\gamma56$@64; $\gamma28$@32 on Sudoku) and a cheap chain ($\gamma4$@16; $\gamma14$@16 on Sudoku); the deterministic ODE-64 sampler is read in Appendix~\ref{app:results} only. \method{}-GRPO is trained under the cheap chain with 128 rollouts per iteration for 600 iterations. \method{}-Scalar and \method{}-2D are Algorithm~\ref{alg:jpc} with the scalar and with the 2D critic, trained under the deployment chain with 64 rollouts per iteration for 1{,}000--1{,}500. GPT-2 (124M, token-level GRPO/PPO) and LLaDA-8B-Instruct (d1's diffu-GRPO, \citealp{zhao2025d1}), trained on the same data, are cross-architecture references. Every ELF-B RL number is the held-out peak over the run's 4--6 evaluated checkpoints; the reference rows are peaks over their own evaluation grids. Recipes, budgets, per-seed values and the selection protocol are in Appendix~\ref{app:details}.
+Four program-verified tasks (Appendix~\ref{app:datasets}): \textbf{Countdown}, \textbf{Sudoku}, \textbf{Knights-and-Knaves} (K\&K) and \textbf{Game24}, the last split by number set so that no evaluation set is seen in training. Every run starts from ELF-B (105M) fine-tuned on the task, the base. Accuracy is measured on 2{,}000 held-out prompts (1{,}601 for Game24) under the deployment chain ($\gamma56$@64; $\gamma28$@32 on Sudoku) and a cheap chain ($\gamma4$@16; $\gamma14$@16 on Sudoku); the deterministic ODE-64 sampler is read in Appendix~\ref{app:results} only. \methodGRPO{} is trained under the cheap chain with 128 rollouts per iteration for 600 iterations. \methodSVGScalar{} and \methodSVGTwoD{} are Algorithm~\ref{alg:jpc} with the scalar and with the 2D critic, trained under the deployment chain with 64 rollouts per iteration for 1{,}000--1{,}500. GPT-2 (124M, token-level GRPO/PPO) and LLaDA-8B-Instruct (d1's diffu-GRPO, \citealp{zhao2025d1}), trained on the same data, are cross-architecture references. Every ELF-B RL number is the held-out peak over the run's 4--6 evaluated checkpoints; the reference rows are peaks over their own evaluation grids. Recipes, budgets, per-seed values and the selection protocol are in Appendix~\ref{app:details}.
 
 \begin{table}[t]
 \centering\small
@@ -26,9 +25,9 @@ task SFT & 13.1 & \phantom{0}0.7 & 61.0 & 16.1 \\
 \midrule
 \multicolumn{5}{@{}l}{\emph{ELF-B (105M, continuous flow)}}\\
 task SFT (base) & 42.2 & 66.2 & 67.5 & 45.0 \\
-+ \method{}-GRPO & 43.1 & 69.7 & 71.6 & 47.5 \\
-+ \method{}-Scalar & 48.2 & 66.3 & 77.6 & 51.4 \\
-+ \hl{\method{}-2D} & \textbf{50.2} & \textbf{71.0} & \textbf{79.6} & \textbf{58.8} \\
++ \methodGRPO{} & 43.1 & 69.7 & 71.6 & 47.5 \\
++ \methodSVGScalar{} & 48.2 & 66.3 & 77.6 & 51.4 \\
++ \hl{\methodSVGTwoD{}} & \textbf{50.2} & \textbf{71.0} & \textbf{79.6} & \textbf{58.8} \\
 \bottomrule
 \end{tabular}}
 \end{minipage}\hfill
