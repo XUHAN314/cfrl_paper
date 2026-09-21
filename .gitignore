@@ -9,3 +9,8 @@ main.log
 main.out
 *.pyc
 __pycache__/
+
+# local-only drafts (kept on disk, not tracked)
+main1.pdf
+sections/2_prelim1.tex
+sections/4_jpc1.tex
