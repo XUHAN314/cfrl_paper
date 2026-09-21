@@ -8,15 +8,27 @@ import matplotlib.pyplot as plt
 D = os.path.dirname(os.path.abspath(__file__)); R = "/cluster/tufts/liulab/xhan03/flow-nlp-rl"
 F = 8.0; plt.rcParams.update({"font.size": F, "legend.fontsize": F, "axes.titlesize": F + 0.3, "axes.labelsize": F, "xtick.labelsize": F, "ytick.labelsize": F})
 SC, TD = style.VAL, style.ACC   # orange = scalar critic, blue = 2D critic, everywhere in §6
-# ---------------- estimator (placed at 0.40*5.5 = 2.2 in) ----------------
-N = [256, 1024, 2048]
-fig, ax = plt.subplots(figsize=(2.1, 1.9))
-ax.plot(N, [0.04, 0.02, -0.04], "-", color="#c9553d", marker="o", ms=3.2, lw=1.4, label="score-function, GRPO $A$")
-ax.plot(N, [0.02, 0.04, 0.02], ":", color=style.BASE, marker="o", ms=3.2, lw=1.3, label="score-function, $A{=}1$")
-ax.plot(N, [0.79, 0.94, 0.97], "-", color=TD, marker="o", ms=3.2, lw=1.6, label="pathwise, 2D critic")
-ax.plot(N, [0.05, 0.17, 0.27], "-", color="#2a9d8f", marker="o", ms=3.2, lw=1.4, label="GPT-2 token GRPO")
+# ---------------- estimator (placed at 0.385*5.5 = 2.1 in): two stacked panels ----------------
+# top: half-split cosine vs N; bottom: held-out gain of ONE step along each direction (Game24, AdamW-normalised directions, paired 95% CI)
+N = [256, 1024, 2048]; GRPO_C = "#c9553d"; GPT_C = "#2a9d8f"
+_one = json.load(open(f"{R}/outputs/analysis/onestep_g24/results.json"))["eval"]["results"]
+_fr = ["0.004", "0.008", "0.016", "0.032", "0.0625", "0.25", "0.5", "1"]; _x = [float(f) for f in _fr]
+def _series(tag): 
+    r = [_one[f"{tag}_eta{f}D"] for f in _fr]; return np.array([q["diff"] for q in r]), np.array([q["ci95"][0] for q in r]), np.array([q["ci95"][1] for q in r])
+fig, (ax, bx) = plt.subplots(2, 1, figsize=(2.1, 2.36), gridspec_kw=dict(hspace=0.66, height_ratios=[1, 1.08]))
+ax.plot(N, [0.04, 0.02, -0.04], "-", color=GRPO_C, marker="o", ms=3.0, lw=1.4)
+ax.plot(N, [0.02, 0.04, 0.02], ":", color=style.BASE, marker="o", ms=3.0, lw=1.3)
+ax.plot(N, [0.79, 0.94, 0.97], "-", color=TD, marker="o", ms=3.0, lw=1.6)
+ax.plot(N, [0.05, 0.17, 0.27], "-", color=GPT_C, marker="o", ms=3.0, lw=1.4)
 ax.axhline(0, color=style.BASE, lw=0.6); ax.set_xscale("log", base=2); ax.set_xticks(N); ax.set_xticklabels([str(n) for n in N]); ax.minorticks_off()
-ax.set_xlabel("rollouts $N$"); ax.set_ylabel("half-split cosine"); ax.set_ylim(-0.12, 1.02); ax.set_title("Game24 (GPT-2: Countdown)", pad=3)
+ax.set_xlabel("rollouts $N$", labelpad=1); ax.set_ylabel("half-split cosine"); ax.set_ylim(-0.12, 1.04); ax.set_yticks([0, 0.5, 1.0])
+for tag, col, ls, lw, band in (("RAND", style.BASE, ":", 1.2, False), ("SF-1024+adam", GRPO_C, "-", 1.4, True), ("PW-1024+adam", TD, "-", 1.6, True)):
+    d_, lo, hi = _series(tag)
+    if band: bx.fill_between(_x, lo, hi, color=col, alpha=0.16, lw=0)
+    bx.plot(_x, d_, ls, color=col, marker="o", ms=3.0, lw=lw)
+bx.axhline(0, color=style.BASE, lw=0.6); bx.set_xscale("log", base=2); bx.set_xticks([1 / 256, 1 / 64, 1 / 16, 1 / 4, 1]); bx.set_xticklabels(["1/256", "1/64", "1/16", "1/4", "1"]); bx.minorticks_off()
+bx.set_xlabel("length of one step (units of $D$)", labelpad=1); bx.set_ylabel("$\\Delta$ accuracy (pts)"); bx.set_ylim(-4.2, 7.0); bx.set_yticks([-3, 0, 3, 6])
+fig.align_ylabels([ax, bx])
 fig.savefig(os.path.join(D, "fig_estimator.pdf"), bbox_inches="tight", pad_inches=0.02); plt.close(fig)
 # ---------------- frozen critic (placed at 0.42*5.5 = 2.3 in) ----------------
 def parse(log):
