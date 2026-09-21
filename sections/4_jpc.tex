@@ -61,7 +61,7 @@ Two things move the condition under which the bias $b_k$ of~(\ref{eq:biasm}) van
 \begin{algorithmic}[1]
 \REQUIRE SFT policy $\hat X_\theta$; pre-trained critic $V_\phi$ (frozen copy $\hat X_\phi$, trainable head $h_\phi$); verifier $r$; sampler $(\gamma,K)$; window $\mathcal W=\{k_{\rm lo},\dots,k_{\rm hi}\}$; replay buffer $\mathcal B$ holding the newest $N_{\mathcal B}$ states
 \FOR{iteration $=1,\dots,T$}
-  \STATE \textbf{Actor.} For $B$ prompts and one $k\sim\mathcal U(\mathcal W)$: roll out to $s_{k-1}$ without gradients, take the denoiser call at $s_{k-1}$ with gradients to form $s_k$, and set $\theta\leftarrow\theta+\eta_\theta\,\mathrm{AdamW}\big(\nabla_\theta\frac1B\sum_{b}V_\phi(s_{k,b})\big)$ \hfill (eq.~\ref{eq:pw}; clipped, $\eta_\theta$ decays)
+  \STATE \textbf{Actor.} For $B$ prompts and one $k\sim\mathcal U(\mathcal W)$: roll out to $s_{k-1}$ without gradients, take the denoiser call at $s_{k-1}$ with gradients to form $s_k$, and set $\theta\leftarrow\theta+\eta_\theta\,\mathrm{AdamW}\big(\nabla_\theta\frac1B\sum_{b}V_\phi(s_{k,b})\big)$ \hfill (eq.~\ref{eq:pw}; clipped)
   \STATE \textbf{Buffer.} Roll out $B$ fresh prompts to the end, decode, verify; push each $(s_{k_{\rm hi}},r)$ into $\mathcal B$
   \STATE \textbf{Critic.} $m_{\rm c}$ head steps $\phi\leftarrow\phi-\eta_\phi\,\mathrm{AdamW}(\nabla_\phi\mathcal L_{\rm 2D})$ on minibatches of $B'$ states of $\mathcal B$; every $n_q$ iterations, $m'_{\rm c}$ more if the AUC of $V_\phi$ on the newest $N_q$ states is below $a_0$ \hfill (eq.~\ref{eq:critic2d_loss}; first term for~(\ref{eq:critic1d}))
 \ENDFOR

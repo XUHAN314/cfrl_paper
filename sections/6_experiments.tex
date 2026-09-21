@@ -50,7 +50,7 @@ The top right panel of Table~\ref{tab:main} measures the cap directly. On one se
 
 \begin{table}[!b]
 \centering\small
-\begin{minipage}[c]{0.565\linewidth}
+\begin{minipage}[c]{0.60\linewidth}
 \centering
 \setlength{\tabcolsep}{3pt}
 \resizebox{\linewidth}{!}{%
@@ -67,7 +67,7 @@ fine-tuned copy, reads $(y_k,\hat x_{k-1})$ & \CDa{1} & \CDa{3} & \CDa{5} & \CDa
 \bottomrule
 \end{tabular}}
 \end{minipage}\hfill
-\begin{minipage}[c]{0.42\linewidth}
+\begin{minipage}[c]{0.385\linewidth}
 \centering
 \includegraphics[width=\linewidth]{figures/fig_frozen.pdf}
 \end{minipage}
@@ -99,7 +99,7 @@ What the difference consists of we can only bound. A frozen 2D critic is exploit
 \caption{Ablations of Algorithm~\ref{alg:jpc} on Game24 (Countdown where marked): held-out accuracy (\%) under the deployment chain at the run's best and last checkpoint. Variants are single runs; the Countdown row and the references are three-seed means. Each reference shares its variant's version of the recipe (rows 1--3, 4--5, 6; Appendix~\ref{app:details}). Full trajectories and further ablations in Appendix~\ref{app:needs_full}.}
 \label{tab:needs}
 \setlength{\tabcolsep}{5pt}
-\begin{tabular}{@{}llcc@{}}
+\begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}llcc@{}}
 \toprule
 choice it tests & variant & best / final & reference \\
 \midrule
@@ -110,7 +110,7 @@ choice it tests & variant & best / final & reference \\
 \S\ref{sec:joint}, step size & constant learning rate $10^{-6}$ & 57.9 / 48.7 & 58.9 / 58.4 \\
 \S\ref{sec:joint}, one chain & trained under $\gamma4$@16, read at $\gamma56$@64 & 47.0 / 47.0 & 56.4 / 56.4 \\
 \bottomrule
-\end{tabular}
+\end{tabular*}
 \end{table}
 
 \subsection{What else the joint training needs}
