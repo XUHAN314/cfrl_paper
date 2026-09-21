@@ -17,6 +17,13 @@
 \usepackage{wrapfig}
 \input{math_commands.tex}
 \newcommand{\jpc}{\textsc{JPC}}
+% The name of our method. Change it HERE and it changes everywhere; the variants are written \method{}-GRPO, \method{}-Scalar, \method{}-2D.
+\newcommand{\method}{\textsc{CFRL}}
+% A second label for the equation that has just ended (several short equations share one display and one number).
+\makeatletter
+\newcommand{\eqalias}[1]{\begingroup\def\@currentlabel{\theequation}\label{#1}\endgroup\ignorespaces}
+\newcommand{\eqaliasprev}[1]{\begingroup\edef\@currentlabel{\the\numexpr\value{equation}-1\relax}\label{#1}\endgroup\ignorespaces}
+\makeatother
 \newcommand{\dep}{\gamma56@64}
 \newcommand{\hl}[1]{\textcolor{blue!70!black}{#1}}
 % ---- line keys for captions (colours match figures/style.py and make_compact.py)
@@ -62,7 +69,6 @@
 \input{sections/2_prelim}
 \input{sections/3_grpo}
 \input{sections/4_jpc}
-\input{sections/5_amortise}
 \input{sections/6_experiments}
 \input{sections/7_related}
 \input{sections/8_conclusion}
@@ -77,6 +83,7 @@
 \raggedbottom % appendix: many [H] floats; do not stretch the vertical glue of short pages
 \input{appendix/A_datasets}
 \input{appendix/B_derivations}
+\input{appendix/M_method}
 \input{appendix/C_details}
 \input{appendix/D_results}
 \input{appendix/E_related}

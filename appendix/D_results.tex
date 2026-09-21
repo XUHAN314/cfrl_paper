@@ -36,11 +36,11 @@ Game24, $10^{-5}$ & 26.9 & 20.5 & 23.8 & 25.0 & 25.8 & 26.8 & 30.1 & 28.9 & \tex
 
 \subsubsection{GRPO at its own chain and under the deployment chain}
 \label{app:grpo_chain}
-GRPO (Stage 1) is trained under the cheap $\gamma4$@16 chain and, like every row of Table~\ref{tab:main}, read at the deployment chain. Two checks show that this mismatch is not what limits it. Read at its own chain, the three Countdown GRPO seeds peak at $24.1$, $24.3$ and $24.4$ against the base's $23.1$ at $\gamma4$@16, a gain of about one point where the deployment reading gives $+0.9$. Trained under the deployment chain instead (one seed per task, otherwise the same recipe, 600 iterations), GRPO reaches $42.3$ on Countdown ($+0.1$) and $48.5$ on Game24 ($+3.5$; the cheap-chain seeds reach $46.8$--$48.6$). The estimator gains little under either chain.
+\method{}-GRPO is trained under the cheap $\gamma4$@16 chain and, like every row of Table~\ref{tab:main}, read at the deployment chain. Two checks show that this mismatch is not what limits it. Read at its own chain, the three Countdown GRPO seeds peak at $24.1$, $24.3$ and $24.4$ against the base's $23.1$ at $\gamma4$@16, a gain of about one point where the deployment reading gives $+0.9$. Trained under the deployment chain instead (one seed per task, otherwise the same recipe, 600 iterations), GRPO reaches $42.3$ on Countdown ($+0.1$) and $48.5$ on Game24 ($+3.5$; the cheap-chain seeds reach $46.8$--$48.6$). The estimator gains little under either chain.
 
 \subsubsection{A masked-diffusion baseline: d1 on our tasks}
 \label{app:d1}
-d1 \citep{zhao2025d1} is the most used RL recipe for masked diffusion language models: LLaDA-8B-Instruct \citep{nie2025llada} with LoRA, optionally a supervised stage, and \emph{diffu}-GRPO, a GRPO variant whose per-token log-probabilities come from one forward pass in which all completion tokens (and 15\% of prompt tokens) are masked. That estimator requires a mask token and a discrete masked-diffusion model, so it cannot be applied to a continuous flow model; the GRPO of \S\ref{sec:grpo} is its counterpart on ELF. We therefore ran d1's own recipe, unchanged, on its own base model and on \emph{our} four held-out sets, using the authors' code and hyperparameters (LoRA rank 128 on all attention and MLP projections, six generations per prompt, 256-token completions with 128 diffusion steps, block length 32, learning rate $3\times10^{-6}$, $\mu{=}12$ inner iterations, KL weight 0.04, clip $\epsilon{=}0.5$, sampling temperature 0.9, or 0.3 for Sudoku as in their Sudoku script), with two changes that do not affect the algorithm: the log-probability pass over the $\mu$ inner iterations is computed in chunks to fit an 80\,GB GPU, and plain data-parallel training replaces DeepSpeed. Prompts follow d1's own Countdown and Sudoku prompt formats (their tasks are Countdown with three numbers and $4{\times}4$ Sudoku; ours are Countdown with four to five numbers and $9{\times}9$ Sudoku), rewards follow d1's conventions (expression correct 1.0 / well-formed 0.1; fraction of correct empty cells for Sudoku; for K\&K, 1.0 if the assignment satisfies all statements, otherwise 0.9 times the fraction of correctly labelled people), and accuracy is our exact-success metric with 256 generated tokens. We report d1's full recipe with its supervised stage run on the same training data as ELF-B's SFT (completion-only masked SFT with d1's settings; for Countdown and Game24 the gold derivation is the reasoning and a single expression built from it is the answer; for Sudoku and K\&K a fixed one-sentence reasoning precedes the gold answer), followed by diffu-GRPO from the merged SFT model on four A100-80G GPUs for 8{,}000 inner steps ($\approx$32k rollouts, the budget of our \jpc{} runs). Two preliminary arms are omitted from the table but were run in full: d1's RL stage directly from the instruct model, which starts near zero on our tasks (1.4 / 0.0 / 4.8 / 2.2 exact on Countdown / Sudoku / K\&K / Game24 at 256 tokens) and ends at 2.5 / 0.0 / 7.7 / 4.7 after 3{,}840--8{,}000 inner steps, and a small supervised stage (20k examples, two epochs, LoRA on the attention projections only) that reaches 11.3 / 0.1 / 3.2 / 9.6 and 12.3 / 0.1 / 3.9 / 11.9 after diffu-GRPO.
+d1 \citep{zhao2025d1} is the most used RL recipe for masked diffusion language models: LLaDA-8B-Instruct \citep{nie2025llada} with LoRA, optionally a supervised stage, and \emph{diffu}-GRPO, a GRPO variant whose per-token log-probabilities come from one forward pass in which all completion tokens (and 15\% of prompt tokens) are masked. That estimator requires a mask token and a discrete masked-diffusion model, so it cannot be applied to a continuous flow model; the GRPO of \S\ref{sec:grpo} is its counterpart on ELF. We therefore ran d1's own recipe, unchanged, on its own base model and on \emph{our} four held-out sets, using the authors' code and hyperparameters (LoRA rank 128 on all attention and MLP projections, six generations per prompt, 256-token completions with 128 diffusion steps, block length 32, learning rate $3\times10^{-6}$, $\mu{=}12$ inner iterations, KL weight 0.04, clip $\epsilon{=}0.5$, sampling temperature 0.9, or 0.3 for Sudoku as in their Sudoku script), with two changes that do not affect the algorithm: the log-probability pass over the $\mu$ inner iterations is computed in chunks to fit an 80\,GB GPU, and plain data-parallel training replaces DeepSpeed. Prompts follow d1's own Countdown and Sudoku prompt formats (their tasks are Countdown with three numbers and $4{\times}4$ Sudoku; ours are Countdown with four to five numbers and $9{\times}9$ Sudoku), rewards follow d1's conventions (expression correct 1.0 / well-formed 0.1; fraction of correct empty cells for Sudoku; for K\&K, 1.0 if the assignment satisfies all statements, otherwise 0.9 times the fraction of correctly labelled people), and accuracy is our exact-success metric with 256 generated tokens. We report d1's full recipe with its supervised stage run on the same training data as ELF-B's SFT (completion-only masked SFT with d1's settings; for Countdown and Game24 the gold derivation is the reasoning and a single expression built from it is the answer; for Sudoku and K\&K a fixed one-sentence reasoning precedes the gold answer), followed by diffu-GRPO from the merged SFT model on four A100-80G GPUs for 8{,}000 inner steps ($\approx$32k rollouts, the budget of our pathwise runs). Two preliminary arms are omitted from the table but were run in full: d1's RL stage directly from the instruct model, which starts near zero on our tasks (1.4 / 0.0 / 4.8 / 2.2 exact on Countdown / Sudoku / K\&K / Game24 at 256 tokens) and ends at 2.5 / 0.0 / 7.7 / 4.7 after 3{,}840--8{,}000 inner steps, and a small supervised stage (20k examples, two epochs, LoRA on the attention projections only) that reaches 11.3 / 0.1 / 3.2 / 9.6 and 12.3 / 0.1 / 3.9 / 11.9 after diffu-GRPO.
 
 \begin{table}[H]\centering\small
 \caption{d1 (LLaDA-8B-Instruct, masked diffusion) versus this paper (ELF-B, 105M, continuous flow) on our held-out sets, exact success (\%), 256 generated tokens for LLaDA, deployment sampler for ELF-B. LLaDA's supervised stage uses the same training data as ELF-B's (Countdown 500k examples, Sudoku 400k, K\&K 300k, Game24 13k; LoRA rank 128 on all projections; 3, 3, 4 and 20 epochs); ``best ckpt'' = best of the checkpoints evaluated every 960 inner steps of diffu-GRPO on four GPUs. Sudoku for LLaDA also reports the fraction of correctly filled empty cells in parentheses. ELF-B rows are the three-seed means of Table~\ref{tab:main}.}\label{tab:d1}
@@ -51,8 +51,8 @@ LLaDA-8B-Instruct & + task SFT & 13.1 & \phantom{0}0.7 & 61.0 & 16.1\\
 LLaDA-8B-Instruct & + task SFT + diffu-GRPO (best ckpt) & 14.9 & \phantom{0}0.7 & 62.5 & 19.5\\\midrule
 ELF-B (105M) & task SFT (base) & 42.2 & 66.2 & 67.5 & 45.0\\
 ELF-B (105M) & + GRPO & 43.1 & 69.7 & 71.6 & 47.5\\
-ELF-B (105M) & + \jpc{}, scalar critic & 48.2 & 66.3 & 77.6 & 51.4\\
-ELF-B (105M) & + \jpc{}, 2D critic & 50.2 & 71.0 & 79.6 & 58.8\\\bottomrule\end{tabular}}\end{table}
+ELF-B (105M) & + \method{}-Scalar & 48.2 & 66.3 & 77.6 & 51.4\\
+ELF-B (105M) & + \method{}-2D & 50.2 & 71.0 & 79.6 & 58.8\\\bottomrule\end{tabular}}\end{table}
 
 The 8B masked-diffusion model is far below the 105M flow model on every task, before and after RL; diffu-GRPO adds at most $+1$ to $+3$ points over its starting point on any task in either arm, and on Sudoku it never produces a solved grid. Two caveats apply. The comparison is across architectures \emph{and} training histories: LLaDA-8B-Instruct was never trained on these tasks, and our supervised stage for it is small (about two GPU-hours per task), whereas ELF-B was fine-tuned on the full training sets; a larger supervised budget would raise the LLaDA rows, and we make no claim about the ceiling of masked diffusion models. What the table does show is the behaviour of the estimator: diffu-GRPO moves the zero-shot model little on the arithmetic tasks within d1's own budget and lifts K\&K by a few points, consistent with d1's own results on its easier three-number Countdown and $4{\times}4$ Sudoku, where the reported gains are largest when the base already solves a sizeable fraction of problems.
 
@@ -71,7 +71,7 @@ $\gamma56$@64 & 4.2 & 37.4 & 41.0 & 42.8 & \textbf{45.0} & 39.8 & 34.7\\\bottomr
 
 \subsubsection{Knights-and-Knaves by number of people}
 \label{app:kk_by_n}
-Table~\ref{tab:kk_by_n} splits K\&K accuracy by the number of people in the puzzle. The base model is near-perfect on 4-person puzzles and weakest on 6-person ones; RL (GRPO and \jpc{}) improves all sizes by similar absolute amounts, and the fresh-problem loop closes the remaining gap on 6-person puzzles ($51.8\to97.6$), within 1.4 points of the gold-supervised model (99.0) without ever seeing a gold label.
+Table~\ref{tab:kk_by_n} splits K\&K accuracy by the number of people in the puzzle. The base model is near-perfect on 4-person puzzles and weakest on 6-person ones; RL (\method{}-GRPO and \method{}-2D) improves all sizes by similar absolute amounts, and the fresh-problem loop closes the remaining gap on 6-person puzzles ($51.8\to97.6$), within 1.4 points of the gold-supervised model (99.0) without ever seeing a gold label.
 
 \begin{table}[H]\centering\small
 \caption{K\&K held-out accuracy by number of people (deployment sampler $\gamma56$@64; ODE-64 in parentheses for the SFT and loop rows).}\label{tab:kk_by_n}
@@ -79,14 +79,14 @@ Table~\ref{tab:kk_by_n} splits K\&K accuracy by the number of people in the puzz
 model & all & 4 people & 5 people & 6 people\\\midrule
 SFT epoch 4 (base) & 67.5 (57.8) & 86.8 (80.8) & 63.5 (57.9) & 51.8 (34.2)\\
 GRPO, seed 3 (600 iterations) & 74.6 & 92.7 & 72.6 & 58.2\\
-\jpc{} 2D, seed 1 (250 iterations) & 70.3 & 92.1 & 68.6 & 50.0\\
+\method{}-2D, seed 1 (250 iterations) & 70.3 & 92.1 & 68.6 & 50.0\\
 fresh-problem loop, round 5 (Table~\ref{tab:loop}) & 99.1 (96.0) & 100.0 (100.0) & 99.7 (97.7) & 97.6 (90.1)\\
 gold SFT epoch 6 & 95.4 (88.8) & 99.9 (99.9) & 96.8 (91.8) & 89.6 (74.8)\\
 gold SFT epoch 8 & 99.7 (96.8) & 100.0 (100.0) & 100.0 (98.5) & 99.0 (91.8)\\\bottomrule\end{tabular}\end{table}
 
 \subsubsection{What the policy gradient changes: failure modes and examples}
 \label{app:failure_modes}
-The Countdown and Game24 verifiers accept a derivation only if every equation is arithmetically exact, every operand is an input number or an earlier result used at most once, and the last result equals the target. Table~\ref{tab:failure_modes} classifies every held-out sample by the first rule it violates (our classifier reproduces the verifier's accept/reject decision exactly). Two facts stand out. No sample ever misses the target: the models always \emph{write} the target as the last result, so a wrong derivation always fails upstream, almost always by one arithmetically false equation. (The \jpc{} and loop rows of this table come from earlier recipes and an earlier loop, so their accuracies differ from Tables~\ref{tab:main} and~\ref{tab:loop}.) What RL changes is therefore the rate of arithmetically false equations: from $47.8\%$ to $31.5\%$ of samples on Game24 and from $52.2\%$ to $41.4\%$ on Countdown, while the rate of number-use violations stays at $5$--$10\%$ (\jpc{} raises it slightly on Game24, the loop lowers it again). Table~\ref{tab:examples} shows held-out problems on which the base and the \jpc{} policy disagree: on Game24 the policy trained by \jpc{} fixes $340$ problems and breaks $135$ relative to the base ($+12.8$ net); on Countdown $408$ and $228$ ($+9.0$ net).
+The Countdown and Game24 verifiers accept a derivation only if every equation is arithmetically exact, every operand is an input number or an earlier result used at most once, and the last result equals the target. Table~\ref{tab:failure_modes} classifies every held-out sample by the first rule it violates (our classifier reproduces the verifier's accept/reject decision exactly). Two facts stand out. No sample ever misses the target: the models always \emph{write} the target as the last result, so a wrong derivation always fails upstream, almost always by one arithmetically false equation. (The pathwise and loop rows of this table come from earlier recipes and an earlier loop, so their accuracies differ from Tables~\ref{tab:main} and~\ref{tab:loop}.) What RL changes is therefore the rate of arithmetically false equations: from $47.8\%$ to $31.5\%$ of samples on Game24 and from $52.2\%$ to $41.4\%$ on Countdown, while the rate of number-use violations stays at $5$--$10\%$ (the pathwise update raises it slightly on Game24, the loop lowers it again). Table~\ref{tab:examples} shows held-out problems on which the base and the pathwise policy disagree: on Game24 the pathwise policy fixes $340$ problems and breaks $135$ relative to the base ($+12.8$ net); on Countdown $408$ and $228$ ($+9.0$ net).
 
 \begin{table}[H]\centering\small
 \caption{Failure-mode breakdown of held-out samples at the deployment sampler (\% of samples; ``arithmetic'' = at least one false equation; ``number use'' = an operand that is not available; ``format'' = unparsable). No sample in any run ends on a result different from the target.}\label{tab:failure_modes}
@@ -94,27 +94,27 @@ The Countdown and Game24 verifiers accept a derivation only if every equation is
 task & policy & correct & arithmetic & number use & format\\\midrule
 Game24 & SFT base & 45.0 & 47.8 & 7.2 & 0.0\\
  & GRPO (seed 2, 400) & 48.1 & 44.9 & 7.0 & 0.0\\
- & \jpc{} 2D (seed 2, 1000) & 57.8 & 31.5 & 10.4 & 0.3\\
+ & \method{}-2D (seed 2, 1000) & 57.8 & 31.5 & 10.4 & 0.3\\
  & loop round 4 & 57.7 & 36.2 & 6.0 & 0.1\\\midrule
 Countdown & SFT base & 42.2 & 52.2 & 5.5 & 0.1\\
- & \jpc{} scalar (1000) & 51.2 & 41.4 & 6.3 & 1.0\\
+ & \method{}-Scalar (1000) & 51.2 & 41.4 & 6.3 & 1.0\\
  & loop round 4 & 54.4 & 40.5 & 5.0 & 0.1\\\bottomrule\end{tabular}\end{table}
 
 \begin{table}[H]\centering\scriptsize
 \caption{Held-out examples (deployment sampler). \checkmark/\texttimes: verifier verdict. The Game24 gold derivation is one of several valid ones; the models are not asked to reproduce it.}\label{tab:examples}
 \resizebox{\linewidth}{!}{%
 \begin{tabular}{@{}llll@{}}\toprule
-problem & SFT base & \jpc{} policy & \\\midrule
-\multicolumn{4}{@{}l}{\emph{Game24 (base 45.0, \jpc{} 2D 57.8)}}\\
+problem & SFT base & pathwise policy & \\\midrule
+\multicolumn{4}{@{}l}{\emph{Game24 (base 45.0, \method{}-2D 57.8)}}\\
 2 2 9 8 $\to$ 24 & 8+2=10, 9*2=18, 18+10=24 \texttimes & 8$-$2=6, 2*9=18, 6+18=24 \checkmark & base: false equation\\
 2 2 4 6 $\to$ 24 & 2*2=4, 4*4=18, 6+18=24 \texttimes & 4/2=2, 2+2=4, 4*6=24 \checkmark & base: false equation\\
 13 4 12 7 $\to$ 24 & 4+13=17, 17*12=168, 168/7=24 \texttimes & 13$-$4=9, 9$-$7=2, 2*12=24 \checkmark & base: false division\\
-5 9 4 6 $\to$ 24 & 9+6=15, 15+4=19, 19+5=24 \checkmark & 9$-$5=4, 6$-$4=6, 6*4=24 \texttimes & \jpc{}: false equation\\
+5 9 4 6 $\to$ 24 & 9+6=15, 15+4=19, 19+5=24 \checkmark & 9$-$5=4, 6$-$4=6, 6*4=24 \texttimes & pathwise: false equation\\
 6 11 6 6 $\to$ 24 & 11*6=66, 6*6=36, 66$-$36=24 \texttimes & 11*6=66, 6*6=36, 66$-$36=24 \texttimes & both: same false last step\\\midrule
-\multicolumn{4}{@{}l}{\emph{Countdown (base 42.2, \jpc{} scalar 51.2)}}\\
+\multicolumn{4}{@{}l}{\emph{Countdown (base 42.2, \method{}-Scalar 51.2)}}\\
 75 40 66 2 52 $\to$ 85 & 40/2=20, 52+20=76, 76$-$66=10, 75+10=85 \texttimes & 75$-$66=9, 52$-$9=43, 2+40=42, 43+42=85 \checkmark & base: false equation\\
 37 31 5 38 47 $\to$ 20 & 47+31=78, 38+37=75, 78$-$75=3, 5*3=20 \texttimes & 5+37=42, 42$-$31=11, 11+47=58, 58$-$38=20 \checkmark & base: forced last step\\
-74 1 37 15 79 $\to$ 40 & 79$-$74=5, 15/5=3, 37*1=37, 3+37=40 \checkmark & 79$-$74=5, 15+37=52, 52$-$5=47, 47$-$1=40 \texttimes & \jpc{}: false equation\\
+74 1 37 15 79 $\to$ 40 & 79$-$74=5, 15/5=3, 37*1=37, 3+37=40 \checkmark & 79$-$74=5, 15+37=52, 52$-$5=47, 47$-$1=40 \texttimes & pathwise: false equation\\
 52 68 56 28 40 $\to$ 76 & 52$-$28=24, 68$-$40=28, 56/28=2, 24*2=76 \texttimes & 56$-$52=4, 68$-$40=28, 28$-$28=84, 84$-$4=76 \texttimes & both: forced last steps\\\bottomrule\end{tabular}}\end{table}
 
 \subsection{The estimator}
@@ -143,6 +143,27 @@ AR GPT-2 (124M) + token-level GRPO/PPO & same estimator, AR actions & $+9.7$ \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\subsubsection{GRPO with ratio, clipping and anchor}
+\label{app:grpo_variants}
+\method{}-GRPO is GRPO with one step per batch of rollouts and no anchor (Proposition~\ref{prop:grpo_equiv}). Table~\ref{tab:grpo_variants} puts the parts of~(\ref{eq:original_grpo}) back, on the rollout budget of Table~\ref{tab:main}: two steps per batch with the ratio taken per flow step and position, then the clip at $\epsilon=0.2$, then the anchor at $\beta=0.04$ on the closed-form KL of the Gaussian transitions. The second step is what helps, by two to three points on Game24 and K\&K and by less than the spread of the seeds on Countdown and Sudoku; the clip adds about a point; the anchor at its usual strength holds the policy at its initialisation and removes the gain. With either row the order of Table~\ref{tab:main} is unchanged: the 2D critic leads the clipped two-step form by $6.3$, $3.0$, $5.5$ and $8.8$ points on Countdown, Sudoku, K\&K and Game24.
+\begin{table}[H]\centering\small
+\caption{GRPO variants on the flow chain, held-out accuracy (\%) under the deployment chain, best checkpoint. \emph{Top:} one seed each. \emph{Bottom:} means of three seeds (per-seed values in brackets). All rows draw the same rollouts per iteration for the same number of iterations as the GRPO row of Table~\ref{tab:main}.}\label{tab:grpo_variants}
+\begin{tabular}{@{}lcccccc@{}}\toprule
+ & steps per batch & ratio & clip & anchor & Countdown & Game24 \\\midrule
+base & & & & & 42.2 & 45.0 \\
+\method{}-GRPO (seed 1 of Table~\ref{tab:main}) & 1 & --- & --- & --- & 43.1 & 46.8 \\
+ratio only & 2 & yes & --- & --- & 42.6 & 50.1 \\
+ratio and clip & 2 & yes & 0.2 & --- & 44.7 & 51.1 \\
+GRPO, (\ref{eq:original_grpo}) & 2 & yes & 0.2 & 0.04 & 43.2 & 46.0 \\\bottomrule
+\end{tabular}
+
+\vspace{4pt}
+\begin{tabular}{@{}lcccc@{}}\toprule
+three seeds & Countdown & Sudoku & K\&K & Game24 \\\midrule
+\method{}-GRPO (Table~\ref{tab:main}) & 43.1 {\scriptsize(43.1, 42.8, 43.3)} & 69.7 {\scriptsize(70.1, 72.8, 66.2)} & 71.6 {\scriptsize(70.2, 70.0, 74.6)} & 47.5 {\scriptsize(46.8, 48.6, 47.1)} \\
+ratio and clip, two steps & 43.9 {\scriptsize(44.7, 43.9, 43.0)} & 68.0 {\scriptsize(67.0, 67.8, 69.2)} & 74.1 {\scriptsize(72.7, 74.6, 75.0)} & 50.0 {\scriptsize(51.1, 50.5, 48.3)} \\\bottomrule
+\end{tabular}\end{table}
 
 \subsubsection{The two estimators on the same rollouts: SNR and half-split cosine}
 \label{app:snr}
@@ -535,7 +556,7 @@ Table~\ref{tab:cd_loop} lists every round of the Countdown loop at all four samp
 \begin{tabular}{@{}llcccc@{}}\toprule
 round & pool & ODE-64 & $\gamma4$@16 & $\gamma28$@32 & $\gamma56$@64\\\midrule
 SFT base (epoch 60) & & 28.1 & 23.1 & 38.0 & 42.2\\
-\jpc{} 2D policy (start) & & 34.6 & 23.9 & 44.5 & 50.4\\
+\method{}-2D policy (start) & & 34.6 & 23.9 & 44.5 & 50.4\\
 round 1 & deployment sampler, 91.9k sequences / 35.1k problems & 41.0 & 38.6 & 46.4 & 47.9\\
 round 2 & deployment sampler, 57.4k / 31.2k & 42.5 & 41.4 & 44.9 & 46.4\\
 round 3 & 2D-critic-guided sampler, \OURSpoolthree & \OURScdthreeo & \OURScdthreeg & \OURScdthreet & \OURScdthree\\
@@ -562,7 +583,7 @@ Game24 is split by number set (Appendix~\ref{app:datasets}): every solvable set 
 \resizebox{\linewidth}{!}{%
 \begin{tabular}{@{}llcccc@{}}\toprule
 start / round & covered & $\gamma56$@64 & ODE-64 & $\gamma4$@16\\\midrule
-\jpc{} 2D policy (start) & & 59.3 & 42.2 & 38.9\\
+\method{}-2D policy (start) & & 59.3 & 42.2 & 38.9\\
 round 1, plain & 3.79k / 4.69k & 56.5 & 46.5 & 43.9\\
 round 2, plain & 3.54k & 56.3 & 49.3 & 48.6\\
 round 3, plain & 3.58k & 55.9 & 50.2 & 48.0\\
