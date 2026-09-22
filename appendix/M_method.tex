@@ -52,7 +52,7 @@ Algorithm~\ref{alg:jpc} refits the head after every actor step. Its remaining ch
 
 \subsection{The amortisation loop}
 \label{app:loop}
-The objective~(\ref{eq:objective}) is defined by one chain. The value, the critic and the improvement of the pathwise variants belong to the sampler ($\gamma$, $K$) under which the policy was trained; a cheaper sampler, with fewer steps or $\gamma=0$, is a different chain through the same denoiser, and an improvement of the denoiser along the training chain need not carry over to it. This section moves the improvement into the model's supervised objective, which trains the denoiser at every time $t$ rather than along one chain, and uses the critic of \methodSVGTwoD{} a second time, to steer generation before the verifier can.
+The objective~(\ref{eq:objective}) is defined by one chain. The value, the critic and the improvement of the SVG variants belong to the sampler ($\gamma$, $K$) under which the policy was trained; a cheaper sampler, with fewer steps or $\gamma=0$, is a different chain through the same denoiser, and an improvement of the denoiser along the training chain need not carry over to it. This section moves the improvement into the model's supervised objective, which trains the denoiser at every time $t$ rather than along one chain, and uses the critic of \methodSVGTwoD{} a second time, to steer generation before the verifier can.
 
 \paragraph{One round.}
 Let $\pi_\theta(w\mid c)$ be the distribution of decoded responses under the deployment chain, the push-forward of~(\ref{eq:chain}) through $w_\theta(s_{K-1})$. A round takes a pool $\mathcal P$ of prompts without labels, disjoint from the evaluation prompts, draws $n$ responses per prompt, keeps the verified ones, and fine-tunes the model on them:

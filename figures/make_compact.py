@@ -15,7 +15,7 @@ _one = json.load(open(f"{R}/outputs/analysis/onestep_g24/results.json"))["eval"]
 _fr = ["0.004", "0.008", "0.016", "0.032", "0.0625", "0.25", "0.5", "1"]; _x = [float(f) for f in _fr]
 def _series(tag): 
     r = [_one[f"{tag}_eta{f}D"] for f in _fr]; return np.array([q["diff"] for q in r]), np.array([q["ci95"][0] for q in r]), np.array([q["ci95"][1] for q in r])
-fig, (ax, bx) = plt.subplots(2, 1, figsize=(2.1, 2.08), gridspec_kw=dict(hspace=0.72, height_ratios=[1, 1.08]))
+fig, (ax, bx) = plt.subplots(2, 1, figsize=(2.1, 1.96), gridspec_kw=dict(hspace=0.78, height_ratios=[1, 1.08]))
 ax.plot(N, [0.04, 0.02, -0.04], "-", color=GRPO_C, marker="o", ms=3.0, lw=1.4)
 ax.plot(N, [0.02, 0.04, 0.02], ":", color=style.BASE, marker="o", ms=3.0, lw=1.3)
 ax.plot(N, [0.79, 0.94, 0.97], "-", color=TD, marker="o", ms=3.0, lw=1.6)
@@ -64,7 +64,7 @@ def acc(pre, run, c, sampler, mfile):
     if not os.path.exists(f): return None
     return 100 * json.load(open(f))["accuracy"]
 S64 = "sde-steps64-cfg2-ts_uniform-gamma56.0-cond"
-fig, (ax, bx) = plt.subplots(1, 2, figsize=(5.5, 1.32), sharey=True, gridspec_kw=dict(wspace=0.08))
+fig, (ax, bx) = plt.subplots(1, 2, figsize=(5.5, 1.2), sharey=True, gridspec_kw=dict(wspace=0.08))
 for lab, pat, col in (("scalar critic", "g24_TS_s%d", SC), ("2D critic", "g24_T_s%d", TD)):
     curves = []
     for s in (1, 2, 3):
