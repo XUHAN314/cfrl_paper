@@ -15,11 +15,11 @@ for which the derivation of~(\ref{eq:pw_exact}) applies on the states where $0<V
 \paragraph{One transition.}
 The estimator draws one transition $k$ uniformly from a window $\mathcal W=\{k_{\rm lo},\dots,k_{\rm hi}\}$ of the chain, with $k_{\rm hi}\le K-2$:
 \begin{equation*}
-\hat g_{\rm PW}=\nabla_\theta V_\phi(s_k),\qquad k\sim\mathcal U(\mathcal W),\qquad s_k=\big(\alpha_kD_\theta(s_{k-1})+\sigma_k\varepsilon_k,\ \hat x_{k-1}\big).
+\hat g_{\rm PW}=\nabla_{\theta_k}V_\phi(s_k),\qquad k\sim\mathcal U(\mathcal W),\qquad s_k=\big(\alpha_kD_\theta(s_{k-1})+\sigma_k\varepsilon_k,\ \hat x_{k-1}\big).
 \end{equation*}
 It is computed by rolling the chain to $s_{k-1}$ without gradients and taking the denoiser call at $s_{k-1}$ with gradients, so its memory is that of the backward passes through the actor's call (two evaluations under classifier-free guidance) and through the critic, independent of $K$: the dependence of the reward on $s_k$ through the remaining steps is carried by $V_k$ in expectation rather than by back-propagation through them. When the slope of $V_\phi$ equals that of $\mathrm{logit}\,V_k$ on the visited states, $\mathbb E[\hat g_{\rm PW}]$ is $|\mathcal W|^{-1}$ times the window's share of $\sum_k\partial\tilde J_k/\partial\theta_k$ (Appendix~\ref{app:pw_derivation}). The window is the middle of the chain, $\mathcal W=[K/8,\,5K/8]$ on every task: it excludes the first steps, where the state is noise and the value flat, and the last, where the state is committed and $V_{K-1}$ is piecewise constant; its ends are hyperparameters, not derived. With a learned critic the update carries the bias
 \begin{equation*}
-\mathbb E\big[\nabla_\theta\,(V_\phi-\mathrm{logit}\,V_k)(s_k)\big],
+\mathbb E\big[\nabla_{\theta_k}\,(V_\phi-\mathrm{logit}\,V_k)(s_k)\big],
 \end{equation*}
 which vanishes when the critic's slope matches the slope of the log-odds on the states the current policy visits. The update has no baseline, advantage or trust region: a baseline is a function of $s_{k-1}$, which the differentiated call holds fixed, and so drops from a pathwise gradient, and the policy's drift is controlled by the step size and by the refit of the critic (\S\ref{sec:joint}).
 
@@ -59,7 +59,7 @@ Let $\pi_\theta(w\mid c)$ be the distribution of decoded responses under the dep
 \begin{align}
 \mathcal A(\theta)&=\Big\{(c,w^{(j)}):\ c\in\mathcal P,\ 1\le j\le n,\ r(w^{(j)},c)=1\Big\},\qquad w^{(1)},\dots,w^{(n)}\overset{\text{iid}}{\sim}\pi_\theta(\cdot\mid c),
 \label{eq:accept}\\
-\theta'&=\arg\min_{\theta'}\ \mathcal L_{\rm SFT}\big(\theta';\mathcal A(\theta)\big)\quad\text{initialised at }\theta,
+\theta'&=\arg\min_{\vartheta}\ \mathcal L_{\rm SFT}\big(\vartheta;\mathcal A(\theta)\big)\quad\text{initialised at }\theta,
 \label{eq:sft_step}
 \end{align}
 where duplicate responses of a prompt are removed from $\mathcal A(\theta)$, at most $M$ are kept per prompt, the minimisation runs for a fixed number of epochs, and $\mathcal L_{\rm SFT}$ is ELF's training loss on the accepted pairs, the objective that produced the initial model \citep{hu2026elf}: for $(c,w)\in\mathcal A$ with $x=\mathrm{Enc}(w)$, a random time $t$ and noise $\varepsilon$ on the generated positions, $z_t=(1-t)c_\sigma\varepsilon+tx$ on $\mathcal G$ with the prefix held at $\mathrm{Enc}(c)$,
@@ -67,10 +67,10 @@ where duplicate responses of a prompt are removed from $\mathcal A(\theta)$, at 
 \mathcal L_{\rm SFT}(\theta';\mathcal A)=\mathbb E_{(c,w)\in\mathcal A}\Big[\,\mathbb E_{t,\varepsilon}\sum_{i\in\mathcal G}\big\|v_{\theta'}(z_t,t;\hat x_{\rm prev})_i-(x_i-c_\sigma\varepsilon_i)\big\|^2-\sum_{i\in\mathcal G}\log p_{\theta'}(w_i\mid x)\Big],
 \label{eq:sft}
 \end{equation}
-the flow-matching regression of the velocity on the generated positions plus the cross-entropy of the network's decoding pass on the clean embeddings at $t=1$. The self-conditioning input $\hat x_{\rm prev}$ is, as in ELF's training, the network's own estimate from a preceding call without gradient for half of the examples and zero for the rest, and the prompt is dropped at random for guidance training; both are kept as in the base training. Rounds are chained: $\theta_{\rho+1}$ is~(\ref{eq:sft_step}) applied to $\theta_\rho$, for $n_{\rm r}$ rounds, and the final round's model is the result (Algorithm~\ref{alg:loop}).
+the flow-matching regression of the velocity on the generated positions plus the cross-entropy of the network's decoding pass on the clean embeddings at $t=1$. The self-conditioning input $\hat x_{\rm prev}$ is, as in ELF's training, the network's own estimate from a preceding call without gradient for half of the examples and zero for the rest, and the prompt is dropped at random for guidance training; both are kept as in the base training. Rounds are chained: $\theta_{\varrho+1}$ is~(\ref{eq:sft_step}) applied to $\theta_\varrho$, for $n_{\rm r}$ rounds, and the final round's model is the result (Algorithm~\ref{alg:loop}).
 
 \paragraph{Why a round raises the reward.}
-Write $J_c(\theta)=\mathbb E_{w\sim\pi_\theta(\cdot\mid c)}[r(w,c)]$ for one prompt and $q_\theta(w\mid c)=\pi_\theta(w\mid c)\,r(w,c)/J_c(\theta)$ for the policy conditioned on success. The responses of prompt $c$ that pass the verifier are a sample from $q_\theta(\cdot\mid c)$; de-duplication and the cap $M$ change the weights within its support but not the support. For every $\theta'$,
+Write $J_c(\theta)=\mathbb E_{w\sim\pi_\theta(\cdot\mid c)}[r(w,c)]$ for one prompt and $q_\theta(w\mid c)=\pi_\theta(w\mid c)\,r(w,c)/J_c(\theta)$ for the policy conditioned on success. The responses of prompt $c$ that pass the verifier are a sample from $q_\theta(\cdot\mid c)$; de-duplication and the cap $M$ keep the sample inside the successes but move its law off $q_\theta$ (Appendix~\ref{app:em}). For every $\theta'$,
 \begin{equation}
 \log J_c(\theta')\ \ge\ \mathbb E_{w\sim q_\theta(\cdot\mid c)}\big[\log\pi_{\theta'}(w\mid c)\big]+H\big(q_\theta(\cdot\mid c)\big),
 \label{eq:em}
@@ -80,12 +80,12 @@ with equality at $\theta'=\theta$ (Proposition~\ref{prop:em}). Raising the likel
 \paragraph{Critic-guided sampling.}
 The 2D critic is a function of partial states, so it can rank and improve candidates before they are decoded. Both operations use the field~(\ref{eq:critic2d}) through the score
 \begin{equation}
-u(s_k)=\min_{i\in\mathcal G}\mathrm{sig}(R_{k,i}),
+R_{\min}(s_k)=\min_{i\in\mathcal G}\mathrm{sig}(R_{k,i}),
 \label{eq:minscore}
 \end{equation}
-the most pessimistic of the $|\mathcal G|$ readings of the outcome. The minimum is used here, and the mean in training, because the two tasks differ: the actor improves the policy on average and needs a gradient at every position, whereas a single candidate is accepted only if the whole response is right, so what limits it is its least confident reading, and a gradient of the minimum acts on that reading. \emph{Pruning:} for each prompt, $n_{\rm g}$ chains are run in parallel to a step $k_p$; the chain with the largest $u(s_{k_p})$ continues alone. \emph{Guidance:} at every stochastic step $k=1,\dots,K-1$ (it needs $\gamma>0$), before the denoiser call, the state is moved along the gradient of the score on the generated positions,
+the most pessimistic of the $|\mathcal G|$ readings of the outcome. The minimum is used here, and the mean in training, because the two tasks differ: the actor improves the policy on average and needs a gradient at every position, whereas a single candidate is accepted only if the whole response is right, so what limits it is its least confident reading, and a gradient of the minimum acts on that reading. \emph{Pruning:} for each prompt, $n_{\rm g}$ chains are run in parallel to a step $k_p$; the chain with the largest $R_{\min}(s_{k_p})$ continues alone. \emph{Guidance:} at every stochastic step $k=1,\dots,K-1$ (it needs $\gamma>0$), before the denoiser call, the state is moved along the gradient of the score on the generated positions,
 \begin{equation}
-y_k\ \leftarrow\ y_k+\kappa\,\sigma_k\sqrt L\ \frac{\nabla_{y}u(s_k)}{\|\nabla_{y}u(s_k)\|},
+y_k\ \leftarrow\ y_k+\kappa\,\sigma_k\sqrt L\ \frac{\nabla_{y}R_{\min}(s_k)}{\|\nabla_{y}R_{\min}(s_k)\|},
 \label{eq:guide}
 \end{equation}
 a step whose length is proportional to the noise scale $\sigma_k$ of that step, a fraction $\kappa\sqrt{L/(|\mathcal G|d)}$, of order $\kappa/\sqrt d$, of the norm of the noise the sampler injects there, so that the pushed state stays within the spread of the chain. The gradient with respect to the state in~(\ref{eq:guide}) is the same kind of quantity as the critic's slope that the actor multiplies with the denoiser Jacobian in~(\ref{eq:chainrule}); guidance applies it to the sample at inference instead of to the parameters at training. A guided response costs $n_{\rm g}$ chains up to step $k_p$, one afterwards, and one backward pass through the critic per step; guided pools are therefore drawn with a cheap chain (small $K$ and $\gamma$), and the search is meant to compensate the cheap chain's lower accuracy. Ranking states of a chain other than the critic's training chain is an assumption of this use (Appendix~\ref{app:joint_details}). Verification and fine-tuning are unchanged.
@@ -96,12 +96,12 @@ a step whose length is proportional to the noise scale $\sigma_k$ of that step, 
 \small
 \begin{algorithmic}[1]
 \REQUIRE policy $\theta_0$; optional critic $V_\phi$ of \methodSVGTwoD{}; verifier $r$; prompt pool $\mathcal P$; per round: a sampler and whether guidance is used; responses per prompt $n$; cap $M$; rounds $n_{\rm r}$; guidance constants $(n_{\rm g},k_p,\kappa)$
-\FOR{round $\rho=0,\dots,n_{\rm r}-1$}
+\FOR{round $\varrho=0,\dots,n_{\rm r}-1$}
   \FOR{each prompt $c\in\mathcal P$ and $j=1,\dots,n$}
-    \STATE Run the round's chain under $\theta_\rho$; with guidance, apply~(\ref{eq:guide}) at every step and prune $n_{\rm g}\to1$ at step $k_p$ by~(\ref{eq:minscore}); decode $w^{(j)}$
+    \STATE Run the round's chain under $\theta_\varrho$; with guidance, apply~(\ref{eq:guide}) at every step and prune $n_{\rm g}\to1$ at step $k_p$ by~(\ref{eq:minscore}); decode $w^{(j)}$
   \ENDFOR
   \STATE $\mathcal A\leftarrow$ the verified, distinct responses, at most $M$ per prompt \hfill (eq.~\ref{eq:accept})
-  \STATE $\theta_{\rho+1}\leftarrow\arg\min_{\theta'}\mathcal L_{\rm SFT}(\theta';\mathcal A)$, initialised at $\theta_\rho$ \hfill (eq.~\ref{eq:sft_step})
+  \STATE $\theta_{\varrho+1}\leftarrow\arg\min_{\theta'}\mathcal L_{\rm SFT}(\theta';\mathcal A)$, initialised at $\theta_\varrho$ \hfill (eq.~\ref{eq:sft_step})
 \ENDFOR
 \STATE \textbf{return} $\theta_{n_{\rm r}}$
 \end{algorithmic}

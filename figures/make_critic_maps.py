@@ -1,6 +1,6 @@
 """Heat maps of per-position 2D-critic values along the trajectory for held-out examples."""
 import sys, torch, numpy as np, matplotlib; matplotlib.use("Agg"); import matplotlib.pyplot as plt
-plt.rcParams.update({"font.size":7,"pdf.fonttype":42})
+plt.rcParams.update({"font.size":7.5,"pdf.fonttype":42})
 R="/cluster/tufts/liulab/xhan03/flow-nlp-rl"
 def load(p): return torch.load(p, map_location="cpu")
 def n_eff(toks):
@@ -21,17 +21,17 @@ def panel(ax, d, i, title, sudoku=False):
     pos=gm.nonzero().squeeze(-1); toks=d["tokens"][i]; n=n_eff(toks)
     n=min(n,len(pos)); P=torch.sigmoid(lg[:,pos[:n]]).numpy()
     im=ax.imshow(P,aspect="auto",vmin=0,vmax=1,cmap="RdYlGn",origin="lower")
-    ax.set_yticks(range(len(ks))); ax.set_yticklabels([f"{k}/{K}" for k in ks],fontsize=5.5); ax.set_ylabel("denoising step $k$",fontsize=6)
+    ax.set_yticks(range(len(ks))); ax.set_yticklabels([f"{k}/{K}" for k in ks],fontsize=7); ax.set_ylabel("denoising step $k$",fontsize=7.5)
     if sudoku:
         tg=d["target"][i].split(); hy=d["hyp"][i].split(); wrong=[j for j in range(min(len(tg),len(hy),n)) if tg[j]!=hy[j]]
-        ax.set_xticks(range(0,81,9)); ax.set_xticklabels([f"row {j//9+1}" for j in range(0,81,9)],fontsize=5.5,rotation=45)
+        ax.set_xticks(range(0,81,9)); ax.set_xticklabels([f"row {j//9+1}" for j in range(0,81,9)],fontsize=7,rotation=45)
         for j in wrong: ax.axvline(j,color="k",lw=0.8,ls=":"); ax.plot(j,len(ks)-0.5,"kv",ms=3)
-        if wrong: title+=f"  ({len(wrong)} wrong cells, dotted)"
+        if wrong: title=title.replace(" sample","")+f" ({len(wrong)} wrong cells)"
     else:
-        ax.set_xticks(range(n)); ax.set_xticklabels([t.strip() or "·" for t in toks[:n]],fontsize=5,rotation=90)
-    ax.set_title(title,fontsize=7.5); return im
+        ax.set_xticks(range(n)); ax.set_xticklabels([t.strip() or "·" for t in toks[:n]],fontsize=6.5,rotation=90)
+    ax.set_title(title,fontsize=8); return im
 tasks=[("g24_jpc_s2_1000.pt","Game24",False),("sd_jpc_500.pt","Sudoku",True)]
-fig,axes=plt.subplots(2,2,figsize=(7.6,5.0),constrained_layout=True)
+fig,axes=plt.subplots(2,2,figsize=(5.5,4.4),constrained_layout=True)
 def pooled_final(d,i):
     gm=d["gm"][i].bool(); pos=gm.nonzero().squeeze(-1); n=min(n_eff(d["tokens"][i]),len(pos)); return float(torch.sigmoid(d["logits"][i][-1,pos[:n]]).mean())
 def n_wrong(d,i):
