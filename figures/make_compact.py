@@ -15,7 +15,7 @@ _one = json.load(open(f"{R}/outputs/analysis/onestep_g24/results.json"))["eval"]
 _fr = ["0.004", "0.008", "0.016", "0.032", "0.0625", "0.25", "0.5", "1"]; _x = [float(f) for f in _fr]
 def _series(tag): 
     r = [_one[f"{tag}_eta{f}D"] for f in _fr]; return np.array([q["diff"] for q in r]), np.array([q["ci95"][0] for q in r]), np.array([q["ci95"][1] for q in r])
-fig, (ax, bx) = plt.subplots(2, 1, figsize=(2.1, 2.36), gridspec_kw=dict(hspace=0.66, height_ratios=[1, 1.08]))
+fig, (ax, bx) = plt.subplots(2, 1, figsize=(2.1, 2.08), gridspec_kw=dict(hspace=0.72, height_ratios=[1, 1.08]))
 ax.plot(N, [0.04, 0.02, -0.04], "-", color=GRPO_C, marker="o", ms=3.0, lw=1.4)
 ax.plot(N, [0.02, 0.04, 0.02], ":", color=style.BASE, marker="o", ms=3.0, lw=1.3)
 ax.plot(N, [0.79, 0.94, 0.97], "-", color=TD, marker="o", ms=3.0, lw=1.6)
@@ -64,7 +64,7 @@ def acc(pre, run, c, sampler, mfile):
     if not os.path.exists(f): return None
     return 100 * json.load(open(f))["accuracy"]
 S64 = "sde-steps64-cfg2-ts_uniform-gamma56.0-cond"
-fig, (ax, bx) = plt.subplots(1, 2, figsize=(5.5, 1.85), sharey=True, gridspec_kw=dict(wspace=0.10))
+fig, (ax, bx) = plt.subplots(1, 2, figsize=(5.5, 1.32), sharey=True, gridspec_kw=dict(wspace=0.08))
 for lab, pat, col in (("scalar critic", "g24_TS_s%d", SC), ("2D critic", "g24_T_s%d", TD)):
     curves = []
     for s in (1, 2, 3):
@@ -76,13 +76,13 @@ for lab, pat, col in (("scalar critic", "g24_TS_s%d", SC), ("2D critic", "g24_T_
     allx = sorted(set(x for cv in curves for x in cv)); mean = [np.mean([cv[x] for cv in curves if x in cv]) for x in allx]
     ax.plot(allx, mean, color=col, lw=1.8, marker="o", ms=3, label=lab)
 ax.axhline(45.0, color=style.BASE, ls="--", lw=0.8); ax.text(260, 45.4, "base", color=style.BASE, fontsize=7, ha="left", va="bottom")
-ax.set_title("scalar against 2D critic, three seeds", pad=3); ax.set_xlabel("actor iteration"); ax.set_ylabel("held-out accuracy (%)")
+ax.set_xlabel("actor iteration", labelpad=1); ax.set_ylabel("held-out acc. (%)")
 ax.set_xticks([250, 500, 750, 1000, 1250, 1500])
 its = [250, 500, 750, 1000, 1250, 1500]
 for lab, ys, col, ls in [("scalar throughout", [47.7, 49.8, 51.6, 49.8, 49.9, 50.8], SC, "-"), ("scalar$\\to$2D at 250", [47.7, 51.3, 51.5, 54.2, 55.8, 56.4], TD, "--"),
                          ("2D throughout", [49.8, 52.3, 52.4, 56.1, 56.7, 57.3], TD, "-"), ("2D$\\to$scalar at 250", [49.8, 51.7, 51.8, 50.1, 50.1, 51.3], SC, "--")]:
     bx.plot(its, ys, ls, color=col, lw=1.6, marker="o", ms=3, label=lab)
 bx.axvline(250, color=style.BASE, ls=":", lw=0.9); bx.axhline(45.0, color=style.BASE, ls="--", lw=0.8)
-bx.set_title("critics exchanged at iteration 250", pad=3); bx.set_xlabel("actor iteration"); bx.set_xticks([250, 500, 750, 1000, 1250, 1500]); bx.set_xlim(200, 1550)
-ax.set_ylim(43.5, 60)
+bx.set_xlabel("actor iteration", labelpad=1); bx.set_xticks([250, 500, 750, 1000, 1250, 1500]); bx.set_xlim(200, 1550)
+ax.set_ylim(43.5, 60); ax.set_yticks([45, 50, 55, 60])
 fig.savefig(os.path.join(D, "fig_dyn.pdf"), bbox_inches="tight", pad_inches=0.02); print("compact figures written")
