@@ -67,7 +67,7 @@ where duplicate responses of a prompt are removed from $\mathcal A(\theta)$, at 
 \mathcal L_{\rm SFT}(\theta';\mathcal A)=\mathbb E_{(c,w)\in\mathcal A}\Big[\,\mathbb E_{t,\varepsilon}\sum_{i\in\mathcal G}\big\|v_{\theta'}(z_t,t;\hat x_{\rm prev})_i-(x_i-c_\sigma\varepsilon_i)\big\|^2-\sum_{i\in\mathcal G}\log p_{\theta'}(w_i\mid x)\Big],
 \label{eq:sft}
 \end{equation}
-the flow-matching regression of the velocity on the generated positions plus the cross-entropy of the network's decoding pass on the clean embeddings at $t=1$. The self-conditioning input $\hat x_{\rm prev}$ is, as in ELF's training, the network's own estimate from a preceding call without gradient for half of the examples and zero for the rest, and the prompt is dropped at random for guidance training; both are kept as in the base training. Rounds are chained: $\theta_{\varrho+1}$ is~(\ref{eq:sft_step}) applied to $\theta_\varrho$, for $n_{\rm r}$ rounds, and the final round's model is the result (Algorithm~\ref{alg:loop}).
+the flow-matching regression of the velocity on the generated positions plus the cross-entropy of the network's decoding pass on the clean embeddings at $t=1$. The self-conditioning input $\hat x_{\rm prev}$ is, as in ELF's training, the network's own estimate from a preceding call without gradient for half of the examples and zero for the rest, and the prompt is dropped at random for guidance training; both are kept as in the base training. Rounds are chained: $\theta_{\varrho+1}$ is~(\ref{eq:sft_step}) applied to $\theta_\varrho$ for rounds $\varrho=0,\dots,n_{\rm r}-1$ (the round index $\varrho$ is not the ratio $\rho$ of \S\ref{sec:grpo}), and the final round's model is the result (Algorithm~\ref{alg:loop}).
 
 \paragraph{Why a round raises the reward.}
 Write $J_c(\theta)=\mathbb E_{w\sim\pi_\theta(\cdot\mid c)}[r(w,c)]$ for one prompt and $q_\theta(w\mid c)=\pi_\theta(w\mid c)\,r(w,c)/J_c(\theta)$ for the policy conditioned on success. The responses of prompt $c$ that pass the verifier are a sample from $q_\theta(\cdot\mid c)$; de-duplication and the cap $M$ keep the sample inside the successes but move its law off $q_\theta$ (Appendix~\ref{app:em}). For every $\theta'$,
@@ -101,7 +101,7 @@ a step whose length is proportional to the noise scale $\sigma_k$ of that step, 
     \STATE Run the round's chain under $\theta_\varrho$; with guidance, apply~(\ref{eq:guide}) at every step and prune $n_{\rm g}\to1$ at step $k_p$ by~(\ref{eq:minscore}); decode $w^{(j)}$
   \ENDFOR
   \STATE $\mathcal A\leftarrow$ the verified, distinct responses, at most $M$ per prompt \hfill (eq.~\ref{eq:accept})
-  \STATE $\theta_{\varrho+1}\leftarrow\arg\min_{\theta'}\mathcal L_{\rm SFT}(\theta';\mathcal A)$, initialised at $\theta_\varrho$ \hfill (eq.~\ref{eq:sft_step})
+  \STATE $\theta_{\varrho+1}\leftarrow\arg\min_{\vartheta}\mathcal L_{\rm SFT}(\vartheta;\mathcal A)$, initialised at $\theta_\varrho$ \hfill (eq.~\ref{eq:sft_step})
 \ENDFOR
 \STATE \textbf{return} $\theta_{n_{\rm r}}$
 \end{algorithmic}

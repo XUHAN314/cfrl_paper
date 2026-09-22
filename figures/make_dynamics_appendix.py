@@ -19,7 +19,7 @@ def evals(prefix,key):
                 m=json.load(open(f)); v=m.get("all",m); a=v.get("solved",v.get("accuracy")) if isinstance(v,dict) else v
                 out.append((ck,float(a)*100 if a<=1 else float(a)))
     return np.array(sorted(out))
-fig,axes=plt.subplots(1,2,figsize=(7.2,2.9))
+fig,axes=plt.subplots(1,2,figsize=(5.6,2.7))
 panels=[("Countdown (Algorithm 1, seed 3)","slurm/logs/cd5_K40_s3-3729236.out","eval_cd5_cd5_K40_s3","gamma56",42.2,(-450,-3)),
         ("K&K (Algorithm 1, seed 3)","slurm/logs/kk_T_s3-3730403.out","eval_kk_kk_T_s3","gamma56",67.5,(-330,-3))]
 H={}
@@ -34,5 +34,5 @@ for ax,(title,log,pref,key,base,off) in zip(axes,panels):
     for a in (ax,ax2):
         for h,l in zip(*a.get_legend_handles_labels()): H.setdefault(l,h)
     print(title, "evals", e.tolist(), "V range", v[:,1].min(), v[:,1].max(), "buf n", len(b))
-fig.legend(list(H.values()),list(H.keys()),fontsize=8,frameon=False,ncol=3,loc="lower center",bbox_to_anchor=(0.5,-0.005))
-fig.tight_layout(rect=(0,0.09,1,1)); fig.savefig("fig_dynamics_cd_kk.pdf"); fig.savefig("fig_dynamics_cd_kk.png",dpi=200); print("ok")
+fig.legend(list(H.values()),list(H.keys()),fontsize=8,frameon=False,ncol=2,loc="lower center",bbox_to_anchor=(0.5,-0.01))
+fig.tight_layout(rect=(0,0.16,1,1)); fig.savefig("fig_dynamics_cd_kk.pdf"); fig.savefig("fig_dynamics_cd_kk.png",dpi=200); print("ok")
