@@ -1,7 +1,55 @@
-1. Table1 ELF-B variates have 3 seeds while others have 1 seed.
-2. Shall we move the sigmoid/logit part to experiment? It's a parameterization choice and Liping suggested to remove it from the paper. But I think we should still mention in experiment, and I added it in main2 experiment section
+## Suggestions for section 2
+1. Liping's comment: do not say "on a time grid" 0=t_0<.... Just say "time steps"
+2. Liping's comment: with steps \Delta_k = t_k - t_{k-1} -> step lengths, not steps.
+3. we can probably remove classifier free guidance from preliminary
+4. "ELF is trained on the linear interpolation $z_t=(1-t)\,c_\sigma\varepsilon+t\,x$ between scaled Gaussian noise $\varepsilon\sim\mathcal N(0,I)$ and the clean embeddings, $t\in[0,1]$, with a fixed noise scale $c_\sigma$. " This writing is not clear. it should be between scaled Gaussian noise $\varepsilon\sim\mathcal N(0,I)$ and clean embeddings $x$, for $t\in[0,1]$...
+5. The first sentence in the sampler as Markov chain: "Generation starts from noise, $y_0=c_\sigma\varepsilon_0$ with $\hat x_0=0$". y hasn't been introduced. I think we should say $y_0=c_\sigma\varepsilon_0$ after we introduce y as renoised state
+6. Liping's comment: is re-noise a word?
+7. Liping's comment: better explanation of the terms: alpha_k, sigma_k, tilda t, lambda_k
+8. Liping's comment: This introduction is super hard to read: we cannot leave the job to the reader: go to read the original paper. No, we still need to have a good explanation. -> please check main2 writing for this part.
+9. For the RL objective part, please also check main2 writing, where the distribution of r is defined. It has been modified based on Liping's advise.
+10. Remove the whole two gradient estimators paragraph.
+11. Liping's advise: use v^*_k instead of V_k to distinguish the true V from V_phi later.
+12. Liping's advise: Define MDF on s_k instead of y_k, and use s throughout the whole paper, instead of y and x. Section onward should only have s and no y/x.
+
+
+## Suggestions for section 3
+0. Liping's comment: "The reward is a program’s verdict and cannot be gamed, so the anchor protects nothing, and it holds back exactly the movement away from the initial model that RL is asked to produce." This sentence will annoy many people: the purpose of the KL term is to improve the training stability. Removing beta is actually problematic.
+1. The first paragraph of the section: "The density of a rollout $(\tau,w)$ is then $p(y_1)$ times a product of factors $\pi^u_\theta$". u is not defined. \pi is also not defined (\pi has only appeared in the AR chain in the last paragraph of prelim, which defines the token distribution per step. Here we use \pi for both the rollout and token and \pi should be redefined).
+2. The same sentense as in point 1 "The density of a rollout $(\tau,w)$ is then $p(y_1)$ times a product of factors $\pi^u_\theta$, one for each Gaussian transition $k=2,\dots,K-1$ and one for each generated token $i\in\mathcal G$. " I think this is not clear. Lets define \pi and use \pi in equation 6 instead of Gaussian.
+2.5 Liping's advise: move the standard GRPO equation (eq 5) to appendix. Equation 6 is too messy. We can use general notation instead of writing out the Gaussian. Liping thinks we modify too much from GRPO and should not call it GRPO. We should use another name.
+3. "each with weight $\nu_u=1$, and all tokens, each with weight $\nu_u=1/|\mathcal G|$." this \nu_u is unclear. It either represents a token or a sequence, and they have different values, but using one parameter \nu_u. \nu_u appeared in equation 5 as well, making this equation confusing. I think it would be more clear to write out the token and transition sequence.
+4. (optional) we can leave out the small constant in the std part in advantage A definition. Original GRPO paper doesn't have it in std. It's an implementation level detail.
+5. The wording of the CFRL-GRPO paragraph is hard to read. Suggested change: \runin{\methodGRPO{}}We make two flow-specific changes (Appendix~\ref{app:grpo_variants}). First, we set $\beta=0$. Our programmatic verifiers check task correctness, reducing reward exploitation, while the penalty restricts policy improvement. Second, we take one on-policy update per rollout batch. At $\theta=\theta_{\rm old}$ all ratios equal one and the clip is inactive, so the first GRPO update with $\beta=0$ is exactly a descent step on~(\ref{eq:grpo_loss}). Reusing rollouts would require unstable high-dimensional Gaussian ratios while providing little benefit. Using the stored states $s^g_{k-1}$ and $s^g_{K-1}$ as inputs to the recomputed calls, so that $z_K^g=z_K(s^g_{K-1})$ still depends on $\theta$, we minimize
+6. (optional) rewrite equation 7 in the \frac{}{} format instead of '/'.
+
+
+
+## Suggestions for section 4
+1. Figure1 can be bigger: change width=0.84\linewidth to width=\textwidth
+2. The start sentence doesn't have a good flow. We should start with "we propose xxx in this section targeting yyy problem in the last section". The first sentence mentioned "the two variants in this section" without introducing we propose 2 variants. Suggested change: We now introduce two SVG-based actor-critic variants, which differentiate the chain itself, avoiding the noise factor $\varepsilon_{k,i}/\sigma_k$ in \methodGRPO{}. Because the terminal reward provides no differentiable path (\S\ref{sec:estimators}), both variants learn a differentiable critic $V_\phi$ for the intermediate-state value~(\ref{eq:value}) and ascend it through one transition. They differ in critic resolution: \methodSVGScalar{} predicts one value per state while \methodSVGTwoD{} predicts one value per state and position.
+3. We need a start sentence of subsection 4.1: what we are doing in this subsection, instead of directly talking about how to do things. This part is talking about decomposition of the SVG chain. Give it a paragraph name. Suggested change: \paragraph{Transition-wise value-gradient decomposition.}
+The true value $V_k^*(s_k)$ summarizes the expected reward of all continuations from $s_k$. Unrolling the standard Stochastic Value-Gradient (SVG) recursion \citep{heess2015svg} then decomposes the policy gradient into transition-wise contributions. Temporarily assigning transition $k$ its own parameter copy $\theta_k$, tied across steps after differentiation gives $\nabla_\theta J=\sum_{k=2}^{K}\partial J/\partial\theta_k$ where $\theta_K$ parameterizes the final deterministic step and decoder. For the sampled transitions $k\le K-2$, subsequent Gaussian re-noising smooths the downstream value:
+4. (optional) shorten the space between the two equations in equation 8 to avoid the overflow of the equation number
+5. For subsection 4.2, the starting sentence should mention what we are doing for this subsection, instead of what the critic read. It should start with "we introduce the design of the critic network in this section"
+6. (optional) equation 11, for the 2D equation, swap the two components, so both scalar and 2D start with V_phi(s_k)=
+7. The Require part in algorithm 1 introduced the policy hat{X}_{theta} that is not used in the later part. It also introduced fixed copy hat{X}_{bar{theta}} and head h_phi, but later in the algorithm, it used V_phi. We should unify the notation between Require and later chunk. The algorithm also used some notations not in the requirement: n_q, a_0, m_c'. The require has sampler(gamma, K) that didn't show up in the later part.
+8. paragraph "supervision without token labels"  should make more clear 1D only trained on the first part of the loss while 2D has a second term. The current writing is not entirely clear.
+9. for section 4.3 needs a starting sentence of what we are doing in this section. Suggested change of the first paragraph: We jointly train the critic and the policy because as $\theta$ changes, the visited states and their values shift, making a critic fitted to an earlier policy stale and exploitable by the actor. The critic is pre-trained on rollouts of the initial policy, copy and head together, and Algorithm~\ref{alg:jpc} refits it after every actor step: the head only, on a replay buffer of the states that fresh rollouts reach at the top of the window, where the state determines the outcome best. The copy stays frozen (\S\ref{sec:exp_critic}). If the critic's AUC on the newest buffer states falls below a floor, the head takes extra steps before the actor moves again. Both networks are trained under the sampler that will be deployed, since a different sampler is a different chain with different values (Appendix~\ref{app:joint_details}).
+
+## Suggestions for section 5
+0. I think we should have an opening sentence for experiment section. "Each paragraph below puts one claim of \S\S\ref{sec:grpo}--\ref{sec:method} against one table or figure;" from setup paragraph could be it. I think a better way to put it is "We provide empirical support for each claim in \S\ref{sec:grpo}--\S\ref{sec:method} through a corresponding table or figure."
+1. Table1 ELF-B variates have 3 seeds while others have 1 seed. 
+2. Add relative change to the base model in table 1.
 3. for all plots, add legend in the plot instead of explaining it in the caption
-4. For table 1, I simplified the caption and removed D. I think (units of D) should also be removed from x-axis label of the bottom right panel.
-5. what is the critic in Table2? Is it scalar or 2D
-6. Figure 2 too big for one dataset. Shall we make it smaller or add other datastes to this figure since the paragraph talks about all 4 datasets.
-7. Table 3: Variants are single runs; the Countdown row and the references are three-seed means why?
+4. Captions are too long for all figures and tables. For example, for table 1, simplify the caption and remove D. I think (units of D) should also be removed from x-axis label of the bottom right panel.
+5. I think we should split Main result and why the score-function variant is capped into two paragraphs. Main result only compares performance and why GRPO is capped should have its own paragraph name because it is diagnostic and points to our main motivation: move from score-fucntion to differentiable pathwise.
+6. the paragraph describing the right panel of table1 is not clear. It didn't describe what the experiment is doing and how to read the figure. It just stated conclusion.
+7. what is the critic in Table2? Is it scalar or 2D
+8. Figure 2 too big for one dataset. I think we can reduce it to 0.85 of linewidth
+9. The 2D critic  keeps the update improving paragraph need to first setup the experiment by explaining what is figure 2 instead of starting with "the 2 runs part..". same with the right panel of figure 2, we need to first explain what is the exchange setting. 
+10. the second paragraph of "The 2D critic  keeps the update improving" should start with the explanations: the architecture and the second term of the 2D loss". It just lists the experiment finds now without connecting it to our design in the paper.
+9. Table 3: Variants are single runs; the Countdown row and the references are three-seed means why?
+
+## Suggestions for section 6
+1. The conclusion should start with "we propose xxx". Suggested change: We propose \method{}, an RL post-training framework for continuous flow language models with three variants: score-function GRPO, SVG with a scalar critic, and SVG with a 2D critic. GRPO yields modest gains because each reward is distributed across a high-dimensional noise trajectory. SVG exploits the differentiable flow chain and improves performance substantially, but the scalar critic eventually plateaus. Our 2D critic instead assigns values across flow steps and token positions, sustaining policy improvement through joint training. It substantially outperforms the base ELF model on all four tasks, while amortisation transfers its verified samples to cheaper samplers. \emph{Limitations:} our evaluation covers only the 105M architecture, four synthetic tasks with exact verifiers, held-out checkpoint selection for SVG, and GRPO trained primarily with the cheap chain.
