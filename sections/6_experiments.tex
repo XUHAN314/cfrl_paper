@@ -69,7 +69,7 @@ fine-tuned copy, reads $(y_k,\hat x_{k-1})$ & \CDa{1} & \CDa{3} & \CDa{5} & \CDa
 \end{table}
 
 \paragraph{What the critic must be.}\label{sec:exp_critic}
-Table~\ref{tab:critic_design} reads the critic of Algorithm~\ref{alg:jpc} and its variants offline and online. Without the estimate $\hat x_{k-1}$ in the input, or with the copy frozen during pre-training, the offline correlation drops by a third to a half and the policy improves and then collapses. A randomly initialised copy never clears the base: the estimate is what the outcome is read from, and the denoiser is the network that reads it (\S\ref{sec:critic}); training the copy during RL instead of the head alone also falls short (Appendix~\ref{app:critic_training}). The last row, drawn over training in the right panel, shows that the critic must also move: frozen after pre-training it is exploited as the bias~(\ref{eq:biasm}) predicts, its value on the training batch driven to certainty while the batch's true success collapses. Refitting the head (\S\ref{sec:joint}) repairs this.
+Table~\ref{tab:critic_design} reads the critic of Algorithm~\ref{alg:jpc} and its variants offline and online. Without the estimate $\hat x_{k-1}$ in the input, or with the copy frozen during pre-training, the offline correlation drops by a third or more and the policy improves and then collapses. A randomly initialised copy never clears the base: the estimate is what the outcome is read from, and the denoiser is the network that reads it (\S\ref{sec:critic}); training the copy during RL instead of the head alone also falls short (Appendix~\ref{app:critic_training}). The last row, drawn over training in the right panel, shows that the critic must also move: frozen after pre-training it is exploited as the bias~(\ref{eq:biasm}) predicts, its value on the training batch driven to certainty while the batch's true success collapses. Refitting the head (\S\ref{sec:joint}) repairs this.
 
 \begin{figure}[t]
 \centering
@@ -103,16 +103,16 @@ choice it tests & variant & best / final & reference \\
 \end{table}
 
 \paragraph{What else the joint training needs.}\label{sec:ablations}
-Table~\ref{tab:needs} keeps the ablations that test a stated design choice (the rest: Appendix~\ref{app:needs_full}). Log-odds beats probability as the objective (\S\ref{sec:pathwise}) and the mean beats the minimum as the pooling (\S\ref{sec:jpc_2d}). Refitting at the window's last step matters (\S\ref{sec:joint}). A decaying step size keeps every 2D-critic seed but Sudoku's near its peak; a constant one declines and a larger one collapses, as the bias~(\ref{eq:biasm}) predicts. The last row bridges to the loop: a gain made under one chain stays on it (Table~\ref{tab:loop}).
+Table~\ref{tab:needs} keeps the ablations that test a stated design choice (the rest: Appendix~\ref{app:needs_full}). Log-odds beats probability as the objective (\S\ref{sec:pathwise}) and the mean beats the minimum as the pooling (\S\ref{sec:jpc_2d}). Refitting at the window's last step matters (\S\ref{sec:joint}). A decaying step size keeps every 2D-critic seed but Sudoku's near its peak (Appendix~\ref{app:lr_regime}); a constant one declines and a larger one collapses, as the bias~(\ref{eq:biasm}) predicts. The last row bridges to the loop: a gain made under one chain stays on it (Table~\ref{tab:loop}).
 
 
 
 \paragraph{The loop.}\label{sec:exp_loop}
-Table~\ref{tab:loop} reports the loop of Algorithm~\ref{alg:loop} on the three tasks with a pool of unlabelled problems (none on Game24, Appendix~\ref{app:g24_loop}). On Countdown and K\&K the rounds lift the cheap chain to or past the base's deployment accuracy: the gain no longer belongs to one chain. The deployment chain follows the pool's coverage (Proposition~\ref{prop:em}): near-full coverage closes K\&K, one round covers most of Sudoku's pool and changes nothing, and on Countdown plain rounds shrink coverage and give back part of the RL gain until the critic-guided cheap chain restores both (Appendix~\ref{app:loop_full}).
+Table~\ref{tab:loop} reports the loop of Algorithm~\ref{alg:loop} on the three tasks with a pool of unlabelled problems (none on Game24, Appendix~\ref{app:g24_loop}). On Countdown and K\&K the rounds lift the cheap chain to or past the base's deployment accuracy: the gain no longer belongs to one chain. The deployment chain follows the pool's coverage (Proposition~\ref{prop:em}, Appendix~\ref{app:loop}): near-full coverage closes K\&K, one round covers most of Sudoku's pool and changes nothing, and on Countdown plain rounds shrink coverage and give back part of the RL gain until the critic-guided cheap chain restores both (Appendix~\ref{app:loop_full}).
 
 \begin{table}[H]
 \centering\small
-\caption{Held-out accuracy (\%) under the cheap and the deployment chain: the base, the 2D-critic policy the loop starts from (best seed), the model after the rounds (single runs); bold: over a point above the start; covered: pool problems with a verified sample (every round and the controls: Appendix~\ref{app:loop_full}).}
+\caption{Held-out accuracy (\%) under the cheap and the deployment chain: the base, the 2D-critic policy the loop starts from (best seed), the model after the rounds (single runs); bold: over a point above the start; blue: this paper's recipe; covered: pool problems with a verified sample (every round and the controls: Appendix~\ref{app:loop_full}).}
 \label{tab:loop}
 \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lcccccc@{}}
 \toprule
