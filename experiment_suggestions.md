@@ -57,3 +57,4 @@ The true value $V_k^*(s_k)$ summarizes the expected reward of all continuations 
 
 ## Suggestions for Appendix B
 1. In B2: "in the flow model, most positions are decided at the first step and never change (\S\ref{app:commit}), so almost every coordinate at almost every step has vanishing covariance with $r$ while contributing its full variance." This writing is dangerous. Our own experiment result support the intuition, but it doesn't prove vanishing covariance. Even if a position decodes to the same token throughout the trajectory, its continuous embedding can still alter that token’s confidence without changing its argmax; affect other positions through transformer attention; and a affect later self-conditioning states. I am not even sure if we want to report the early token commitment. 
+2. The KL discussion in B3 is discussed in my suggestions for section 3.
