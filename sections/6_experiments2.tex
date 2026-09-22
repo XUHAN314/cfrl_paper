@@ -4,9 +4,7 @@
 We provide empirical support for each claim in \S\ref{sec:grpo}--\S\ref{sec:method} through a corresponding table or figure. Unless otherwise noted, diagnostics use Game24, which shows the largest gap between variants; results for other tasks appear in Appendix~\ref{app:results}.
 
 \paragraph{Setup.}
-We evaluate on four program-verified tasks: \textbf{Countdown}, \textbf{Sudoku}, \textbf{Knights-and-Knaves} (K\&K) and \textbf{Game24} (Appendix~\ref{app:datasets}). All runs start from ELF-B (105M) fine-tuned separately on each task with ELF's self-conditioning retained. We write $\gamma a$\texttt{@}$K$ for a $K$-step stochastic chain with churn $\gamma=a$. Accuracy is measured on 2{,}000 held-out prompts (1{,}601 for Game24) using both the deployment chain ($\gamma56$@64; $\gamma28$@32 on Sudoku) and a cheaper chain ($\gamma4$@16; $\gamma14$@16 on Sudoku). \methodGRPO{} is trained under the cheap chain with 128 rollouts per iteration for 600 iterations. Both SVG variants follow Algorithm~\ref{alg:jpc} under the deployment chain for 1{,}000--1{,}500 iterations. As cross-architecture references, we train GPT-2 (124M) with GRPO/PPO and LLaDA-8B-Instruct with diffu-GRPO \citep{zhao2025d1} on the same data. We report each each model's best held-out checkpoints over its own evaluation grid. Appendix~\ref{app:details} provides more details.
-
-\paragraph{Critic parameterization.} We parameterize the critic in logit units. If $V_\phi=\mathrm{logit}\,V_k^*$, its gradient rescales the pathwise term in~(\ref{eq:pw_exact}) by the positive factor $\nabla_{\theta_k}V_k^*/[V_k^*(1-V_k^*)]$. The update ascends the expected log-odds of success with a bias $b_k=\mathbb E\big[\nabla_{\theta_k}(V_\phi-\mathrm{logit}\,V_k^*)(y_k)\big]$, which vanishes when the critic's slope matches that of the log-odds on the states the current policy visits.
+We evaluate on four program-verified tasks: \textbf{Countdown}, \textbf{Sudoku}, \textbf{Knights-and-Knaves} (K\&K) and \textbf{Game24} (Appendix~\ref{app:datasets}). All runs start from ELF-B (105M) fine-tuned separately on each task, serving as the base. We write $\gamma a$\texttt{@}$K$ for a $K$-step stochastic chain with churn $\gamma=a$. Accuracy is measured on 2{,}000 held-out prompts (1{,}601 for Game24) using both the deployment chain ($\gamma56$@64; $\gamma28$@32 on Sudoku) and a cheaper chain ($\gamma4$@16; $\gamma14$@16 on Sudoku). \methodGRPO{} is trained under the cheap chain with 128 rollouts per iteration for 600 iterations. Both SVG variants follow Algorithm~\ref{alg:jpc} under the deployment chain for 1{,}000--1{,}500 iterations. As cross-architecture references, we train GPT-2 (124M) with GRPO/PPO and LLaDA-8B-Instruct with diffu-GRPO \citep{zhao2025d1} on the same data. We report each each model's best held-out checkpoints over its own evaluation grid. Appendix~\ref{app:details} provides more details.
 
 \begin{table}[t]
 \centering\small
@@ -135,7 +133,7 @@ choice it tests & variant & best / final & reference \\
 
 
 
-\begin{table}[!hb]
+\begin{table}[!h]
 \centering\small
 \caption{Held-out accuracy (\%) under the cheap and the deployment chain; bold: more than a point above the start. More in Appendix~\ref{app:loop_full}.}
 \label{tab:loop}

@@ -1,6 +1,6 @@
-\section{\method{}-GRPO: the score-function variant}
+\section{\methodGRPO{}: the score-function variant}
 \label{sec:grpo}
-The exact density of the chain~(\ref{eq:chain}) permits a direct adaptation of GRPO \citep{shao2024deepseekmath}. A rollout comprises Gaussian transition actions $y_k\sim\mathcal N(\alpha_kD_\theta(y_{k-1}),\sigma_k^2I)$ and endpoint tokens $w_i\sim p_\theta(\cdot\mid z_K)=\mathrm{softmax}(\ell_i)$. Each update uses all generated tokens, weighted by $\nu_u=1/|\mathcal G|$, and a random subset $\mathcal K\subseteq\{2,\dots,K-1\}$ of the transitions, each with weight $\nu_u=1$.
+The exact density of the chain~(\ref{eq:chain}) permits a direct adaptation of GRPO \citep{shao2024deepseekmath}. A rollout comprises Gaussian transition actions $y_k\sim\mathcal N(\alpha_kD_\theta(s_{k-1}),\sigma_k^2I)$ and endpoint tokens $w_i\sim p_\theta(\cdot\mid z_K)=\mathrm{softmax}(\ell_i)$. Each update uses all generated tokens, weighted by $\nu_u=1/|\mathcal G|$, and a random subset $\mathcal K\subseteq\{2,\dots,K-1\}$ of the transitions, each with weight $\nu_u=1$.
 
 \paragraph{GRPO.}
 For each prompt GRPO draws $G$ rollouts from the current policy $\pi_{\theta_{\rm old}}$, forms the group-normalised advantages $A^g=\frac{r^g-\operatorname{mean}(r^{1:G})}{\operatorname{std}(r^{1:G})}$, and takes several steps on
@@ -10,15 +10,15 @@ For each prompt GRPO draws $G$ rollouts from the current policy $\pi_{\theta_{\r
 \end{equation}
 where the ratio $\rho^g_u=\frac{\pi^u_\theta(\tau^g,w^g)}{\pi^u_{\theta_{\rm old}}(\tau^g,w^g)}$, clipped to $[1{-}\epsilon,1{+}\epsilon]$, corrects for the steps taken since the rollouts were drawn, and the per-factor divergence $\mathrm{KL}_u$ anchors the policy to the initial model $\pi_{\rm ref}$.
 
-\runin{\method{}-GRPO}We make two flow-specific changes (Appendix~\ref{app:grpo_variants}). First, we set $\beta=0$. Our programmatic verifiers check task correctness, reducing reward exploitation, while the penalty restricts policy improvement. Second, we take one on-policy update per rollout batch. At $\theta=\theta_{\rm old}$ all ratios equal one and the clip is inactive, reducing the GRPO gradient exactly to the score-function loss below (Proposition~\ref{prop:grpo_equiv}). Reusing rollouts would require unstable high-dimensional Gaussian ratios while providing little benefit. Holding the stored states $y^g_{k-1}$ fixed, we minimize
+\runin{\methodGRPO{}}We make two flow-specific changes (Appendix~\ref{app:grpo_variants}). First, we set $\beta=0$. Our programmatic verifiers check task correctness, reducing reward exploitation, while the penalty restricts policy improvement. Second, we take one on-policy update per rollout batch. At $\theta=\theta_{\rm old}$ all ratios equal one and the clip is inactive, so the first GRPO update with $\beta=0$ is exactly a descent step on~(\ref{eq:grpo_loss}). Reusing rollouts would require unstable high-dimensional Gaussian ratios while providing little benefit. Using the stored states $s^g_{k-1}$ and $s^g_{K-1}$ as inputs to the recomputed calls, so that $z_K^g=z_K(s^g_{K-1})$ still depends on $\theta$, we minimize
 \begin{equation}
-\mathcal L_{\mathrm{SF}}(\theta)=-\frac1G\sum_{g=1}^{G}A^g\Bigl[\sum_{k\in\mathcal K}\log\mathcal N\bigl(y^g_k;\alpha_kD_\theta(y^g_{k-1}),\sigma_k^2I\bigr)+\frac{1}{|\mathcal G|}\sum_{i\in\mathcal G}\log p_\theta\bigl(w^g_i\mid z^g_K\bigr)\Bigr].
+\mathcal L_{\mathrm{SF}}(\theta)=-\frac1G\sum_{g=1}^{G}A^g\Bigl[\sum_{k\in\mathcal K}\log\mathcal N\bigl(y^g_k;\alpha_kD_\theta(s^g_{k-1}),\sigma_k^2I\bigr)+\frac{1}{|\mathcal G|}\sum_{i\in\mathcal G}\log p_\theta\bigl(w^g_i\mid z^g_K\bigr)\Bigr].
 \label{eq:grpo_loss}
 \end{equation}
 
-\runin{What limits it}is the score of a transition, $y_{k,i}=\alpha_kD_\theta(y_{k-1})_i+\sigma_k\varepsilon_{k,i}$:
+\runin{What limits it}is the score of a transition, $y_{k,i}=\alpha_kD_\theta(s_{k-1})_i+\sigma_k\varepsilon_{k,i}$:
 \begin{equation}
-\nabla_\theta\log\mathcal N\!\big(y_{k,i};\alpha_kD_\theta(y_{k-1})_i,\sigma_k^2I_d\big)=\frac{\varepsilon_{k,i}^{\top}}{\sigma_k}\alpha_k\frac{\partial D_\theta(y_{k-1})_i}{\partial\theta}.
+\nabla_\theta\log\mathcal N\!\big(y_{k,i};\alpha_kD_\theta(s_{k-1})_i,\sigma_k^2I_d\big)=\frac{\varepsilon_{k,i}^{\top}}{\sigma_k}\alpha_k\frac{\partial D_\theta(s_{k-1})_i}{\partial\theta}.
 \label{eq:sf}
 \end{equation}
-The advantage scales the injected noise before it passes through the denoiser Jacobian. Unlike an AR token action, a noise coordinate is not a semantic decision: it contributes signal only through its covariance with the advantage but contributes variance regardless. The estimate therefore draws signal from few coordinates and variance from all $(K{-}2)\,|\mathcal G|\,d$. Per step or per position advantages reweight these terms but retain the noise factor $\varepsilon_{k,i}/\sigma_k$ (Appendix~\ref{app:sf_variants}). \method{}-GRPO thus requires neither a critic nor a differentiable reward path.
+The advantage scales the injected noise before it passes through the denoiser Jacobian. Unlike an AR token action, a noise coordinate is not a semantic decision: it contributes signal only through its covariance with the advantage but contributes variance regardless. The estimate therefore draws signal from few coordinates and variance from all $(K{-}2)\,|\mathcal G|\,d$. Per step or per position advantages reweight these terms but retain the noise factor $\varepsilon_{k,i}/\sigma_k$ (Appendix~\ref{app:sf_variants}). \methodGRPO{} thus requires neither a critic nor a differentiable reward path.
