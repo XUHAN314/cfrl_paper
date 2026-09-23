@@ -4,8 +4,7 @@ We now introduce two SVG-based actor-critic variants, which differentiate the ch
 \subsection{The pathwise update}
 \label{sec:pathwise}
 \paragraph{Transition-wise value-gradient decomposition.}
-The true value $V_k^*(s_k)$ summarizes the expected reward of all continuations from $s_k$. Unrolling the standard Stochastic Value-Gradient (SVG) recursion \citep{heess2015svg} then decomposes the policy gradient into transition-wise contributions. Temporarily assigning transition $k$ its own parameter copy $\theta_k$, tied across steps after differentiation gives $\nabla_\theta J=\sum_{k=2}^{K}\partial J/\partial\theta_k$ where $\theta_K$ parameterizes the final deterministic step and decoder. For the sampled transitions $k\le K-2$, subsequent Gaussian re-noising smooths the
-downstream value:
+The true value $V_k^*(s_k)$ summarizes the expected reward of all continuations from $s_k$. Unrolling the standard Stochastic Value-Gradient (SVG) recursion \citep{heess2015svg} then decomposes the policy gradient into transition-wise contributions. Temporarily assigning transition $k$ its own parameter copy $\theta_k$, tied across steps after differentiation gives $\nabla_\theta J=\sum_{k=2}^{K}\partial J/\partial\theta_k$ where $\theta_K$ parameterizes the final deterministic step and decoder. For the sampled transitions $k\le K-2$, subsequent Gaussian re-noising smooths the downstream value:
 \begin{equation}
 \frac{\partial J}{\partial\theta_k}=\mathbb E\big[\nabla_{\theta_k}V_k^*(s_k)\big],\qquad \nabla_{\theta_k}V_k^*(s_k)=\Big[\alpha_k\lambda_{k-1}\nabla_{y}V_k^*(s_k)+\nabla_{\hat x}V_k^*(s_k)\Big]\frac{\partial\hat x_{k-1}}{\partial\theta_k},
 \label{eq:pw_exact}
