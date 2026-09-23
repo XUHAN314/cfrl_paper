@@ -27,7 +27,7 @@ for tag, col, ls, lw, band in (("RAND", style.BASE, ":", 1.2, False), ("SF-1024+
     if band: bx.fill_between(_x, lo, hi, color=col, alpha=0.16, lw=0)
     bx.plot(_x, d_, ls, color=col, marker="o", ms=3.0, lw=lw)
 bx.axhline(0, color=style.BASE, lw=0.6); bx.set_xscale("log", base=2); bx.set_xticks([1 / 256, 1 / 64, 1 / 16, 1 / 4, 1]); bx.set_xticklabels(["1/256", "1/64", "1/16", "1/4", "1"]); bx.minorticks_off()
-bx.set_xlabel("length of one step (units of $D$)", labelpad=1); bx.set_ylabel("$\\Delta$ accuracy (pts)"); bx.set_ylim(-4.2, 7.0); bx.set_yticks([-3, 0, 3, 6])
+bx.set_xlabel("length of one step (units of $\\Lambda$)", labelpad=1); bx.set_ylabel("$\\Delta$ accuracy (pts)"); bx.set_ylim(-4.2, 7.0); bx.set_yticks([-3, 0, 3, 6])
 fig.align_ylabels([ax, bx])
 fig.savefig(os.path.join(D, "fig_estimator.pdf"), bbox_inches="tight", pad_inches=0.02); plt.close(fig)
 # ---------------- frozen critic (placed at 0.42*5.5 = 2.3 in) ----------------
@@ -64,7 +64,7 @@ def acc(pre, run, c, sampler, mfile):
     if not os.path.exists(f): return None
     return 100 * json.load(open(f))["accuracy"]
 S64 = "sde-steps64-cfg2-ts_uniform-gamma56.0-cond"
-fig, (ax, bx) = plt.subplots(1, 2, figsize=(5.5, 1.2), sharey=True, gridspec_kw=dict(wspace=0.08))
+fig, (ax, bx) = plt.subplots(1, 2, figsize=(5.5, 1.45), sharey=True, gridspec_kw=dict(wspace=0.08))
 for lab, pat, col in (("scalar critic", "g24_TS_s%d", SC), ("2D critic", "g24_T_s%d", TD)):
     curves = []
     for s in (1, 2, 3):
@@ -75,7 +75,8 @@ for lab, pat, col in (("scalar critic", "g24_TS_s%d", SC), ("2D critic", "g24_T_
         ax.plot(xs, ys, color=col, lw=0.7, alpha=0.55); curves.append(dict(zip(xs, ys)))
     allx = sorted(set(x for cv in curves for x in cv)); mean = [np.mean([cv[x] for cv in curves if x in cv]) for x in allx]
     ax.plot(allx, mean, color=col, lw=1.8, marker="o", ms=3, label=lab)
-ax.axhline(45.0, color=style.BASE, ls="--", lw=0.8); ax.text(260, 45.4, "base", color=style.BASE, fontsize=7, ha="left", va="bottom")
+ax.axhline(45.0, color=style.BASE, ls="--", lw=0.8, label="base")
+ax.legend(loc="lower right", ncol=3, frameon=False, fontsize=6.5, handlelength=1.5, borderaxespad=0.15, columnspacing=0.8, bbox_to_anchor=(1.0, 0.0))
 ax.set_xlabel("actor iteration", labelpad=1); ax.set_ylabel("held-out acc. (%)")
 ax.set_xticks([250, 500, 750, 1000, 1250, 1500])
 its = [250, 500, 750, 1000, 1250, 1500]
@@ -84,5 +85,6 @@ for lab, ys, col, ls in [("scalar throughout", [47.7, 49.8, 51.6, 49.8, 49.9, 50
     bx.plot(its, ys, ls, color=col, lw=1.6, marker="o", ms=3, label=lab)
 bx.axvline(250, color=style.BASE, ls=":", lw=0.9); bx.axhline(45.0, color=style.BASE, ls="--", lw=0.8)
 bx.set_xlabel("actor iteration", labelpad=1); bx.set_xticks([250, 500, 750, 1000, 1250, 1500]); bx.set_xlim(200, 1550)
-ax.set_ylim(43.5, 60); ax.set_yticks([45, 50, 55, 60])
+bx.legend(loc="lower right", ncol=2, frameon=False, fontsize=6.2, handlelength=1.6, borderaxespad=0.15, columnspacing=0.8, labelspacing=0.2, bbox_to_anchor=(1.0, 0.0))
+ax.set_ylim(39.5, 60); ax.set_yticks([40, 45, 50, 55, 60])
 fig.savefig(os.path.join(D, "fig_dyn.pdf"), bbox_inches="tight", pad_inches=0.02); print("compact figures written")
