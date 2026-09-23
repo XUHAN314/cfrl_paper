@@ -83,7 +83,7 @@ its = [250, 500, 750, 1000, 1250, 1500]
 for lab, ys, col, ls in [("scalar throughout", [47.7, 49.8, 51.6, 49.8, 49.9, 50.8], SC, "-"), ("scalar$\\to$2D at 250", [47.7, 51.3, 51.5, 54.2, 55.8, 56.4], TD, "--"),
                          ("2D throughout", [49.8, 52.3, 52.4, 56.1, 56.7, 57.3], TD, "-"), ("2D$\\to$scalar at 250", [49.8, 51.7, 51.8, 50.1, 50.1, 51.3], SC, "--")]:
     bx.plot(its, ys, ls, color=col, lw=1.6, marker="o", ms=3, label=lab)
-bx.axvline(250, color=style.BASE, ls=":", lw=0.9); bx.axhline(45.0, color=style.BASE, ls="--", lw=0.8)
+bx.vlines(250, 45.5, 60, color=style.BASE, ls=":", lw=0.9); bx.axhline(45.0, color=style.BASE, ls="--", lw=0.8)
 bx.set_xlabel("actor iteration", labelpad=1); bx.set_xticks([250, 500, 750, 1000, 1250, 1500]); bx.set_xlim(200, 1550)
 bx.legend(loc="lower right", ncol=2, frameon=False, fontsize=6.2, handlelength=1.6, borderaxespad=0.15, columnspacing=0.8, labelspacing=0.2, bbox_to_anchor=(1.0, 0.0))
 ax.set_ylim(39.5, 60); ax.set_yticks([40, 45, 50, 55, 60])
