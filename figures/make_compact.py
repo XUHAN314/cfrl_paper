@@ -1,5 +1,5 @@
 """Compact main-text figures for §6 (round 2).
-fig_estimator.pdf : half-split cosine vs N (Game24; GPT-2 row on Countdown), 4 series, legend below, fonts >= 7 pt at 0.40 linewidth.
+fig_estimator.pdf : half-split cosine vs N (Game24, all four series), 4 series, legend below, fonts >= 7 pt at 0.40 linewidth.
 fig_frozen.pdf    : frozen critic on Game24, twin axis (% left, critic value in logits right): true success of the training batch, held-out accuracy.
 fig_dyn.pdf       : two Game24 panels, shared y: scalar vs 2D held-out trajectories (3 seeds) | critics exchanged at iteration 250."""
 import re, glob, json, os, sys, numpy as np
@@ -19,7 +19,7 @@ fig, (ax, bx) = plt.subplots(2, 1, figsize=(2.1, 2.45), gridspec_kw=dict(hspace=
 ax.plot(N, [0.04, 0.02, -0.04], "-", color=GRPO_C, marker="o", ms=3.0, lw=1.4, label="CFRL-GRPO")
 ax.plot(N, [0.02, 0.04, 0.02], ":", color=style.BASE, marker="o", ms=3.0, lw=1.3, label="control")
 ax.plot(N, [0.79, 0.94, 0.97], "-", color=TD, marker="o", ms=3.0, lw=1.6, label="pathwise (2D)")
-ax.plot(N, [0.05, 0.17, 0.27], "-", color=GPT_C, marker="o", ms=3.0, lw=1.4, label="GPT-2 (Countdown)")
+ax.plot(N, [0.09, 0.35, 0.34], "-", color=GPT_C, marker="o", ms=3.0, lw=1.4, label="GPT-2")
 ax.axhline(0, color=style.BASE, lw=0.6); ax.set_xscale("log", base=2); ax.set_xticks(N); ax.set_xticklabels([str(n) for n in N]); ax.minorticks_off()
 ax.set_xlabel("rollouts $N$", labelpad=1); ax.set_ylabel("half-split cosine"); ax.set_ylim(-0.12, 1.04); ax.set_yticks([0, 0.5, 1.0])
 for tag, col, ls, lw, band in (("RAND", style.BASE, ":", 1.2, False), ("SF-1024+adam", GRPO_C, "-", 1.4, True), ("PW-1024+adam", TD, "-", 1.6, True)):
@@ -59,8 +59,8 @@ h3, = ax2.plot(xv, yv, color="#6a4c93", lw=1.4, label="critic $V_\\phi$ (logits,
 h4 = ax.axhline(45.0, color=style.BASE, ls=":", lw=0.8, label="SFT base")
 ax.set_xlabel("actor iteration"); ax.set_ylabel("%"); ax.set_ylim(0, 100); ax.set_xlim(0, 1000); ax.set_yticks([0, 50, 100])
 ax2.tick_params(axis="y", colors="#6a4c93"); ax2.spines["right"].set_color("#6a4c93"); ax2.set_ylim(-5, 100); ax2.set_yticks([0, 50, 100]); ax2.set_ylabel("logit", color="#6a4c93", labelpad=1)
-fig.subplots_adjust(bottom=0.50, top=0.97, left=0.19, right=0.82)
-fig.legend([h1, h2, h3, h4], ["batch success (train)", "held-out accuracy", "critic value (right axis)", "base"], loc="lower center", ncol=1, frameon=False, fontsize=7.2, handlelength=1.2, labelspacing=0.2, handletextpad=0.4, bbox_to_anchor=(0.52, 0.0))
+fig.subplots_adjust(bottom=0.36, top=0.97, left=0.19, right=0.82)
+fig.legend([h1, h2, h3, h4], ["batch success", "held-out acc.", "critic value", "base"], loc="lower center", ncol=2, frameon=False, fontsize=7.2, handlelength=1.2, labelspacing=0.2, handletextpad=0.4, bbox_to_anchor=(0.52, 0.0))
 fig.savefig(os.path.join(D, "fig_frozen.pdf"), bbox_inches="tight", pad_inches=0.02); plt.close(fig)
 # ---------------- Game24: trajectories | exchange (placed at 5.5 in) ----------------
 def acc(pre, run, c, sampler, mfile):

@@ -7,7 +7,7 @@ grpo=[[43.1,42.8,43.3],[70.1,72.8,66.2],[70.2,70.0,74.6],[46.8,48.6,47.1]]
 scal=[[48.5,47.4,48.6],[65.5,67.3,66.0],[77.8,77.1,78.0],[50.9,52.5,50.7]]
 jpc=[[50.1,50.2,50.4],[70.8,71.3,71.0],[79.7,79.2,80.0],[58.2,59.3,58.9]]
 loop=[50.2,71.4,99.1,None]  # no Game24 loop: the set split leaves no pool
-ar=[53.9,1.4,93.2,32.2]
+ar=[61.8,1.4,93.3,46.6]
 fig,ax=plt.subplots(figsize=(7.6,3.4))
 w=0.155; x=np.arange(len(tasks))
 def bar(off,vals,color,label):
@@ -25,8 +25,8 @@ for xi,v in zip(x,ar):
     if v is None: continue
     ax.plot([xi-2.5*w,xi+2.5*w],[v,v],ls="--",lw=1.2,color="k")
     side,dy=place[int(xi)]
-    if side=="left": ax.text(xi-2.5*w,v+dy,f"GPT-2 + PPO  {v:.1f}",fontsize=9.5,va="bottom",ha="left")
-    else: ax.text(xi+2.6*w,v,f"GPT-2 + PPO  {v:.1f}",fontsize=9.5,va="center",ha="left")
+    if side=="left": ax.text(xi-2.5*w,v+dy,f"GPT-2 + GRPO/PPO  {v:.1f}",fontsize=9.5,va="bottom",ha="left")
+    else: ax.text(xi+2.6*w,v,f"GPT-2 + GRPO/PPO  {v:.1f}",fontsize=9.5,va="center",ha="left")
 ax.set_xticks(x); ax.set_xticklabels(tasks); ax.set_ylabel("deployment-sampler accuracy (%)"); ax.set_ylim(0,104); ax.set_xlim(-0.5,3.95)
 ax.legend(fontsize=10,frameon=False,ncol=3,loc="upper center",bbox_to_anchor=(0.5,-0.17),handlelength=1.4,columnspacing=1.2)
 fig.subplots_adjust(left=0.09,right=0.99,top=0.97,bottom=0.34); import os; _d=os.path.dirname(os.path.abspath(__file__)); fig.savefig(os.path.join(_d,"fig_results.pdf"),bbox_inches="tight"); print("fig_results ok")
