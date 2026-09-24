@@ -4,32 +4,19 @@ Reinforcement learning (RL) post-training has become a central mechanism for tur
 models into reasoners \citep{ouyang2022instructgpt,shao2024deepseekmath,deepseek2025r1}. Their explicit token probabilities 
 provide a natural RL interface, treating each semantic token decision as an action that advantages can reinforce or suppress. 
 However, AR generation requires one sequential model evaluation per token, tying latency to sequence length. Diffusion-based 
-language models mitigate this bottleneck by jointly refining all token positions in a fixed number of denoising steps and 
-has the potential to significantly increase the generation speed [TODO: citation]. 
-Recently, RL training have been applied to diffusion-based language models \citep{zhao2025d1,zhu2025llada15,shao2026papo} 
-to guide the behavior of the generative model and shows promising results. Since the diffusion-based models operates 
-with discrete tokens and take discrete ``actions'' in the generation procedure, the RL alogrithms built on them 
-(e.g. PPO \citep{schulman2017ppo} and GRPO \citep{shao2024deepseekmath}) mainly depends on the score-function (REINFORCE) 
-\citep{williams1992reinforce} gradients in model training.
+language models mitigate this bottleneck by jointly refining all token positions over a fixed number of denoising steps, potentially increasing generation speed substantially \citep{nie2025llada,sahoo2024mdlm, lou2023sedd}. 
+Recently, RL has been applied to diffusion-based language models 
+to guide generation, with promising results \citep{zhao2025d1,zhu2025llada15,shao2026papo}. Because these models operate on discrete tokens and take discrete ``actions'' during generation, RL methods for them, including PPO \citep{schulman2017ppo} and GRPO \citep{shao2024deepseekmath}, primarily rely on score-function (REINFORCE) gradients \citep{williams1992reinforce}.
 
 
-Continuous language models (CLM) show strong results in language generation  [TODO: cite multiple models]. The most recent model 
-ELF \citep{hu2026elf} has achieved ... . It constructs the generative model with flow  matching \citep{lipman2022flow,liu2022rectified} 
-and  generate real-valued token embeddings through denoising Gaussian noise from multiple steps, 
-then it decodes continuous token embeddings into language tokens. The continuous step of the generation process is differentiable, 
-which offers an opportunity to backpropagate reward signals through gradients.  
+Continuous language models (CLMs) have historically lagged behind their discrete counterparts in language generation \citep{li2022diffusion, gong2022diffuseq, dieleman2022continuous}. The recently introduced ELF \citep{hu2026elf} closes this gap, achieving lower generative perplexity with fewer sampling steps while using ten times fewer training tokens. ELF uses flow  matching \citep{lipman2022flow,liu2022rectified}  to  generate real-valued token embeddings by progressively denoising Gaussian noise, then decodes the final embeddings into discrete tokens. Its continuous generation trajectory is differentiable, enabling reward signals to be back-propagated through the denoising process.  
 
 %when the verifier reward becomes available; thus, no transition or noise coordinate directly corresponds 
 %to a semantic token decision. This separation between continuous refinement and discrete readout creates a distinct 
 %credit-assignment problem, leaving effective RL post-training for continuous flow language models unresolved.
 %\citep{zhao2025d1,rojas2026improving,zhu2025llada15,shao2026papo}.
 
-In this work, we propose \textbf{C}ontinuous \textbf{F}low \textbf{R}einforcement learning for \textbf{L}anguage 
-models (\method{}), a post-training framework to improve the reasoning ability of CLMs. 
-We use a verifier on decoded discrete tokens as the reward and then apply the flow-based GRPO
-\citep{black2023ddpo,fan2023dpok,liu2025flowgrpo,xue2025dancegrpo} to train the model. We then exploits 
-the differentiable transitions of CLMs, in which only the last step decode continuous token vectors to discrete tokens. 
-Therefore, we train a critic that takes a denoising state as the input and predict the verifier result based 
+In this work, we propose \textbf{C}ontinuous \textbf{F}low \textbf{R}einforcement learning for \textbf{L}anguage models (\method{}), a post-training framework to improve the reasoning ability of CLMs. We use a verifier on decoded discrete tokens as the reward and then apply the flow-based GRPO \citep{black2023ddpo,fan2023dpok,liu2025flowgrpo,xue2025dancegrpo} to train the model. We then exploits  the differentiable transitions of CLMs, in which only the last step decode continuous token vectors to discrete tokens. Therefore, we train a critic that takes a denoising state as the input and predict the verifier result based 
 on later generated response. The critic is fairly accurate at the end of the denoising trajectory because it 
 contains almost all the information of discrete tokens. Then the critic can be used to backpropagate the approximate 
 reward through the continuous flow trajectory. We also design an new critic architecture that allows the reward to 
