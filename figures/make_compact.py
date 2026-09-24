@@ -16,7 +16,7 @@ _fr = ["0.004", "0.008", "0.016", "0.032", "0.0625", "0.25", "0.5", "1"]; _x = [
 def _series(tag): 
     r = [_one[f"{tag}_eta{f}D"] for f in _fr]; return np.array([q["diff"] for q in r]), np.array([q["ci95"][0] for q in r]), np.array([q["ci95"][1] for q in r])
 fig, (ax, bx) = plt.subplots(2, 1, figsize=(2.1, 2.45), gridspec_kw=dict(hspace=0.78, height_ratios=[1, 1.08]))
-ax.plot(N, [0.04, 0.02, -0.04], "-", color=GRPO_C, marker="o", ms=3.0, lw=1.4, label="CFRL-GRPO")
+ax.plot(N, [0.03, 0.02, -0.03], "-", color=GRPO_C, marker="o", ms=3.0, lw=1.4, label="CFRL-GRPO")
 ax.plot(N, [0.02, 0.04, 0.02], ":", color=style.BASE, marker="o", ms=3.0, lw=1.3, label="control")
 ax.plot(N, [0.79, 0.94, 0.97], "-", color=TD, marker="o", ms=3.0, lw=1.6, label="pathwise (2D)")
 ax.plot(N, [0.09, 0.35, 0.34], "-", color=GPT_C, marker="o", ms=3.0, lw=1.4, label="GPT-2")
@@ -50,14 +50,14 @@ def evals(prefix, key="gamma56"):
 def smooth_valid(x, y, w=5):
     if len(y) < w: return x, y
     return x[w // 2: len(y) - (w - 1 - w // 2)], np.convolve(y, np.ones(w) / w, mode="valid")
-v, t = parse(f"{R}/slurm/logs/cd-pathwise-3447085.out"); e = evals("eval_g24_g24_abl_frozen")
+v, t = parse(f"{R}/slurm/logs/g24_A_frozen_s1-4258416.out"); e = evals("eval_g24_g24_A_frozen_s1")
 fig, ax = plt.subplots(figsize=(1.95, 2.15)); ax2 = ax.twinx(); ax2.spines["top"].set_visible(False); ax2.grid(False)
 xt, yt = smooth_valid(t[:, 0], t[:, 1]); xv, yv = smooth_valid(v[:, 0], v[:, 1])
 h1, = ax.plot(xt, yt, color=style.TRUE, lw=1.3, label="batch success")
 h2, = ax.plot(e[:, 0], e[:, 1], "o-", color="#212529", lw=1.4, ms=3, label="held-out acc.")
 h3, = ax2.plot(xv, yv, color="#6a4c93", lw=1.4, label="critic $V_\\phi$ (logits, right)")
 h4 = ax.axhline(45.0, color=style.BASE, ls=":", lw=0.8, label="SFT base")
-ax.set_xlabel("actor iteration"); ax.set_ylabel("%"); ax.set_ylim(0, 100); ax.set_xlim(0, 1000); ax.set_yticks([0, 50, 100])
+ax.set_xlabel("actor iteration"); ax.set_ylabel("%"); ax.set_ylim(0, 100); ax.set_xlim(0, 1500); ax.set_xticks([0, 500, 1000, 1500]); ax.set_yticks([0, 50, 100])
 ax2.tick_params(axis="y", colors="#6a4c93"); ax2.spines["right"].set_color("#6a4c93"); ax2.set_ylim(-5, 100); ax2.set_yticks([0, 50, 100]); ax2.set_ylabel("logit", color="#6a4c93", labelpad=1)
 fig.subplots_adjust(bottom=0.36, top=0.97, left=0.19, right=0.82)
 fig.legend([h1, h2, h3, h4], ["batch success", "held-out acc.", "critic value", "base"], loc="lower center", ncol=2, frameon=False, fontsize=7.2, handlelength=1.2, labelspacing=0.2, handletextpad=0.4, bbox_to_anchor=(0.52, 0.0))
