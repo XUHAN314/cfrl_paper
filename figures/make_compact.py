@@ -15,9 +15,9 @@ _one = json.load(open(f"{R}/outputs/analysis/onestep_g24/results.json"))["eval"]
 _fr = ["0.004", "0.008", "0.016", "0.032", "0.0625", "0.25", "0.5", "1"]; _x = [float(f) for f in _fr]
 def _series(tag): 
     r = [_one[f"{tag}_eta{f}D"] for f in _fr]; return np.array([q["diff"] for q in r]), np.array([q["ci95"][0] for q in r]), np.array([q["ci95"][1] for q in r])
-fig, (ax, bx) = plt.subplots(2, 1, figsize=(2.1, 2.8), gridspec_kw=dict(hspace=0.78, height_ratios=[1, 1.08]))
-ax.plot(N, [0.04, 0.02, -0.04], "-", color=GRPO_C, marker="o", ms=3.0, lw=1.4, label="score-function")
-ax.plot(N, [0.02, 0.04, 0.02], ":", color=style.BASE, marker="o", ms=3.0, lw=1.3, label="control / random")
+fig, (ax, bx) = plt.subplots(2, 1, figsize=(2.1, 2.45), gridspec_kw=dict(hspace=0.78, height_ratios=[1, 1.08]))
+ax.plot(N, [0.04, 0.02, -0.04], "-", color=GRPO_C, marker="o", ms=3.0, lw=1.4, label="CFRL-GRPO")
+ax.plot(N, [0.02, 0.04, 0.02], ":", color=style.BASE, marker="o", ms=3.0, lw=1.3, label="control")
 ax.plot(N, [0.79, 0.94, 0.97], "-", color=TD, marker="o", ms=3.0, lw=1.6, label="pathwise (2D)")
 ax.plot(N, [0.05, 0.17, 0.27], "-", color=GPT_C, marker="o", ms=3.0, lw=1.4, label="GPT-2 (Countdown)")
 ax.axhline(0, color=style.BASE, lw=0.6); ax.set_xscale("log", base=2); ax.set_xticks(N); ax.set_xticklabels([str(n) for n in N]); ax.minorticks_off()
@@ -29,8 +29,8 @@ for tag, col, ls, lw, band in (("RAND", style.BASE, ":", 1.2, False), ("SF-1024+
 bx.axhline(0, color=style.BASE, lw=0.6); bx.set_xscale("log", base=2); bx.set_xticks([1 / 256, 1 / 64, 1 / 16, 1 / 4, 1]); bx.set_xticklabels(["1/256", "1/64", "1/16", "1/4", "1"]); bx.minorticks_off()
 bx.set_xlabel("length of one step (units of $\\Lambda$)", labelpad=1); bx.set_ylabel("$\\Delta$ accuracy (pts)"); bx.set_ylim(-4.2, 7.0); bx.set_yticks([-3, 0, 3, 6])
 fig.align_ylabels([ax, bx])
-fig.subplots_adjust(bottom=0.36, top=0.98, left=0.24, right=0.97)
-fig.legend(*ax.get_legend_handles_labels(), loc="lower center", ncol=1, frameon=False, fontsize=7.0, handlelength=1.2, labelspacing=0.2, handletextpad=0.4, bbox_to_anchor=(0.6, 0.0))
+fig.subplots_adjust(bottom=0.27, top=0.98, left=0.24, right=0.97)
+fig.legend(*ax.get_legend_handles_labels(), loc="lower center", ncol=2, frameon=False, fontsize=7.0, handlelength=1.2, columnspacing=0.7, labelspacing=0.2, handletextpad=0.4, bbox_to_anchor=(0.6, 0.0))
 fig.savefig(os.path.join(D, "fig_estimator.pdf"), bbox_inches="tight", pad_inches=0.02); plt.close(fig)
 # ---------------- frozen critic (placed at 0.42*5.5 = 2.3 in) ----------------
 def parse(log):
