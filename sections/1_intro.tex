@@ -1,20 +1,73 @@
 \section{Introduction}
 \label{sec:intro}
-Reinforcement learning (RL) post-training has become a central mechanism for turning pretrained autoregressive (AR) language models into reasoners \citep{ouyang2022instructgpt,shao2024deepseekmath,deepseek2025r1}. Their explicit token probabilities provide a natural RL interface, treating each semantic token decision as an action that advantages can reinforce or suppress. However, AR generation requires one sequential model evaluation per token, tying latency to sequence length. Diffusion and flow language models mitigate this bottleneck by jointly refining all token positions in a fixed number of denoising steps. However, actions in AR and discrete diffusion models \citep{zhao2025d1,zhu2025llada15,shao2026papo} remain categorical and are therefore optimized using score-function (REINFORCE) \citep{williams1992reinforce} gradients, as in PPO \citep{schulman2017ppo} and GRPO \citep{shao2024deepseekmath}; their discrete sampling precludes exact pathwise differentiation, which often provides lower-variance gradients and more stable optimization.
+Reinforcement learning (RL) post-training has become a central mechanism for turning pretrained autoregressive (AR) language 
+models into reasoners \citep{ouyang2022instructgpt,shao2024deepseekmath,deepseek2025r1}. Their explicit token probabilities 
+provide a natural RL interface, treating each semantic token decision as an action that advantages can reinforce or suppress. 
+However, AR generation requires one sequential model evaluation per token, tying latency to sequence length. Diffusion-based 
+language models mitigate this bottleneck by jointly refining all token positions in a fixed number of denoising steps and 
+has the potential to significantly increase the generation speed [TODO: citation]. 
+Recently, RL training have been applied to diffusion-based language models \citep{zhao2025d1,zhu2025llada15,shao2026papo} 
+to guide the behavior of the generative model and shows promising results. Since the diffusion-based models operates 
+with discrete tokens and take discrete ``actions'' in the generation procedure, the RL alogrithms built on them 
+(e.g. PPO \citep{schulman2017ppo} and GRPO \citep{shao2024deepseekmath}) mainly depends on the score-function (REINFORCE) 
+\citep{williams1992reinforce} gradients in model training.
 
-Continuous language models (CLM) take no discrete token actions and offer an opportunity to move beyond this restriction: their continuous generation trajectories are reparameterizable, allowing reward information to be differentiated through denoising. Recently introduced models such as ELF \citep{hu2026elf} generate real-valued token embeddings through flow matching \citep{lipman2022flow,liu2022rectified}. Starting from Gaussian noise, the stochastic sampler injects noise at each step and forms a differentiable chain of Gaussian transitions that jointly refine all positions. Tokens are decoded together only at the endpoint, when the verifier reward becomes available; thus, no transition or noise coordinate directly corresponds to a semantic token decision. This separation between continuous refinement and discrete readout creates a distinct credit-assignment problem, leaving effective RL post-training for continuous flow language models unresolved.
 
-To address this question, we introduce \textbf{C}ontinuous \textbf{F}low \textbf{R}einforcement learning for \textbf{L}anguage models (\method{}), a post-training framework with three variants. \methodGRPO{} adapts score-function policy optimization to CLM, building on denoising-as-control methods for image diffusion and flow models \citep{black2023ddpo,fan2023dpok,liu2025flowgrpo,xue2025dancegrpo} and masked diffusion language adaptations \citep{zhao2025d1,rojas2026improving,zhu2025llada15,shao2026papo}.
-% The exact joint Gaussian transition densities avoid likelihood surrogates, but each transition acts on the entire high-dimensional sequence state, with a score determined by the injected noise and denoiser Jacobian.  A scalar advantage is therefore spread over millions of continuous coordinates that do not individually represent semantic decisions, creating far more nuisance directions than in AR generation. 
-% The advantage refinements we evaluate do not remove this credit-assignment burden; empirically, GRPO produces its smallest gains where the model has the most headroom and varies more across seeds.
+Continuous language models (CLM) show strong results in language generation  [TODO: cite multiple models]. The most recent model 
+ELF \citep{hu2026elf} has achieved ... . It constructs the generative model with flow  matching \citep{lipman2022flow,liu2022rectified} 
+and  generate real-valued token embeddings through denoising Gaussian noise from multiple steps, 
+then it decodes continuous token embeddings into language tokens. The continuous step of the generation process is differentiable, 
+which offers an opportunity to backpropagate reward signals through gradients.  
 
-\methodSVGScalar{} exploits the differentiable transitions of continuous flow language models. Unlike categorical sampling, continuous flow trajectories admit pathwise gradients that differentiate a reward estimate through generation, as in continuous control and image-diffusion reward back-propagation \citep{lillicrap2015ddpg,haarnoja2018sac,prabhudesai2023alignprop,clark2023draft}. The verifier reward follows a discrete readout and is not directly differentiable; back-propagating a learned surrogate through the full trajectory is expensive \citep{prabhudesai2023alignprop,clark2023draft}, while keeping it fixed invites critic exploitation \citep{lee2026dav}. This variant therefore learns a differentiable intermediate-state scalar value from verifier outcomes and trains it jointly to track the evolving policy. However, the scalar critic compresses all token positions into one state value, limiting token-level credit and causing performance to plateau early.
+%when the verifier reward becomes available; thus, no transition or noise coordinate directly corresponds 
+%to a semantic token decision. This separation between continuous refinement and discrete readout creates a distinct 
+%credit-assignment problem, leaving effective RL post-training for continuous flow language models unresolved.
+%\citep{zhao2025d1,rojas2026improving,zhu2025llada15,shao2026papo}.
 
-\methodSVGTwoD{} exploits the two natural axes of flow generation: flow step and token position. A scalar critic retains only the flow-step axis, even though the sequence state evolves across positions and its semantics are represented along that axis. The 2D critic preserves both axes, allowing the value landscape to vary by position without claiming token-level error localization. This structure provides position-dependent gradients and keeps the critic useful as the policy evolves, sustaining improvement during joint training. We complete \method{} with an amortisation loop that distils verified samples back into the policy, transferring the reward improvement to cheaper samplers.
+In this work, we propose \textbf{C}ontinuous \textbf{F}low \textbf{R}einforcement learning for \textbf{L}anguage 
+models (\method{}), a post-training framework to improve the reasoning ability of CLMs. 
+We use a verifier on decoded discrete tokens as the reward and then apply the flow-based GRPO
+\citep{black2023ddpo,fan2023dpok,liu2025flowgrpo,xue2025dancegrpo} to train the model. We then exploits 
+the differentiable transitions of CLMs, in which only the last step decode continuous token vectors to discrete tokens. 
+Therefore, we train a critic that takes a denoising state as the input and predict the verifier result based 
+on later generated response. The critic is fairly accurate at the end of the denoising trajectory because it 
+contains almost all the information of discrete tokens. Then the critic can be used to backpropagate the approximate 
+reward through the continuous flow trajectory. We also design an new critic architecture that allows the reward to 
+give feedback to each token vector in the transformer calculation. We compute a value from each token vector, compare 
+it to the verifier result for the entire sequence, and compute a loss term from the comparison. In this design, 
+each token vector can receive a gradient from the verifier result, which allows the model to learn more efficiently. 
 
-We evaluate all three \method{} variants under a unified protocol on four program-verifiable reasoning tasks: Countdown, Sudoku, Knights-and-Knaves, and Game24. We also train an AR model with standard RL post-training and a masked diffusion model on the same data. Our contributions are:
+%Unlike categorical sampling, 
+%continuous flow trajectories admit pathwise gradients that differentiate a reward estimate through generation, as in continuous 
+%control and image-diffusion reward back-propagation \citep{lillicrap2015ddpg,haarnoja2018sac,prabhudesai2023alignprop,clark2023draft}. 
+%The verifier reward follows a discrete readout and is not directly differentiable; back-propagating a learned surrogate through the 
+%full trajectory is expensive \citep{prabhudesai2023alignprop,clark2023draft}, while keeping it fixed invites critic exploitation 
+%\citep{lee2026dav}. This variant therefore learns a differentiable intermediate-state scalar value from verifier outcomes and 
+%trains it jointly to track the evolving policy. 
+%However, the scalar critic compresses all token positions into one state value, 
+%limiting token-level credit and causing performance to plateau early.
+
+
+
+% The exact joint Gaussian transition densities avoid likelihood surrogates, but each transition acts on the entire high-dimensional 
+% sequence state, with a score determined by the injected noise and denoiser Jacobian.  A scalar advantage is therefore spread over millions 
+% of continuous coordinates that do not individually represent semantic decisions, creating far more nuisance directions than in AR generation. 
+% The advantage refinements we evaluate do not remove this credit-assignment burden; empirically, GRPO produces its smallest 
+% gains where the model has the most headroom and varies more across seeds.
+
+%\methodSVGTwoD{} exploits the two natural axes of flow generation: flow step and token position. A scalar critic retains only the 
+%flow-step axis, even though the sequence state evolves across positions and its semantics are represented along that axis. The 2D 
+%critic preserves both axes, allowing the value landscape to vary by position without claiming token-level error localization. 
+%This structure provides position-dependent gradients and keeps the critic useful as the policy evolves, sustaining improvement 
+%during joint training. We complete \method{} with an amortisation loop that distils verified samples back into the policy, 
+%transferring the reward improvement to cheaper samplers.
+
+
+We evaluate our new method under a unified protocol on four program-verifiable reasoning tasks: Countdown, 
+Sudoku, Knights-and-Knaves, and Game24. Models trained with our method achieve better or comparable performance than baseline models with similar or bigger sizes. 
+We summarize our contributions are summarized as follows.
 \begin{itemize}
-    \item We formulate the RL action-space and credit-assignment problem for continuous flow language models and introduce \method{} with three variants, to our knowledge the first framework to reliably improve them through RL post-training.
-    \item Within \method{} we introduce a 2D critic indexed by both flow steps and token positions and an amortisation loop that distils reward improvement across samplers.
-    \item We characterize all three variants across four program-verifiable reasoning tasks, finding that \methodSVGTwoD{} yields the strongest and most consistent reasoning improvement.
+    \item To our best knowledge, we are the first to propose an RL framework for post-training of CLMs and reliably improve their performance through RL post-training.
+    \item Our innovation of the neural architecture for the critic not only improves the RL performance but also are readilly applied to various desnoising-based RL models.  
+    \item We conduct empirical study on four program-verifiable reasoning tasks and verify the effectiveness of our approach.
 \end{itemize}
