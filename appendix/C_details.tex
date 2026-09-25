@@ -1,7 +1,7 @@
 \section{Experimental details}
 \label{app:details}
 
-\paragraph{Base models.}
+\paragraph{Base models.} The released-model rows of Table~\ref{tab:main} evaluate each released checkpoint with the task prompt and no task training: GPT-2 (124M), LLaDA-8B-Instruct (256 generated tokens), and ELF-B's OpenWebText checkpoint under the deployment chain.
 ELF-B \citep{hu2026elf}: 105M-parameter transformer denoiser, frozen T5-small \citep{raffel2020t5} encoder embeddings ($d{=}512$), x-prediction with self-conditioning and training-time classifier-free guidance, PyTorch port of the released code. A denoiser call combines a prompt-conditioned and an unconditioned evaluation, $\hat x=\hat x_{\rm u}+\omega(\hat x_{\rm c}-\hat x_{\rm u})$, with guidance weight $\omega=2$ in every rollout and evaluation (Appendix~\ref{app:datasets}); the critic's copy is evaluated without guidance. Supervised fine-tuning uses the released recipe (AdamW, learning rate $2\times10^{-3}$ with warm-up, global batch 256--512, EMA of weights; EMA decay 0.99 for the short Game24 run and 0.999 otherwise). The Countdown base is epoch 60 of a 100-epoch run; Sudoku uses the converged model (76 epochs on 400k puzzles); K\&K the epoch-4 checkpoint of a 40-epoch schedule stopped at epoch 9; Game24 the epoch-20 checkpoint of a 40-epoch run initialised from the Countdown model.
 
 \paragraph{Critic.}

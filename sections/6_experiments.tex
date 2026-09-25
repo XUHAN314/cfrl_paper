@@ -1,7 +1,7 @@
 \section{Experiments}
 \label{sec:experiments}
 \paragraph{Setup.}
-We evaluate on four program-verified tasks: \textbf{Countdown}, \textbf{Sudoku}, \textbf{Knights-and-Knaves} (K\&K) and \textbf{Game24}. All flow runs start from ELF-B (105M) fine-tuned on each task (the base). Held-out prompts (2{,}000 per task; 1{,}601 for Game24) are split into a validation half, on which checkpoints are selected, and a test half, on which every accuracy is reported. The deployment chain is $\gamma56$@64 (churn $\gamma{=}56$, $K{=}64$ steps; $\gamma28$@32 on Sudoku), the cheap chain $\gamma4$@16, both through the same denoiser. GPT-2 \citep{radford2019gpt2} with token-level GRPO/PPO and LLaDA-8B-Instruct \citep{nie2025llada} with d1's diffu-GRPO \citep{zhao2025d1}, trained on the same data, are cross-architecture references. Diagnostics use Game24. Data, budgets and every supporting result are in Appendix~\ref{app:results}.
+We evaluate on four program-verified tasks: \textbf{Countdown}, \textbf{Sudoku}, \textbf{Knights-and-Knaves} (K\&K) and \textbf{Game24}. Every model is fine-tuned on each task from its released checkpoint before RL; ELF-B's (105M) task-SFT model is the base of all flow runs. Held-out prompts (2{,}000 per task; 1{,}601 for Game24) are split into a validation half, on which checkpoints are selected, and a test half, on which every accuracy is reported. The deployment chain is $\gamma56$@64 (churn $\gamma{=}56$, $K{=}64$ steps; $\gamma28$@32 on Sudoku), the cheap chain $\gamma4$@16, both through the same denoiser. GPT-2 \citep{radford2019gpt2} with token-level GRPO/PPO and LLaDA-8B-Instruct \citep{nie2025llada} with d1's diffu-GRPO \citep{zhao2025d1}, trained on the same data, are cross-architecture references. Diagnostics use Game24. Data, budgets and every supporting result are in Appendix~\ref{app:results}.
 
 \begin{table}[t]
 \centering\small
@@ -13,15 +13,18 @@ We evaluate on four program-verified tasks: \textbf{Countdown}, \textbf{Sudoku},
  & Countdown & Sudoku & K\&K & Game24 \\
 \midrule
 \multicolumn{5}{@{}l}{\emph{GPT-2 (124M, autoregressive)}}\\
-task SFT & 44.2 & \phantom{0}1.2 & 92.9 & 26.9 \\
-+ token GRPO/PPO & 61.8 {\scriptsize(+17.6)} & \phantom{0}1.4 {\scriptsize(+0.2)} & 93.3 {\scriptsize(+0.4)} & 46.6 {\scriptsize(+19.7)} \\
+released model & \phantom{0}0.0 & \phantom{0}0.0 & \phantom{0}0.0 & \phantom{0}0.0 \\
++ task SFT & 45.1 & \phantom{0}0.8 & 92.7 & 28.0 \\
++ token GRPO/PPO & 60.9 {\scriptsize(+15.8)} & \phantom{0}0.8 {\scriptsize(+0.0)} & 92.8 {\scriptsize(+0.1)} & 46.7 {\scriptsize(+18.7)} \\
 \midrule
 \multicolumn{5}{@{}l}{\emph{LLaDA-8B-Instruct (masked diffusion)}}\\
-task SFT & 12.1 & \phantom{0}0.5 & 61.4 & 15.9 \\
+released model & \phantom{0}1.4 & \phantom{0}0.0 & \phantom{0}5.4 & \phantom{0}1.6 \\
++ task SFT & 12.1 & \phantom{0}0.5 & 61.4 & 15.9 \\
 + diffu-GRPO & 14.9 {\scriptsize(+2.8)} & \phantom{0}0.8 {\scriptsize(+0.3)} & 63.2 {\scriptsize(+1.8)} & 18.8 {\scriptsize(+2.9)} \\
 \midrule
 \multicolumn{5}{@{}l}{\emph{ELF-B (105M, continuous flow)}}\\
-task SFT (base) & 42.8 & 64.0 & 68.2 & 44.0 \\
+released model & \phantom{0}0.0 & \phantom{0}0.0 & \phantom{0}0.0 & \phantom{0}0.0 \\
++ task SFT (base) & 42.8 & 64.0 & 68.2 & 44.0 \\
 + \methodGRPO{} & 42.6 {\scriptsize($-$0.2)} & 67.9 {\scriptsize(+3.9)} & 71.4 {\scriptsize(+3.2)} & 47.4 {\scriptsize(+3.4)} \\
 + \methodSVGScalar{} & 47.4 {\scriptsize(+4.6)} & 64.1 {\scriptsize(+0.1)} & 76.5 {\scriptsize(+8.3)} & 51.2 {\scriptsize(+7.2)} \\
 + \hl{\methodSVGTwoD{}} & \textbf{49.7} {\scriptsize(+6.9)} & \textbf{68.7} {\scriptsize(+4.7)} & \textbf{77.5} {\scriptsize(+9.3)} & \textbf{58.2} {\scriptsize(+14.2)} \\
@@ -32,12 +35,12 @@ task SFT (base) & 42.8 & 64.0 & 68.2 & 44.0 \\
 \centering
 \includegraphics[width=\linewidth]{figures/fig_estimator.pdf}
 \end{minipage}
-\caption{\textbf{Left:} held-out accuracy (\%) under the deployment chain; RL rows carry the gain over their model's task-SFT row in parentheses; bold: best ELF\mbox{-}B row; blue: recommended variant. \textbf{Right:} Game24 rollouts of each model's SFT base (ELF\mbox{-}B under the deployment chain); control: $A{=}1$, whose expected gradient is zero (top), a random direction (bottom); GPT-2 in the top panel only. Top: half-split cosine against the number of rollouts $N$. Bottom: accuracy change after one AdamW-normalised step, in units of $\Lambda$, the distance the 2D-critic policy travels from the base over training; bands: paired $95\%$ intervals.}
+\caption{\textbf{Left:} held-out accuracy (\%) under the deployment chain: the released model with no task training, its task-SFT model (our supervised stage), and RL from the task-SFT model; RL rows carry the gain over the task-SFT row in parentheses; bold: best ELF\mbox{-}B row; blue: recommended variant. \textbf{Right:} Game24 rollouts of each model's SFT base (ELF\mbox{-}B under the deployment chain); control: $A{=}1$, whose expected gradient is zero (top), a random direction (bottom); GPT-2 in the top panel only. Top: half-split cosine against the number of rollouts $N$. Bottom: accuracy change after one AdamW-normalised step, in units of $\Lambda$, the distance the 2D-critic policy travels from the base over training; bands: paired $95\%$ intervals.}
 \label{tab:main}
 \end{table}
 
 \paragraph{Main result.}\label{sec:exp_main}
-Table~\ref{tab:main} compares the three variants on the flow model with the score-function recipe on an autoregressive and a masked-diffusion model. On ELF-B the estimator decides the gain. \methodGRPO{} moves every task by a few points at most. Differentiating the chain with the 2D critic gains more on every task: the pathwise factor per coordinate is the value's derivative, which vanishes on coordinates the value does not depend on, in place of the injected noise (\S\ref{sec:pathwise}), and \methodSVGTwoD{}, which changes only the critic, is the best row on every task (Figure~\ref{fig:dyn} follows it on Game24). The score-function estimator itself is not capped where every score term is a semantic decision (\S\ref{sec:estimators}). GPT-2's token-level recipe gains seventeen to twenty points on Countdown and Game24, the two tasks where its supervised model is neither saturated nor near zero, where \methodGRPO{} gains at most three and a half; LLaDA's diffu-GRPO, trained on a proxy for its sampler's likelihood, gains little.
+Table~\ref{tab:main} compares the three variants on the flow model with the score-function recipe on an autoregressive and a masked-diffusion model. On ELF-B the estimator decides the gain. \methodGRPO{} moves every task by a few points at most. Differentiating the chain with the 2D critic gains more on every task: the pathwise factor per coordinate is the value's derivative, which vanishes on coordinates the value does not depend on, in place of the injected noise (\S\ref{sec:pathwise}), and \methodSVGTwoD{}, which changes only the critic, is the best row on every task (Figure~\ref{fig:dyn} follows it on Game24). The score-function estimator itself is not capped where every score term is a semantic decision (\S\ref{sec:estimators}). GPT-2's token-level recipe gains sixteen to nineteen points on Countdown and Game24, the two tasks where its supervised model is neither saturated nor near zero, where \methodGRPO{} gains at most three and a half; LLaDA's diffu-GRPO, trained on a proxy for its sampler's likelihood, gains little.
 
 \paragraph{Why the score-function variant is capped.}\label{sec:exp_estimator}
 \S\ref{sec:grpo} places the cap in the injected noise: the advantage weights all $|\mathcal K|\,|\mathcal G|\,d$ noise coordinates of an update, so the variance grows with coordinates that carry no signal, whereas the pathwise term~(\ref{eq:pw_exact}) multiplies the Jacobian by $\partial V/\partial y$, which vanishes on them. The right panels of Table~\ref{tab:main} test this on base rollouts. \emph{Top:} the half-split cosine rises towards one for a genuine signal and stays near zero for noise. \methodGRPO{} lies on the zero-mean control at every $N$, GPT-2's token gradient rises with $N$, and the pathwise gradient agrees from the smallest $N$. \emph{Bottom:} after one step along each mean gradient, only the pathwise step gains, its interval excluding zero, at a quarter and a half of $\Lambda$.
