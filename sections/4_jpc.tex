@@ -1,74 +1,59 @@
-\section{\method{}-SVG: pathwise RL with a critic}
+\subsection{Learn with pathwise RL with a critic}
 \label{sec:method}
-\methodGRPO{} needs no critic and no differentiable path, and pays for it with the noise factor of~(\ref{eq:sf}). We now introduce two actor-critic variants based on stochastic value gradients (SVG; \citealp{heess2015svg}) that differentiate the chain itself and so remove that factor. The reward offers no differentiable path (\S\ref{sec:estimators}), but the value~(\ref{eq:value}) of an earlier state does: both variants learn a critic $V_\phi$ and ascend it through one transition of the chain, an SVG whose transition model is the sampler itself. They differ in the critic's resolution: one value per state in \methodSVGScalar{}, one per state and position in \methodSVGTwoD{}.
 
-\subsection{The pathwise update}
-\label{sec:pathwise}
-\paragraph{Transition-wise decomposition.}
-The true value $V^\star_k(s_k)$ summarises the expected reward of all continuations from $s_k$, and by the tower property applied to~(\ref{eq:value}), $J=\mathbb E_c\,\mathbb E[V^\star_k(s_k)]$ at every $k$. Write $\nabla^{(k)}_\theta$ for the gradient with respect to $\theta$ taken through the denoiser call of transition $k$ alone, every other call held fixed; since $\theta$ enters $J$ once per call, the multivariable chain rule gives $\nabla_\theta J=\sum_{k=2}^{K}\nabla^{(k)}_\theta J$ exactly, where $\nabla^{(K)}_\theta$ collects the call at $s_{K-1}$, the final step and the decode. For $2\le k\le K-2$ the term is the one-step value gradient of SVG \citep{heess2015svg} with the true value, and with a critic in place of $V^\star_k$ it becomes an estimator, as we now show; the terms $k=K-1,K$ pass through the piecewise-constant $r\circ w_\theta$ and give a pathwise estimator no signal (Appendix~\ref{app:pw_derivation}). Fix a prompt. The call of transition $k$ affects the objective only through the state $s_k=(y_k,\hat x_{k-1})$, both components of which are its outputs, $\hat x_{k-1}=\hat X_\theta(y_{k-1},\tilde t_{k-1};\hat x_{k-2})$ and $y_k=\alpha_k[y_{k-1}+\lambda_{k-1}(\hat x_{k-1}-y_{k-1})]+\sigma_k\varepsilon_k$, and the downstream value $V^\star_k$ does not involve it. For $k\le K-2$ the recursion of \S\ref{sec:estimators} makes $V^\star_k$ a Gaussian average of $V^\star_{k+1}$ centred at $\alpha_{k+1}D_\theta(s_k)$, hence differentiable in that mean although the reward is not; assuming the same regularity in the estimate $\hat x_k=\hat X_\theta(s_k)$ that $V^\star_{k+1}$ reads (Appendix~\ref{app:pw_derivation}), the expectation is differentiated inside with the noise held fixed:
+In our MDP formulation, only the last decoding step blocks gradient flow from the reward to the policy. We consider the stochastic 
+value gradients (SVG) \citealp{heess2015svg} and learn a critic to backpropagate the reward signal in denoising steps.  
+
+The value function $V^\star_k(s_k) = \mathbb E[R(s_{K+1}) \mid s_k]$ of a state $s_k$ is the expected reward of all continuations from that state. 
+Since the reward $R(s_{K+1})$ is 0 or 1, the value $V^\star_k(s_k)$ is the probability $p_\theta(R(s_{K+1}) | s_k)$ of success from $s_k$. 
+Note that the MDP problem here has a finite horizon so the value function is relatively easy to learn. 
+
+We train a critic $V_\phi$ to predict the value function $V^\star_k(s_k)$ from the state $s_k$. The critic is trained with 
+a binary cross-entropy loss against the verifier reward $R(s_{K+1})$ at the end of the trajectory. The minimization objective is:
 \begin{equation}
-\nabla^{(k)}_\theta J=\mathbb E\big[\nabla^{(k)}_\theta V^\star_k(s_k)\big],\qquad \nabla^{(k)}_\theta V^\star_k(s_k)=\Big[\alpha_k\lambda_{k-1}\nabla_{y}V^\star_k(s_k)+\nabla_{\hat x}V^\star_k(s_k)\Big]\,\nabla^{(k)}_\theta\hat x_{k-1},
-\label{eq:pw_exact}
-\end{equation}\eqalias{eq:chainrule}
-the first term through the re-noised state, the second through the estimate that the next call reads. The second term has no counterpart in~(\ref{eq:grpo_loss}), which holds the stored estimates fixed, and it carries most of the pathwise gradient (Appendix~\ref{app:actor_signal}). By Gaussian integration by parts the first term has the same expectation as the $k$-th score-function summand (eq.~\ref{eq:sfterm}, Appendix~\ref{app:pw_derivation}). The two differ in what multiplies the denoiser's Jacobian at coordinate $(k,i)$, up to the common factor $\alpha_k\lambda_{k-1}$: $V^\star_k\,\varepsilon_{k,i}/\sigma_k$, of variance $\approx\mathbb E[(V^\star_k)^2]/\sigma_k^2$ whether or not the coordinate affects the outcome, against the derivative $\partial V^\star_k/\partial y_{k,i}$, which vanishes on every coordinate the value does not depend on.
-
-\paragraph{The estimator.}
-The critic $V_\phi$ is trained to approximate $\mathrm{logit}\,V^\star_k$ (\S\ref{sec:critic}). With an exact critic, $V_\phi=\mathrm{logit}\,V^\star_k$, the sample gradient is $\nabla^{(k)}_\theta V^\star_k/[V^\star_k(1-V^\star_k)]$ on states with $0<V^\star_k<1$, the sample's term of~(\ref{eq:pw_exact}) scaled by a positive weight, so the update ascends the expected log-odds of success. One transition $k\sim\mathcal U(\mathcal W)$ is drawn from a window $\mathcal W=\{k_{\rm lo},\dots,k_{\rm hi}\}$, $2\le k_{\rm lo}$, $k_{\rm hi}\le K-2$, which leaves out the first steps, where the state is noise and the value flat, and the last, where the state is all but committed:
-\begin{equation}
-\tilde J_k=\mathbb E\big[\mathrm{logit}\,V^\star_k(s_k)\big],\qquad \hat g_{\rm PW}=\nabla^{(k)}_\theta V_\phi(s_k),\qquad b_k=\mathbb E\big[\nabla^{(k)}_\theta(V_\phi-\mathrm{logit}\,V^\star_k)(s_k)\big].
-\label{eq:pw}
-\end{equation}\eqalias{eq:logodds}\eqalias{eq:biasm}
-The actor gradient passes through the sampled transition only, not the whole chain: the critic carries the later transitions in expectation, so memory does not grow with $K$. The weight $1/[V^\star_k(1-V^\star_k)]$ above amplifies the probability gradient where the outcome is nearly decided. With a learned critic the update is biased, $\mathbb E[\hat g_{\rm PW}\mid k]=\nabla^{(k)}_\theta\tilde J_k+b_k$. The bias vanishes when the critic's slope matches that of the log-odds on the states the current policy visits, which motivates the critic's design (\S\ref{sec:critic}) and its training (\S\ref{sec:joint}).
-
-\begin{figure}[!b]
-\centering
-\includegraphics[width=0.84\linewidth]{figures/flow-rl-figure1.pdf}
-\caption{Where the reward lands: (a) on the token axis in an AR model; (b) on the step axis in RL for diffusion and flow models; (c) on both in \methodSVGTwoD{}: $R_{k,i}$ for flow step $k$ and position $i$, each an estimate of the whole response's outcome, pooled into $V_\phi$.}
-\label{fig:mechanism}
-\end{figure}
-
-\subsection{The critic: one value per state, or per state and position}
-\label{sec:critic}\label{sec:jpc_scalar}\label{sec:jpc_2d}
-The critic takes the state $s_k=(y_k,\hat x_{k-1})$ and the time $\tilde t_k$ as input. Because $\hat x_{k-1}$ is the denoiser's current prediction of the decoded sequence, the critic reuses the denoiser to read it: a copy $\hat X_{\bar\theta}$, initialised from $\theta_{\rm ref}$, fine-tuned once with the head before RL and then held fixed, is evaluated without guidance and gives per-position features $f_i(s_k)=\hat X_{\bar\theta}(y_k,\tilde t_k;\hat x_{k-1})_i\in\mathbb R^d$; a small MLP head $h_\phi$, the part of the critic refit during RL, turns them into a value in one of two orders,
-\begin{alignat}{2}
-&\text{\methodSVGScalar{}:}&\quad V_\phi(s_k)&=h_\phi\big(\tfrac1{|\mathcal G|}\textstyle\sum_{i\in\mathcal G}f_i(s_k),\,\tilde t_k\big),
-\label{eq:critic1d}\\
-&\text{\methodSVGTwoD{}:}&\quad V_\phi(s_k)&=\tfrac1{|\mathcal G|}\textstyle\sum_{i\in\mathcal G}R_{k,i},\qquad R_{k,i}=h_\phi\big(f_i(s_k),\tilde t_k\big).
-\label{eq:critic2d}
-\end{alignat}
-A flow model refines all positions at once over $K$ steps, so credit has two axes, \emph{when} along the flow and \emph{where} along the sequence (Figure~\ref{fig:mechanism}). RL for diffusion and flow models treats the whole state as one action indexed by the step \citep{liu2025flowgrpo,xue2025dancegrpo}, as \methodGRPO{} and \methodSVGScalar{} do; \methodSVGTwoD{} indexes the value by both. The actor ascends the pooled value through~(\ref{eq:pw}) in both; the critics differ in the order of head and mean and, through it, in the loss below. The order decides what each position is asked to change. The actor's signal at position $i$ is $\sum_{j}(\partial V_\phi/\partial f_j)(\partial f_j/\partial s_{k,i})$, with $s_{k,i}=(y_{k,i},\hat x_{k-1,i})$ position $i$ of the state, where
-\begin{equation}
-\text{head after the mean: }\ \frac{\partial V_\phi}{\partial f_j}=\frac{\nabla h_\phi(\bar f)}{|\mathcal G|}\ \ \forall j,\qquad \text{head before the mean: }\ \frac{\partial V_\phi}{\partial f_j}=\frac{\nabla h_\phi(f_j)}{|\mathcal G|},
-\label{eq:headgrad}
+\mathcal L_{\mathrm{critic}}(\phi) = \mathbb{E}_{s_k, s_{K+1}} \Bigl[ \mathrm{BCE}(V_\phi(s_k), R(s_{K+1})\Bigr].
+\label{eq:critic_loss}
 \end{equation}
-with $\bar f$ the mean feature and $\nabla h_\phi$ the gradient in the feature argument. Either every position is pushed along one direction of feature space, the head's slope at the mean, or each along the head's slope at its own reading, the change that would raise its own estimate of success. At a given training step the two updates are similar, because both critics use the same features and outcome labels (Appendices~\ref{app:critic_equiv}, \ref{app:actor_signal}); they diverge over training as the policy evolves and the heads are refitted (Figure~\ref{fig:dyn}). A head on the mean moreover sees the positions only through the bottleneck $\bar f$: it can be written as a mean of per-position readings only if it is affine (Proposition~\ref{prop:additive}).
+Here $\mathrm{BCE}(V_\phi(s_k), R(s_{K+1})$ is the binary cross-entropy loss of $V_\phi(s_k)$ with the true binary label $R(s_{K+1})$. 
+The loss is consistent here: the true probability $p_\theta(R(s_{K+1}) | s_k)$ receives the lowest expected loss.  
 
-\paragraph{Supervision without token labels.}
-Both critics are trained on states of rollouts labelled with the rollout's outcome $r$, by binary cross-entropy (BCE); the 2D critic minimises
-\begin{equation}
-\mathcal L_{\rm 2D}(\phi)=\mathbb E_{(s_k,r)}\Big[\tfrac12\,\mathrm{BCE}\big(\mathrm{sig}(V_\phi(s_k)),r\big)+\tfrac12\,\tfrac1{|\mathcal G|}\textstyle\sum_{i\in\mathcal G}\mathrm{BCE}\big(\mathrm{sig}(R_{k,i}),r\big)\Big],
-\label{eq:critic2d_loss}
-\end{equation}\eqalias{eq:bce}
-whereas the scalar critic minimises the first term alone. The first term fits $V_\phi$ to $\mathrm{logit}\,V^\star_k$, the log-odds that the update ascends; the second, present only for the 2D critic, makes every reading a calibrated log-odds on its own, without which the field $R_{k,\cdot}$ would be constrained only through its mean. One reason to expect the field to stay a usable target \emph{under the refit}: a head on the mean is one function of one vector, which the actor can raise by moving that vector wherever the head reads success, whereas a rise of the pooled field has to be carried by $|\mathcal G|$ readings, each taken by the refit head at its own position and, with the second term, each fitted to the outcome. Without the refit either critic is exploited (Table~\ref{tab:critic_design}; Appendices~\ref{app:frozen}, \ref{app:critic_equiv}). $R_{k,i}$ is not a verifier of token $i$: every reading attends over the whole state and predicts the outcome of the whole response, and within a failed response the readings barely tell wrong positions from right ones (Appendix~\ref{app:critic_maps}). What the field changes is the behaviour of the update under joint training (Figure~\ref{fig:dyn}).
+The critic can learn the value function fairly accurately. Since the FM model is trained to generate accurate token embeddings that 
+can be decoded without much ambiguity. We further freeze the decoder so that denoised token embeddings keep the same semantic. 
+The critic can read out the information about the response from these embeddings at the later denoising stage. 
 
-\subsection{Training the critic with the policy}
-\label{sec:joint}
-We train the critic jointly with the policy because two things move the condition under which the bias $b_k$ of~(\ref{eq:biasm}) vanishes: as $\theta$ changes, so do the states the policy visits and so does $V^\star_k$ itself, so a critic fitted to an earlier policy is stale even on a state it has seen, and the actor, ascending $V_\phi$ wherever its slope is positive, exploits it. The critic is pre-trained on rollouts of the initial policy, copy and head together, with the first term of~(\ref{eq:critic2d_loss}) for both critics, and Algorithm~\ref{alg:jpc} then refits the head after every actor step, on a replay buffer of the states that fresh rollouts reach at the window's last step $k_{\rm hi}$ alone, where the outcome is most determined by the state; the copy $\bar\theta$ stays fixed (Table~\ref{tab:critic_design}). If the critic's ranking of outcomes on the newest buffer states (its AUC) falls below a floor, the head takes extra steps before the actor moves. The bias paid per step grows with the step size, hence a decaying schedule; and both networks are trained under the sampler to be deployed, since a different sampler is a different chain with different values.
+Now we can directly backpropagate the reward information to denoising actions. We don't have reward in non-terminal states, so the maximization objective is
+\begin{align}
+ \mathcal{J}_{\mathrm{SVG}}(\theta) &= \mathbb{E}_{s_{k - 1}, s_k} \Bigl[ V_\phi(s_k) \Bigr]
+= \mathbb{E}_{\rvz_{t_{k - 1}}, \rvx_{t_{k-2}}, \varepsilon} \Bigl[ V_\phi(\rvz_{t_k}, \rvx_{t_{k-1}}) \Bigr] \quad \text{with} \\
+\rvx_{t_{k-1}} &= \mathrm{d}_\theta(\rvz_{t_{k-1}}, \rvx_{t_{k-2}}),  \quad \rvz_{t_{k}} = \lambda_{k} \rvz_{t_{k-1}} + \eta_k \rvx_{t_{k-1}} + \psi_k \varepsilon
+\end{align}
+In the calculation of $\nabla_\theta \mathcal{J}_{\mathrm{SVG}}(\theta)$, we only use the gradient from on transition and do not take the derivative of 
+state $s_{k-1} = (\rvz_{t_{k - 1}}, \rvx_{t_{k-2}})$. Then the calcualtion $\mathcal{J}_{\mathrm{SVG}}(\theta)$ can be viewed reparameterization, 
+which allows the gradient to propagate from $V_\phi$ to $d_\theta$ directly.    
 
-\begin{algorithm}[t]
-\caption{\methodSVGScalar{} and \methodSVGTwoD{}: critic~(\ref{eq:critic1d}) or~(\ref{eq:critic2d}); values: Appendix~\ref{app:details}}
-\label{alg:jpc}
-\small
-\begin{algorithmic}[1]
-\REQUIRE policy parameters $\theta$; pre-trained critic $V_\phi$ with trainable head parameters $\phi$ on a fixed copy of the denoiser; verifier $r$; sampler $(\gamma,K)$; window $\mathcal W$ with top step $k_{\rm hi}$; buffer $\mathcal B$ and its size $N_{\mathcal B}$; iterations $T$, prompts per iteration $B$, critic minibatch $B'$ and steps $m_{\rm c}$, AUC check every $n_q$ iterations on the newest $N_q$ states with floor $a_0$ and $m'_{\rm c}$ extra steps; learning rates $\eta_\theta,\eta_\phi$
-\FOR{iteration $=1,\dots,T$}
-  \STATE \textbf{Actor.} For $B$ prompts and one $k\sim\mathcal U(\mathcal W)$: roll out under $(\gamma,K)$ to $s_{k-1}$ without gradients, take the denoiser call at $s_{k-1}$ with gradients to form $s_k$, and set $\theta\leftarrow\theta+\eta_\theta\,\mathrm{AdamW}\big(\nabla_\theta\frac1B\sum_{g=1}^{B}V_\phi(s^g_k)\big)$ \hfill (eq.~\ref{eq:pw}; gradient-norm clipped)
-  \STATE \textbf{Buffer.} Roll out $B$ fresh prompts under $(\gamma,K)$ to the end, decode, verify; push each $(s_{k_{\rm hi}},r)$ into $\mathcal B$, keeping the newest $N_{\mathcal B}$
-  \STATE \textbf{Critic.} $m_{\rm c}$ head steps $\phi\leftarrow\phi-\eta_\phi\,\mathrm{AdamW}(\nabla_\phi\mathcal L_{\rm 2D})$ on minibatches of $B'$ states of $\mathcal B$; every $n_q$ iterations, $m'_{\rm c}$ more if the AUC of $V_\phi$ on the newest $N_q$ states is below $a_0$ \hfill (eq.~\ref{eq:critic2d_loss}; first term for~(\ref{eq:critic1d}))
-\ENDFOR
-\end{algorithmic}
-\end{algorithm}
+%[NOTE: if space allows, we can put the gradient calculation here]
+  
 
-\subsection{Amortising the policy into the model}
-\label{sec:loop}
-The SVG variants' gains are specific to their training chain and need not transfer to a cheaper chain through the same denoiser (Appendix~\ref{app:samplers}). An optional amortisation step transfers them to other samplers through the supervised objective, which trains the denoiser at every time $t$: a round samples the policy on a pool of unlabelled prompts, keeps the verified, distinct responses, and fine-tunes the model on them with ELF's loss (Algorithm~\ref{alg:loop}, Appendix~\ref{app:loop}). This is rejection-sampling fine-tuning \citep{yuan2023rft}, the M-step of an EM view of the per-prompt reward in~(\ref{eq:objective}), whose bound is tight at the current model for plain sampling before de-duplication (Proposition~\ref{prop:em}). A round learns only from prompts with accepted responses, so its reach is limited by the pool's coverage, which the 2D critic can help expand: it uses its most pessimistic position, $\min_{i}\mathrm{sig}(R_{k,i})$, to prune parallel chains and to guide the state before decoding, so that pools can be drawn with a cheap chain (Appendix~\ref{app:loop}).
+%be used to provide a differentiable reward estimate for intermediate states, 
+%allowing us to backpropagate through the denoising steps and update the policy parameters $\theta$ accordingly.
+%
+%
+%e reward offers no differentiable path (\S\ref{sec:estimators}), but the value~(\ref{eq:value}) of an earlier state does: both variants learn a critic $V_\phi$ and ascend it through one transition of the chain, an SVG whose transition model is the sampler itself. They differ in the critic's resolution: one value per state in \methodSVGScalar{}, one per state and position in \methodSVGTwoD{}.
+%
+%\label{sec:pathwise}
+%\paragraph{Transition-wise decomposition.}
+%The true value $V^\star_k(s_k)$ summarises the expected reward of all continuations from $s_k$, and by the tower property applied to~(\ref{eq:value}), $J=\mathbb E_c\,\mathbb E[V^\star_k(s_k)]$ at every $k$. Write $\nabla^{(k)}_\theta$ for the gradient with respect to $\theta$ taken through the denoiser call of transition $k$ alone, every other call held fixed; since $\theta$ enters $J$ once per call, the multivariable chain rule gives $\nabla_\theta J=\sum_{k=2}^{K}\nabla^{(k)}_\theta J$ exactly, where $\nabla^{(K)}_\theta$ collects the call at $s_{K-1}$, the final step and the decode. For $2\le k\le K-2$ the term is the one-step value gradient of SVG \citep{heess2015svg} with the true value, and with a critic in place of $V^\star_k$ it becomes an estimator, as we now show; the terms $k=K-1,K$ pass through the piecewise-constant $r\circ w_\theta$ and give a pathwise estimator no signal (Appendix~\ref{app:pw_derivation}). Fix a prompt. The call of transition $k$ affects the objective only through the state $s_k=(y_k,\hat x_{k-1})$, both components of which are its outputs, $\hat x_{k-1}=\hat X_\theta(y_{k-1},\tilde t_{k-1};\hat x_{k-2})$ and $y_k=\alpha_k[y_{k-1}+\lambda_{k-1}(\hat x_{k-1}-y_{k-1})]+\sigma_k\varepsilon_k$, and the downstream value $V^\star_k$ does not involve it. For $k\le K-2$ the recursion of \S\ref{sec:estimators} makes $V^\star_k$ a Gaussian average of $V^\star_{k+1}$ centred at $\alpha_{k+1}D_\theta(s_k)$, hence differentiable in that mean although the reward is not; assuming the same regularity in the estimate $\hat x_k=\hat X_\theta(s_k)$ that $V^\star_{k+1}$ reads (Appendix~\ref{app:pw_derivation}), the expectation is differentiated inside with the noise held fixed:
+%\begin{equation}
+%\nabla^{(k)}_\theta J=\mathbb E\big[\nabla^{(k)}_\theta V^\star_k(s_k)\big],\qquad \nabla^{(k)}_\theta V^\star_k(s_k)=\Big[\alpha_k\lambda_{k-1}\nabla_{y}V^\star_k(s_k)+\nabla_{\hat x}V^\star_k(s_k)\Big]\,\nabla^{(k)}_\theta\hat x_{k-1},
+%\label{eq:pw_exact}
+%\end{equation}\eqalias{eq:chainrule}
+%the first term through the re-noised state, the second through the estimate that the next call reads. The second term has no counterpart in~(\ref{eq:grpo_loss}), which holds the stored estimates fixed, and it carries most of the pathwise gradient (Appendix~\ref{app:actor_signal}). By Gaussian integration by parts the first term has the same expectation as the $k$-th score-function summand (eq.~\ref{eq:sfterm}, Appendix~\ref{app:pw_derivation}). The two differ in what multiplies the denoiser's Jacobian at coordinate $(k,i)$, up to the common factor $\alpha_k\lambda_{k-1}$: $V^\star_k\,\varepsilon_{k,i}/\sigma_k$, of variance $\approx\mathbb E[(V^\star_k)^2]/\sigma_k^2$ whether or not the coordinate affects the outcome, against the derivative $\partial V^\star_k/\partial y_{k,i}$, which vanishes on every coordinate the value does not depend on.
+%
+%\paragraph{The estimator.}
+%The critic $V_\phi$ is trained to approximate $\mathrm{logit}\,V^\star_k$ (\S\ref{sec:critic}). With an exact critic, $V_\phi=\mathrm{logit}\,V^\star_k$, the sample gradient is $\nabla^{(k)}_\theta V^\star_k/[V^\star_k(1-V^\star_k)]$ on states with $0<V^\star_k<1$, the sample's term of~(\ref{eq:pw_exact}) scaled by a positive weight, so the update ascends the expected log-odds of success. One transition $k\sim\mathcal U(\mathcal W)$ is drawn from a window $\mathcal W=\{k_{\rm lo},\dots,k_{\rm hi}\}$, $2\le k_{\rm lo}$, $k_{\rm hi}\le K-2$, which leaves out the first steps, where the state is noise and the value flat, and the last, where the state is all but committed:
+%\begin{equation}
+%\tilde J_k=\mathbb E\big[\mathrm{logit}\,V^\star_k(s_k)\big],\qquad \hat g_{\rm PW}=\nabla^{(k)}_\theta V_\phi(s_k),\qquad b_k=\mathbb E\big[\nabla^{(k)}_\theta(V_\phi-\mathrm{logit}\,V^\star_k)(s_k)\big].
+%\label{eq:pw}
+%\end{equation}\eqalias{eq:logodds}\eqalias{eq:biasm}
+%The actor gradient passes through the sampled transition only, not the whole chain: the critic carries the later transitions in expectation, so memory does not grow with $K$. The weight $1/[V^\star_k(1-V^\star_k)]$ above amplifies the probability gradient where the outcome is nearly decided. With a learned critic the update is biased, $\mathbb E[\hat g_{\rm PW}\mid k]=\nabla^{(k)}_\theta\tilde J_k+b_k$. The bias vanishes when the critic's slope matches that of the log-odds on the states the current policy visits, which motivates the critic's design (\S\ref{sec:critic}) and its training (\S\ref{sec:joint}).
+
