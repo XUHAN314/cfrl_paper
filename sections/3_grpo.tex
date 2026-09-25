@@ -1,5 +1,26 @@
-\section{\methodGRPO{}: the score-function variant}
-\label{sec:grpo}
+\section{Method}
+
+We formulate language generation with a CLM as a Markov decision process (MDP). With a CLM like ELF introduced in Section~\ref{sec:prelim}, 
+the generation always have $K+1$ steps. The state $s_k = (\rvz_{t_k}, \rvx_{t_{k-1}})$ at a generation step $k \in \{1, \ldots, K\}$ is considered the MDP state. 
+The initial state is $s_0 = (\epsilon, \mathbf{0})$, with $\epsilon$ being a random Gaussian noise as we have defined. Here we need to record $\rvx_{t_{k-1}}$ in the state 
+because it is used in the self-conditioning of the FM. The last state $s_{K+1} = \rvw$ is the decoded response.
+
+Actions are denoising steps and the final decoding step. Specifically, the action $a_{k} = \rvx_{t_{k}}$ for $k \in \{0, \ldots, K-1\}$. 
+The policy $\pi(a_k | s_k)$ is the denoising probability given by $\mathrm{d}_\theta$. The last action $a_{K} = \rvw$, and the probabiliy $\pi(a_K | s_K)$ is 
+the decoding probability $p_\theta(\rvw | \rvz_{t_K})$. 
+
+The transition probability is defined by the denoising process in~(\ref{eq:sde}). The reward $r(s_{K+1})$ is obtained from a verifier $r(\rvw)$ that evaluates 
+the decoded response $\rvw$. The objective of RL is to maximize the expected reward over the generation trajectory: 
+\begin{equation}
+\max_\theta \mathbb E_{s_0\sim p_0, a_k\sim \pi_\theta(\cdot|s_k), s_{k+1}\
+sim p(\cdot|s_k, a_k)}[r(s_{K+1})],
+\label{eq:objective}
+\end{equation}
+
+
+
+
+
 The exact Gaussian transition densities in~(\ref{eq:chain}) enable a direct adaptation of GRPO \citep{shao2024deepseekmath} to continuous flow generation. A rollout consists of the Gaussian transitions $y_k\mid s_{k-1}\sim\pi^k_\theta$, the factors of~(\ref{eq:chain}), $k=2,\dots,K-1$, and, during RL, of tokens sampled from the decoder, $w_i\sim\pi^i_\theta:=\mathrm{softmax}(\ell_i)$ with $\ell_i$ the decoder logits at $z_K$; sampling them replaces $w_\theta(s_{K-1})$ in~(\ref{eq:objective}) by a sampled $w$. We write $u$ for a factor of the rollout density, a transition $k$ or a token $i$, and $\pi^u_\theta$ for that factor. To bound the cost, an update uses a random subset $\mathcal K\subseteq\{2,\dots,K-1\}$ of the transitions, with weight $\nu_k=1$, and all tokens, with weight $\nu_i=1/|\mathcal G|$, so that the readout counts as one transition.
 
 \paragraph{GRPO.}

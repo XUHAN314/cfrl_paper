@@ -2,43 +2,139 @@
 \label{sec:estimators}
 
 \paragraph{Continuous flow language modeling.}
-We study ELF \citep{hu2026elf}, a continuous flow language model that generates text in embedding space. A token sequence $w=(w_1,\dots,w_L)$ is embedded by a frozen T5 encoder \citep{raffel2020t5} as $x=\mathrm{Enc}(w)\in\mathbb R^{L\times d}$, one vector $x_i\in\mathbb R^d$ per position. The first positions hold the prompt $c$ and stay clean throughout; the remaining positions, the set $\mathcal G$, are generated. ELF is trained on the linear interpolation $z_t=(1-t)\,c_\sigma\varepsilon+t\,x$ between scaled Gaussian noise $\varepsilon\sim\mathcal N(0,I)$ and the clean embeddings $x$, for $t\in[0,1]$ and a fixed noise scale $c_\sigma$. Its denoiser is a transformer that reads a noisy state $z$ at a time $t$, with the prompt in the prefix positions, together with its own previous estimate $\hat x_{\rm prev}$ of the clean sequence (self-conditioning), and outputs a new estimate
-\begin{equation}
-\hat x=\hat X_\theta(z,t;\hat x_{\rm prev})\in\mathbb R^{L\times d};
+We base our work on ELF \citep{hu2026elf}, a flow-based language model. ELF embeds tokens in the text with a 
+frozen T5 encoder \citep{raffel2020t5}. Let $\rvx=(x_1, \ldots, x_L)$ be embeddings of tokens in a target sequence $\rvw = (w_1, \ldots, w_L)$. 
+If the target sequence is conditioned on a context (e.g., a prompt), then let $\rvc$ be the embeddings of the context tokens.  
+
+ELF fits the distribution $p_\theta(\rvx | \rvc)$ with an FM model, which learns a neural network to denoise noisy states to generate clean embeddings. A noisy state $\rvz_t=(1-t)\,\varepsilon+t\,\rvx$ is an interpolation 
+between a scaled Gaussian noise $\varepsilon\sim\mathcal N(0, c_\sigma^2)$ and a clean embeddings $\rvx$. Here $c_\sigma^2$ is a fixed noise scale, and 
+$t\in[0,1]$ is the time in the FM model. The ELF denoiser is parameterized as an x-flow: it predicts $\rvx_{t}$ from a noisy state $\rvz_t$ and aims to match the clean embedding $\rvx$ with $\rvx_{t}$.  
+Let $0=t_0<\dots<t_K=1$ be a discretization of $t$, then the denoising step is: 
+\begin{align} 
+\rvx_{t_{k}} = \mathrm{d}_\theta(\rvz_{t_{k}}, t_{k}, \rvx_{t_{k-1}}, \rvc)
 \label{eq:denoiser}
-\end{equation}
-the flow-matching velocity is $v_\theta(z,t;\hat x_{\rm prev})=(\hat x-z)/(1-t)$. A call may use classifier-free guidance (Appendix~\ref{app:details}); we treat the guided evaluation as one denoiser call $\hat X_\theta$. At $t=1$ a decoder head maps each embedding to vocabulary logits $\ell_i$, read out as $w_i=\arg\max\ell_i$. Throughout, $\mathrm{sig}(\cdot)$ denotes the logistic function and $\mathrm{logit}=\mathrm{sig}^{-1}$.
+\end{align} 
+Here we explicitly show the self-conditioning technique \citep{chen2022selfcond}: the denoiser $\mathrm{d}_\theta$ includes the previous estimate $\rvx_{t_{k-1}}$ as one input. 
+The network $\mathrm{d}_\theta$ is constructed with a transformer, with $\theta$ denoting learnable parameters. It is trained to minimize the mean squared error (MSE) 
+between the predicted clean embedding $\rvx_{t}$ and the true clean embedding $\rvx$. 
 
-\paragraph{The sampler as a Markov chain.}
-ELF's stochastic sampler with churn $\gamma$ \citep{hu2026elf}, used for RL and for deployment, runs over time steps $0=t_0<\dots<t_K=1$ with step lengths $\Delta_k=t_k-t_{k-1}$ and adds fresh noise to the state (\emph{re-noising}) before every denoiser call but the last; we write $y_k$ for the re-noised embeddings. Starting from noise, $y_0=c_\sigma\varepsilon_0$ with $\hat x_0=0$ and $z_0:=y_0$ (the sampler's $z_k$ is the state at time $t_k$), step $k=1,\dots,K-1$ is, in temporal order,
+In the inference stage, we consider the SDE version of ELP. It injects random noise during the generation steps. 
+\begin{align} 
+\rvz_{t_k} =  \lambda_k  \rvz_{t_{k-1}} + \eta_k \rvx_{t_{k-1}} + \psi_k \varepsilon, \qquad k=1, \ldots, K  
+\label{eq:sde}
+\end{align} 
+Here the three scalars $\lambda_k, \eta_k, \psi_k$ are determined by the step size and the noise re-injection scale in the ELF algorithm.  
+The steps start with $\rvz_{0}=\varepsilon$ and $\rvx_{t_{-1}} = \mathbf{0}$. After $K$ steps, it generates
+$\rvz_{1}$, which is considered as $\rvx$ samples. 
+
+ELF learns a decoder $p_\theta(\rvw|\rvx)$ to map the denoised embeddings $\rvz_{1}$ to the discrete tokens $\rvw$. Each embedding in $\rvz_{1}$ is decoded to a discrete token with a linear layer. 
 \begin{align}
-y_{k}&=\alpha_k z_{k-1}+\sigma_k\varepsilon_k\ \text{ on the positions }\mathcal G,\qquad \varepsilon_k\sim\mathcal N(0,I),\tag{re-noise}\\
-\hat x_k&=\hat X_\theta(y_k,\tilde t_k;\hat x_{k-1})=:\hat X_\theta(s_k),\qquad s_k:=(y_k,\hat x_{k-1}),\tag{estimate}\\
-z_k&=D_\theta(s_k):=y_k+\lambda_k\big(\hat x_k-y_k\big),\tag{partial step}
+w_i \sim \mathrm{softmax}(W \rvz_{1}[i]), \qquad i=1, \ldots, L
 \end{align}
-with the constants
-\begin{equation*}
-\alpha_k=1-\gamma\Delta_k,\qquad \sigma_k=(1-\alpha_k)\,c_\sigma,\qquad \tilde t_k=\alpha_kt_{k-1},\qquad \lambda_k=\frac{t_k-\tilde t_k}{1-\tilde t_k}.
-\end{equation*}
-Here $\alpha_k$ retains part of the previous state, lowering its signal coefficient from $t_{k-1}$ to $\tilde t_k$, where the denoiser is queried, and $\sigma_k$ is the injected noise scale that ELF's convention sets for this $\alpha_k$ (Appendix~\ref{app:kernels}). The partial step then moves a fraction $\lambda_k$ from $y_k$ toward the estimate, reaching $t_k$. The display groups the operations by step; the density below groups them by transition: transition $k$ consists of the denoiser call at $s_{k-1}$, its partial step and the re-noising that produces $y_k$; the call at $s_k$ belongs to transition $k+1$. The final step is deterministic, $z_K=z_{K-1}+(1-t_{K-1})\,v_\theta(z_{K-1},t_{K-1};\hat x_{K-1})$, followed by the decode; when $\gamma=0$ the sampler reduces to a deterministic ODE sampler with $y_k=z_{k-1}$. The pair $s_k=(y_k,\hat x_{k-1})$ is the complete input of the call of step $k$, whose output is $\hat x_k$, so the sampler is a Markov chain in $s_k$: given $s_{k-1}$, the next re-noised state is Gaussian, $y_{k,i}=\alpha_kD_\theta(s_{k-1})_i+\sigma_k\varepsilon_{k,i}$, and the density of the trajectory $\tau=(y_1,\dots,y_{K-1})$ factorises as
-\begin{equation}
-p_\theta(\tau\mid c)=p(y_1)\prod\nolimits_{k=2}^{K-1}\prod\nolimits_{i\in\mathcal G}\mathcal N\!\big(y_{k,i};\,\alpha_kD_\theta(s_{k-1})_i,\,\sigma_k^2I_d\big),
-\label{eq:chain}
-\end{equation}
-where $y_1=\alpha_1y_0+\sigma_1\varepsilon_1$ is Gaussian noise whose law $p(y_1)$ does not depend on $\theta$ (transition 1 involves no denoiser call), $k$ indexes the flow step and $i$ the position. The response is a deterministic function of the last stochastic state, $w=w_\theta(s_{K-1})$: the final step from $z_{K-1}=D_\theta(s_{K-1})$ to $t_K=1$ and the decoder's $\arg\max$.
+Here $W$ is the linear layer that maps an embedding to a logit vector. We also include $W$ into the learnable parameters $\theta$ of the model, 
+then ELF defines a language distribution $p_\theta(\rvw | \rvc)$ through $p_\theta(\rvx|\rvc)$ and $p_\theta(\rvw|\rvx)$. 
 
-\paragraph{RL objective and value.}
-A program verifier assigns a binary reward $r=r(w,c)\in\{0,1\}$ by checking every component of the decoded response. RL post-training maximises the expected reward,
-\begin{equation}
-J(\theta)=\mathbb E_c\,\mathbb E_{\tau\sim p_\theta(\cdot\mid c)}\big[r\big(w_\theta(s_{K-1}),c\big)\big].
-\label{eq:objective}
-\end{equation}
-The value of a state at step $k$ under the current policy is its probability of success,
-\begin{equation}
-V^\star_k(s)=\mathbb P\big(r=1\,\big|\,s_k=s,\,c\big),\qquad r\mid s_k\sim\mathrm{Bernoulli}\big(V^\star_k(s_k)\big),\qquad k=1,\dots,K-1,
-\label{eq:value}
-\end{equation}
-the probability over the remaining noise $\varepsilon_{k+1},\dots,\varepsilon_{K-1}$ (the star marks the true value). The last value, $V^\star_{K-1}(s)=r(w_\theta(s),c)$, is piecewise constant in $s$, and $J=\mathbb E_c\,\mathbb E[V^\star_1(s_1)]$. For $2\le k\le K-1$ the tower property gives $V^\star_{k-1}(s)=\mathbb E_{\varepsilon_k}\big[V^\star_k\big(\alpha_kD_\theta(s)+\sigma_k\varepsilon_k,\ \hat X_\theta(s)\big)\big]$: each value is a Gaussian average of the next over $y_k$, and $V^\star_k$ depends on $\theta$ only through the calls at $s_k$ and later (transitions $k{+}1,\dots,K$).
+\noindent\fbox{\parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}{%
+The official implementation of ELF uses the following stochastic sampler with churn $\gamma$ 
+\citep{hu2026elf}. The implementation is slightly different from Algorithm 6 in the original 
+paper. Here we provide the derivation based on the code, and the notations are 
+mostly consistent with the original paper. 
 
-\paragraph{Two gradient estimators.}
-The \emph{score-function} identity differentiates the density, $\nabla_\theta J=\mathbb E_\tau[r\,\allowbreak\nabla_\theta\log p_\theta(\tau\mid c)]$, where $r$ may be replaced by a baseline-adjusted advantage $A$ \citep{williams1992reinforce}; for an AR model every term of $\log\pi^{\rm AR}_\theta(w\mid c)=\sum_j\log\pi^{\rm AR}_\theta{(w_j\mid w_{<j},c)}$ is a categorical decision on which the reward depends; for the chain~(\ref{eq:chain}) the identity applies to the exact Gaussian density, each term a noise coordinate, with the decoder readout sampled. The \emph{pathwise} identity differentiates the sample: $\tau=F_\theta(c,\varepsilon)$ for the independent noise $\varepsilon=(\varepsilon_0,\dots,\varepsilon_{K-1})$, so $\nabla_\theta\mathbb E[\psi(\tau)]=\mathbb E_\varepsilon[\nabla_\theta\psi(F_\theta(c,\varepsilon))]$ for any $\psi$ that is locally Lipschitz with an integrable gradient. It needs a differentiable path from $\theta$ to the quantity averaged: the reward gives none, since $r$ depends on $s_{K-1}$ through an $\arg\max$ and a program, while the value~(\ref{eq:value}) of an intermediate state gives one under a regularity assumption.
+At step $k$, let the current time be $t_{k-1}$ and the step size be $h$, so that
+$t_{k} = t_{k-1} + h$. Let $\gamma \ge 0$ be the noise re-injection scale, and
+$t_{\text{eps}}=0.05$ is the lower bound used in the velocity conversion.
+Define
+\begin{equation}
+  \alpha = \operatorname{clip}\!\left(1 - \gamma h,\; 0,\; 1\right),
+  \quad
+  \tilde{t}_{k-1} = \alpha t,
+  \quad
+  D = \max\!\left(1 - \tilde{t}_{k-1},\; t_{\text{eps}}\right)
+    = \max\!\left(1 - \alpha t_{k-1},\; t_{\text{eps}}\right).
+\end{equation}
+
+With $\epsilon \sim \mathcal{N}(0, I)$, one step performs
+\begin{align}
+  \tilde z_{k-1} &= \alpha\, z_{k-1} + (1 - \alpha)\, \epsilon,
+    \label{eq:renoise} \\
+  x_{k-1} &= \mathrm{d}_\theta\!\left(\tilde z_{k-1},\, \tilde t, x_{k-2}, c\right),
+    \label{eq:predict} \\
+  v_{k-1} &= \frac{x_{k-1} - \tilde z_{k-1}}{D},
+    \label{eq:velocity} \\
+  z_k &= \tilde z_{k-1} + \left(t_k - \tilde{t}_{k-1} \right) v_{k-1}. 
+    \label{eq:update} \\
+  \tilde{z}_k &= \alpha\, z_{k} + (1 - \alpha)\, \epsilon.
+    \label{eq:renoise2}
+\end{align}
+Note that $x_{k-1}$ is the prediction at the re-noised input
+$(\tilde z_{k-1}, \tilde t)$, not at $(z_{k-1}, t)$. At each step, 
+the code record $(z_k, x_{k-1})$ at each step. At $k = 1$, we 
+use $z_{0} = \varepsilon$ and $x_{-1} = 0$. 
+
+In our derivation, we use $(\tilde{z}_{k}, x_{k-1})$ as the state, which is $(\rvz_{t_k}, \rvx_{t_{k-1}})$ in our notation. We write: 
+\begin{align}
+\tilde{z}_k = \lambda_k \tilde{z}_{k-1} + \eta_k x_{k-1} + \psi_k \epsilon
+\end{align}
+with 
+\begin{align}
+\lambda_k &= \alpha \left(1 - \frac{t + h - \tilde t}{D}\right), \quad
+\eta_k = \frac{\alpha (t + h - \tilde t)}{D}, \quad
+\psi_k = 1 - \alpha,
+\end{align}
+for $k =1, \ldots, K - 1$. When $k = K$, we set $\alpha=1$ and eliminate the re-noising step, 
+\begin{align}
+\lambda_K &= \left(1 - \frac{t + h - \tilde t}{D}\right), \quad
+\eta_K = \frac{(t + h - \tilde t)}{D}, \quad
+\psi_K = 0,
+\end{align}
+so that $\tilde{z}_K = z_K$, matching the ELF implementation.
+
+To derive these, substitute \eqref{eq:velocity} into \eqref{eq:update} and group the terms by $\tilde z_{k-1}$ and $x_{k-1}$:
+\begin{align*}
+z_k &= \tilde z_{k-1} + \frac{t + h - \tilde t}{D}\left(x_{k-1} - \tilde z_{k-1}\right) \\
+    &= \left(1 - \frac{t + h - \tilde t}{D}\right)\tilde z_{k-1} + \frac{t + h - \tilde t}{D}\, x_{k-1}.
+\end{align*}
+Substituting this into \eqref{eq:renoise2} gives
+\begin{align*}
+\tilde z_k = \alpha\left(1 - \frac{t + h - \tilde t}{D}\right)\tilde z_{k-1} + \frac{\alpha\,(t + h - \tilde t)}{D}\, x_{k-1} + (1 - \alpha)\,\epsilon,
+\end{align*}
+from which $\lambda_k$, $\eta_k$ and $\psi_k$ are read off. The noise enters only through the re-noising after the update, so $\psi_k$ carries no factor from the step.
+
+
+
+}}
+
+
+
+%\paragraph{FM as an MDP.} In order ELF's stochastic sampler with churn $\gamma$ \citep{hu2026elf}, used for RL and for deployment, runs over time steps $0=t_0<\dots<t_K=1$ with step lengths $\Delta_k=t_k-t_{k-1}$ and adds fresh noise to the state (\emph{re-noising}) before every denoiser call but the last; we write $y_k$ for the re-noised embeddings. Starting from noise, $y_0=c_\sigma\varepsilon_0$ with $\hat x_0=0$ and $z_0:=y_0$ (the sampler's $z_k$ is the state at time $t_k$), step $k=1,\dots,K-1$ is, in temporal order,
+%\begin{align}
+%y_{k}&=\alpha_k z_{k-1}+\sigma_k\varepsilon_k\ \text{ on the positions }\mathcal G,\qquad \varepsilon_k\sim\mathcal N(0,I),\tag{re-noise}\\
+%\hat x_k&=\hat X_\theta(y_k,\tilde t_k;\hat x_{k-1})=:\hat X_\theta(s_k),\qquad s_k:=(y_k,\hat x_{k-1}),\tag{estimate}\\
+%z_k&=D_\theta(s_k):=y_k+\lambda_k\big(\hat x_k-y_k\big),\tag{partial step}
+%\end{align}
+%with the constants
+%\begin{equation*}
+%\alpha_k=1-\gamma\Delta_k,\qquad \sigma_k=(1-\alpha_k)\,c_\sigma,\qquad \tilde t_k=\alpha_kt_{k-1},\qquad \lambda_k=\frac{t_k-\tilde t_k}{1-\tilde t_k}.
+%\end{equation*}
+%Here $\alpha_k$ retains part of the previous state, lowering its signal coefficient from $t_{k-1}$ to $\tilde t_k$, where the denoiser is queried, and $\sigma_k$ is the injected noise scale that ELF's convention sets for this $\alpha_k$ (Appendix~\ref{app:kernels}). The partial step then moves a fraction $\lambda_k$ from $y_k$ toward the estimate, reaching $t_k$. The display groups the operations by step; the density below groups them by transition: transition $k$ consists of the denoiser call at $s_{k-1}$, its partial step and the re-noising that produces $y_k$; the call at $s_k$ belongs to transition $k+1$. The final step is deterministic, $z_K=z_{K-1}+(1-t_{K-1})\,v_\theta(z_{K-1},t_{K-1};\hat x_{K-1})$, followed by the decode; when $\gamma=0$ the sampler reduces to a deterministic ODE sampler with $y_k=z_{k-1}$. The pair $s_k=(y_k,\hat x_{k-1})$ is the complete input of the call of step $k$, whose output is $\hat x_k$, so the sampler is a Markov chain in $s_k$: given $s_{k-1}$, the next re-noised state is Gaussian, $y_{k,i}=\alpha_kD_\theta(s_{k-1})_i+\sigma_k\varepsilon_{k,i}$, and the density of the trajectory $\tau=(y_1,\dots,y_{K-1})$ factorises as
+%\begin{equation}
+%p_\theta(\tau\mid c)=p(y_1)\prod\nolimits_{k=2}^{K-1}\prod\nolimits_{i\in\mathcal G}\mathcal N\!\big(y_{k,i};\,\alpha_kD_\theta(s_{k-1})_i,\,\sigma_k^2I_d\big),
+%\label{eq:chain}
+%\end{equation}
+%where $y_1=\alpha_1y_0+\sigma_1\varepsilon_1$ is Gaussian noise whose law $p(y_1)$ does not depend on $\theta$ (transition 1 involves no denoiser call), $k$ indexes the flow step and $i$ the position. The response is a deterministic function of the last stochastic state, $w=w_\theta(s_{K-1})$: the final step from $z_{K-1}=D_\theta(s_{K-1})$ to $t_K=1$ and the decoder's $\arg\max$.
+%
+%\paragraph{RL objective and value.}
+%A program verifier assigns a binary reward $r=r(w,c)\in\{0,1\}$ by checking every component of the decoded response. RL post-training maximises the expected reward,
+%\begin{equation}
+%J(\theta)=\mathbb E_c\,\mathbb E_{\tau\sim p_\theta(\cdot\mid c)}\big[r\big(w_\theta(s_{K-1}),c\big)\big].
+%\label{eq:objective}
+%\end{equation}
+%The value of a state at step $k$ under the current policy is its probability of success,
+%\begin{equation}
+%V^\star_k(s)=\mathbb P\big(r=1\,\big|\,s_k=s,\,c\big),\qquad r\mid s_k\sim\mathrm{Bernoulli}\big(V^\star_k(s_k)\big),\qquad k=1,\dots,K-1,
+%\label{eq:value}
+%\end{equation}
+%the probability over the remaining noise $\varepsilon_{k+1},\dots,\varepsilon_{K-1}$ (the star marks the true value). The last value, $V^\star_{K-1}(s)=r(w_\theta(s),c)$, is piecewise constant in $s$, and $J=\mathbb E_c\,\mathbb E[V^\star_1(s_1)]$. For $2\le k\le K-1$ the tower property gives $V^\star_{k-1}(s)=\mathbb E_{\varepsilon_k}\big[V^\star_k\big(\alpha_kD_\theta(s)+\sigma_k\varepsilon_k,\ \hat X_\theta(s)\big)\big]$: each value is a Gaussian average of the next over $y_k$, and $V^\star_k$ depends on $\theta$ only through the calls at $s_k$ and later (transitions $k{+}1,\dots,K$).
+%
+%\paragraph{Two gradient estimators.}
+%The \emph{score-function} identity differentiates the density, $\nabla_\theta J=\mathbb E_\tau[r\,\allowbreak\nabla_\theta\log p_\theta(\tau\mid c)]$, where $r$ may be replaced by a baseline-adjusted advantage $A$ \citep{williams1992reinforce}; for an AR model every term of $\log\pi^{\rm AR}_\theta(w\mid c)=\sum_j\log\pi^{\rm AR}_\theta{(w_j\mid w_{<j},c)}$ is a categorical decision on which the reward depends; for the chain~(\ref{eq:chain}) the identity applies to the exact Gaussian density, each term a noise coordinate, with the decoder readout sampled. The \emph{pathwise} identity differentiates the sample: $\tau=F_\theta(c,\varepsilon)$ for the independent noise $\varepsilon=(\varepsilon_0,\dots,\varepsilon_{K-1})$, so $\nabla_\theta\mathbb E[\psi(\tau)]=\mathbb E_\varepsilon[\nabla_\theta\psi(F_\theta(c,\varepsilon))]$ for any $\psi$ that is locally Lipschitz with an integrable gradient. It needs a differentiable path from $\theta$ to the quantity averaged: the reward gives none, since $r$ depends on $s_{K-1}$ through an $\arg\max$ and a program, while the value~(\ref{eq:value}) of an intermediate state gives one under a regularity assumption.
