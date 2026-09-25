@@ -32,9 +32,7 @@ ELF learns a decoder $p_\theta(\rvw|\rvx)$ to map the denoised embeddings $\rvz_
 w_i \sim \mathrm{softmax}(W \rvz_{1}[i]), \qquad i=1, \ldots, L
 \end{align}
 Here $W$ is the linear layer that maps an embedding to a logit vector. We also include $W$ into the learnable parameters $\theta$ of the model, 
-then ELF defines a language distribution $p_\theta(\rvw | \rvc)$ through $p_\theta(\rvx|\rvc)$ and $p_\theta(\rvw|\rvx)$. 
-
-The code-level derivation of ELF's stochastic sampler is provided in Appendix~\ref{app:kernels}.
+then ELF defines a language distribution $p_\theta(\rvw | \rvc)$ through $p_\theta(\rvx|\rvc)$ and $p_\theta(\rvw|\rvx)$. The derivation of ELF's stochastic sampler is provided in Appendix~\ref{app:kernels}.
 
 
 
