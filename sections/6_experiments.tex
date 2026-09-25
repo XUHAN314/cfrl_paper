@@ -1,7 +1,9 @@
 \section{Experiments}
 \label{sec:experiments}
+We evaluate \method{} on four reasoning tasks with program verifiers. \textbf{Countdown}: combine four or five given integers with arithmetic operations to reach a target. \textbf{Sudoku}: complete a $9\times9$ grid from its givens. \textbf{Knights-and-Knaves} (K\&K): from the statements of four to six characters who each always tell the truth or always lie, decide who is which. \textbf{Game24}: reach 24 from four given numbers, each used once.
+
 \paragraph{Setup.}
-We evaluate on four program-verified tasks: \textbf{Countdown}, \textbf{Sudoku}, \textbf{Knights-and-Knaves} (K\&K) and \textbf{Game24}. Every model is fine-tuned on each task before RL; the ELF-B (105M) task-SFT model is the base of all flow runs. Held-out prompts (2{,}000 per task; 1{,}601 for Game24) are split into a validation half, on which checkpoints are selected, and a test half, on which every accuracy is reported. The deployment chain is $\gamma56$@64 (churn $\gamma{=}56$, $K{=}64$ steps; $\gamma28$@32 on Sudoku), the cheap chain $\gamma4$@16, both through the same denoiser. GPT-2 \citep{radford2019gpt2} with token-level GRPO/PPO and LLaDA-8B-Instruct \citep{nie2025llada} with d1's diffu-GRPO \citep{zhao2025d1}, trained on the same data, are cross-architecture references. Diagnostics use Game24. Data, budgets and every supporting result are in Appendix~\ref{app:results}.
+Every model is first fine-tuned on each task (task SFT); the ELF-B (105M) task-SFT model is the base of all flow runs. Held-out prompts are split into a validation half, on which checkpoints are selected, and a test half, on which every accuracy is reported. The deployment sampler is $\gamma56$@64 (churn $\gamma{=}56$, $K{=}64$ steps; $\gamma28$@32 on Sudoku) and the cheap sampler $\gamma4$@16, both through the same denoiser. As references from other architectures we train GPT-2 \citep{radford2019gpt2} with token-level GRPO/PPO and LLaDA-8B-Instruct \citep{nie2025llada} with d1's diffu-GRPO \citep{zhao2025d1} on the same data. Datasets, hyperparameters and budgets are in Appendices~\ref{app:datasets} and~\ref{app:details}.
 
 \begin{table}[t]
 \centering\small
@@ -10,24 +12,24 @@ We evaluate on four program-verified tasks: \textbf{Countdown}, \textbf{Sudoku},
 \setlength{\tabcolsep}{1.5pt}
 \begin{tabular}{@{}lcccc@{}}
 \toprule
- & Countdown & Sudoku & K\&K & Game24 \\
+\textbf{Model} & \textbf{Countdown} & \textbf{Sudoku} & \textbf{K\&K} & \textbf{Game24} \\
 \midrule
-\multicolumn{5}{@{}l}{\emph{GPT-2 (124M, autoregressive)}}\\
+\multicolumn{5}{c}{\emph{GPT-2 (124M, autoregressive)}}\\
 released model & \phantom{0}0.0 & \phantom{0}0.0 & \phantom{0}0.0 & \phantom{0}0.0 \\
 + task SFT & 45.1 & \phantom{0}0.8 & 92.7 & 28.0 \\
-+ token GRPO/PPO & 60.9 {\scriptsize(+15.8)} & \phantom{0}0.8 {\scriptsize(+0.0)} & 92.8 {\scriptsize(+0.1)} & 46.7 {\scriptsize(+18.7)} \\
++ token GRPO/PPO & \cellcolor{blue!12}60.9 {\scriptsize(+15.8)} & \phantom{0}0.8 {\scriptsize(+0.0)} & \cellcolor{blue!12}92.8 {\scriptsize(+0.1)} & 46.7 {\scriptsize(+18.7)} \\
 \midrule
-\multicolumn{5}{@{}l}{\emph{LLaDA-8B-Instruct (masked diffusion)}}\\
+\multicolumn{5}{c}{\emph{LLaDA-8B-Instruct (masked diffusion)}}\\
 released model & \phantom{0}1.4 & \phantom{0}0.0 & \phantom{0}5.4 & \phantom{0}1.6 \\
 + task SFT & 12.1 & \phantom{0}0.5 & 61.4 & 15.9 \\
 + diffu-GRPO & 14.9 {\scriptsize(+2.8)} & \phantom{0}0.8 {\scriptsize(+0.3)} & 63.2 {\scriptsize(+1.8)} & 18.8 {\scriptsize(+2.9)} \\
 \midrule
-\multicolumn{5}{@{}l}{\emph{ELF-B (105M, continuous flow)}}\\
+\multicolumn{5}{c}{\emph{ELF-B (105M, continuous flow)}}\\
 released model & \phantom{0}0.0 & \phantom{0}0.0 & \phantom{0}0.0 & \phantom{0}0.0 \\
 + task SFT (base) & 42.8 & 64.0 & 68.2 & 44.0 \\
 + \methodGRPO{} & 42.6 {\scriptsize($-$0.2)} & 67.9 {\scriptsize(+3.9)} & 71.4 {\scriptsize(+3.2)} & 47.4 {\scriptsize(+3.4)} \\
 + \methodSVGScalar{} & 47.4 {\scriptsize(+4.6)} & 64.1 {\scriptsize(+0.1)} & 76.5 {\scriptsize(+8.3)} & 51.2 {\scriptsize(+7.2)} \\
-+ \hl{\methodSVGTwoD{}} & \textbf{49.7} {\scriptsize(+6.9)} & \textbf{68.7} {\scriptsize(+4.7)} & \textbf{77.5} {\scriptsize(+9.3)} & \textbf{58.2} {\scriptsize(+14.2)} \\
+\rowcolor{gray!15}\textbf{+ \methodSVGTwoD{}} & \textbf{49.7} {\scriptsize(+6.9)} & \cellcolor{blue!12}\textbf{68.7} {\scriptsize(+4.7)} & \textbf{77.5} {\scriptsize(+9.3)} & \cellcolor{blue!12}\textbf{58.2} {\scriptsize(+14.2)} \\
 \bottomrule
 \end{tabular}
 \end{minipage}\hfill
@@ -35,15 +37,18 @@ released model & \phantom{0}0.0 & \phantom{0}0.0 & \phantom{0}0.0 & \phantom{0}0
 \centering
 \includegraphics[width=\linewidth]{figures/fig_estimator.pdf}
 \end{minipage}
-\caption{\textbf{Left:} held-out accuracy (\%) under the deployment chain; RL rows carry the gain over the task-SFT row in parentheses; bold: best ELF\mbox{-}B row; blue: recommended variant. \textbf{Right:} Game24 rollouts of each model's SFT base (ELF\mbox{-}B under the deployment chain); control: $A{=}1$, whose expected gradient is zero (top), a random direction (bottom); GPT-2 in the top panel only. Top: half-split cosine against the number of rollouts $N$. Bottom: accuracy change after one AdamW-normalised step, in units of $\Lambda$, the distance the 2D-critic policy travels from the base over training; bands: paired $95\%$ intervals.}
+\caption{\textbf{Main results.} \textbf{Left:} accuracy (\%) under the deployment sampler, with the gain over task SFT in parentheses; shaded: recommended; bold: best flow row; blue: best per task. \textbf{Right:} gradient estimates on Game24 base rollouts: half-split cosine (top) and accuracy after one step (bottom).}
 \label{tab:main}
 \end{table}
 
-\paragraph{Main result.}\label{sec:exp_main}
-Table~\ref{tab:main} reads across three model classes. \method{} raises the flow model on every task: from the task-SFT base, \methodSVGTwoD{} gains 6.9 points on Countdown, 4.7 on Sudoku, 9.3 on K\&K and 14.2 on Game24 and is the best flow row throughout; \methodSVGScalar{} gains 4.6, 0.1, 8.3 and 7.2; \methodGRPO{}, which needs no critic, still gains up to 3.9 but trails both critic variants. Against the other model classes, the autoregressive GPT-2 is strongest on Countdown and K\&K (60.9 and 92.8 after RL) but fails on Sudoku (0.8), whereas the flow model with \methodSVGTwoD{} leads on Sudoku and Game24 (68.7 and 58.2 against 0.8 and 46.7). The masked-diffusion LLaDA is far behind on every task, and diffu-GRPO adds at most 2.9 points, against 4.7 to 14.2 for \methodSVGTwoD{}.
+\paragraph{Main results.}\label{sec:exp_main}
+Table~\ref{tab:main} compares the three \method{} variants with the two references. Every variant raises the flow model's average accuracy over the four tasks, \methodGRPO{}, which needs no critic, by the least and \methodSVGTwoD{} by the most; \methodSVGTwoD{} is the best flow row on every task. Across architectures the flow model and the autoregressive model trade tasks: GPT-2 leads on Countdown and K\&K, the flow model on Game24 and on Sudoku, which neither reference learns. The 8B masked-diffusion model stays far below the flow model on every task, and \methodSVGTwoD{} gains more than diffu-GRPO on every task. The gains are large: \methodSVGTwoD{} lifts Game24 by \hl{14.2} points and takes Sudoku to \hl{68.7}, so a 105M flow model becomes the strongest model on Sudoku and Game24 and the strongest flow model on all four tasks.
 
-\paragraph{Why the score-function variant is capped.}\label{sec:exp_estimator}
-\S\ref{sec:grpo} places the cap in the injected noise: the advantage weights all $|\mathcal K|\,|\mathcal G|\,d$ noise coordinates of an update, so the variance grows with coordinates that carry no signal, whereas the pathwise term~(\ref{eq:pw_exact}) multiplies the Jacobian by $\partial V/\partial y$, which vanishes on them. The right panels of Table~\ref{tab:main} test this on base rollouts. \emph{Top:} the half-split cosine rises towards 1 for a genuine signal and stays near 0 for noise. \methodGRPO{} lies on the zero-mean control at every $N$, GPT-2's token gradient rises with $N$, and the pathwise gradient agrees from the smallest $N$. \emph{Bottom:} after one step along each mean gradient, only the pathwise step gains, its interval excluding 0, at $\Lambda/4$ and $\Lambda/2$.
+\paragraph{Analysis.}
+We analyse the estimator, the critic and the recipe on Game24, then the transfer to a cheap sampler; supporting results are in Appendix~\ref{app:results}.
+
+\paragraph{Effect of the gradient estimator.}\label{sec:exp_estimator}
+The right panels of Table~\ref{tab:main} probe the estimators on base rollouts. \emph{Top:} the half-split cosine of two independent gradient estimates rises towards 1 for a genuine signal and stays near 0 for noise. \methodGRPO{} stays at the level of the control, whose expected gradient is 0, at every rollout count; GPT-2's token gradient clears the control from 1024 rollouts; the pathwise gradient agrees with itself from the smallest count. \emph{Bottom:} after one step along each mean gradient, only the pathwise step gives a large gain, at step lengths $\Lambda/4$ and $\Lambda/2$. The score-function estimator weights every noise coordinate of the update by one scalar advantage, so the reward signal is spread over coordinates that do not affect the outcome, whereas the critic's derivative selects the coordinates that do.
 
 \begin{table}[!b]
 \centering\small
@@ -53,14 +58,15 @@ Table~\ref{tab:main} reads across three model classes. \method{} raises the flow
 \resizebox{\linewidth}{!}{%
 \begin{tabular}{@{}lcccc@{}}
 \toprule
-critic & Pearson & pick@$V_\phi$ & max. & final \\
+\textbf{Critic} & \textbf{Pearson} & \textbf{pick@$V_\phi$} & \textbf{max.} & \textbf{final} \\
 \midrule
-fine-tuned copy, reads $(y_k,\hat x_{k-1})$ & \CDa{1} & \CDa{3} & \CDa{5} & \CDa{6} \\
+\multicolumn{5}{c}{\emph{critic input and initialisation}}\\
+\rowcolor{gray!15}\textbf{fine-tuned copy, reads $(y_k,\hat x_{k-1})$} & \CDa{1} & \CDa{3} & \CDa{5} & \CDa{6} \\
 \quad without $\hat x_{k-1}$ in the input & \CDb{1} & \CDb{3} & \CDb{5} & \CDb{6} \\
-\quad copy frozen in pre-training & \CDc{1} & \CDc{3} & \CDc{5} & \CDc{6} \\
+\quad copy not fine-tuned & \CDc{1} & \CDc{3} & \CDc{5} & \CDc{6} \\
 \quad random initialisation & \CDd{1} & \CDd{3} & 37.9 & \phantom{0}4.1 \\
 \midrule
-\multicolumn{5}{@{}l}{\emph{same critic, trained differently in RL}}\\
+\multicolumn{5}{c}{\emph{same critic, trained differently in RL}}\\
 \quad copy also trained in RL & \CDa{1} & \CDa{3} & 49.7 & 49.3 \\
 \quad head not refit in RL & \CDa{1} & \CDa{3} & 49.3 & \phantom{0}0.5 \\
 \bottomrule
@@ -70,60 +76,59 @@ fine-tuned copy, reads $(y_k,\hat x_{k-1})$ & \CDa{1} & \CDa{3} & \CDa{5} & \CDa
 \centering
 \includegraphics[width=\linewidth]{figures/fig_frozen.pdf}
 \end{minipage}
-\caption{\textbf{Left:} the 2D critic of Algorithm~\ref{alg:jpc} on Game24 (first row) and variants with one element changed. \emph{Offline}, on held-out base rollouts at step 32 of 64: Pearson correlation of the pooled value with the outcome, and pick@$V_\phi$, the success rate of the top-ranked of eight rollouts (chance: the rollouts' success rate, $0.55$). \emph{Online}: held-out accuracy (\%) of RL with that critic, maximum over training and final checkpoint (base $45.0$). \textbf{Right:} the run of the last row over training; the critic's value is on the right axis, in logits.}
+\caption{\textbf{Critic design.} \textbf{Left:} the 2D critic on Game24 (shaded) and variants. Offline: correlation of the value with the outcome, and success of its top-ranked rollout (chance $0.55$). Online: RL accuracy (\%), max.\ and final. \textbf{Right:} the last row over training.}
 \label{tab:critic_design}
 \end{table}
 
-\paragraph{What the critic must be.}\label{sec:exp_critic}
-Table~\ref{tab:critic_design} changes one element of the critic at a time. Without the estimate $\hat x_{k-1}$, or with the copy frozen in pre-training, the critic reads the outcome worse offline and the policy first rises above the base, then falls far below it; a random initialisation never clears the base. The estimate carries the outcome, and the pre-trained denoiser reads it (\S\ref{sec:critic}). Training the copy during RL lowers the maximum, so only the head is refit (\S\ref{sec:joint}). Without the refit the actor exploits the critic, as the bias~(\ref{eq:biasm}) predicts: in the right panel the critic's value is driven to certainty while batch success falls to zero.
+\paragraph{Effect of the critic design.}\label{sec:exp_critic}
+Table~\ref{tab:critic_design} changes one element of the critic at a time. Without the estimate $\hat x_{k-1}$, or with the copy not fine-tuned, the critic reads the outcome worse offline, and the policy first rises above the base and then falls far below it; a random initialisation never clears the base. The outcome is readable from $\hat x_{k-1}$, and the pre-trained denoiser is what reads it. Training the copy during RL does not help, so only the head is refit. Without the refit the actor exploits the critic: in the right panel the critic's value is driven to certainty while the true success of the same batch falls to zero.
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.85\linewidth]{figures/fig_dyn.pdf}
-\caption{Game24, held-out accuracy (\%) under the deployment chain. \textbf{Left:} the scalar- and 2D-critic runs of Table~\ref{tab:main}, individual runs (thin) and their mean (thick). \textbf{Right:} critics exchanged at iteration 250; dashed: exchanged, solid: not; colour: the critic in charge after the exchange.}
+\caption{\textbf{Scalar versus 2D critic.} Game24 accuracy (\%) over training. \textbf{Left:} scalar- and 2D-critic runs (thin) and their means (thick). \textbf{Right:} critics exchanged at iteration 250 (dashed) or not (solid); colour: the critic in charge afterwards.}
 \label{fig:dyn}
 \end{figure}
 
-\paragraph{Why the 2D critic wins.}\label{sec:exp_2d}
-Figure~\ref{fig:dyn} (left) follows the scalar- and 2D-critic runs of Table~\ref{tab:main}. Every 2D run rises faster, and both plateau after about 750 iterations, the 2D runs well above the scalar ones. The right panel exchanges the critics at iteration 250, while the two policies are within 2.1 points of each other: each run then ends where the critic in charge takes it, whichever policy it inherited. The advantage is therefore made during joint training, by the critic. \S\ref{sec:jpc_2d} suggests why: under the refit, a head on the mean can be raised by moving one pooled vector wherever it reads success, whereas a rise of the pooled field must be carried by readings at many positions, each fitted to the outcome.
+\paragraph{Scalar versus 2D critic.}\label{sec:exp_2d}
+In Figure~\ref{fig:dyn} (left) the 2D critic rises faster than the scalar critic and plateaus well above it. The right panel exchanges the critics at iteration 250, early in training: the final accuracy follows the critic, not the inherited policy. The advantage of the 2D critic is therefore made during joint training, by the critic.
 
-\paragraph{Ablations.}\label{sec:ablations}
-Table~\ref{tab:needs} removes three further choices of \S\ref{sec:method} one at a time on Game24. Ascending the probability instead of the log-odds lowers both the maximum and the final accuracy, because it drops the weight $1/[V^\star_k(1-V^\star_k)]$ that amplifies the gradient where the outcome is nearly decided (\S\ref{sec:pathwise}); pooling by the minimum costs less, because the gradient of a minimum reaches only one position per state (cf.~(\ref{eq:headgrad})). Training under the cheap chain loses most of the gain at deployment, because a different sampler is a different chain with different values (\S\ref{sec:joint}); the loop is how a gain is carried to a cheaper chain.
+\paragraph{Effect of the objective, the pooling and the sampler.}\label{sec:ablations}
+Table~\ref{tab:needs} removes three choices one at a time, and each costs accuracy: ascending the success probability instead of its log-odds, which amplify the gradient where the outcome is nearly decided; pooling positions by the minimum, whose gradient reaches only one position per state; and, most of all, training under the cheap sampler, whose values differ from those of the deployment sampler.
 
 \begin{table}[!t]
 \centering\small
-\caption{Ablations of Algorithm~\ref{alg:jpc} on Game24: change in held-out accuracy (\%) under the deployment chain at the maximum over training and at the last checkpoint, relative to the unablated recipe.}
+\caption{\textbf{Effect of the objective, the pooling and the sampler} on Game24: change in accuracy (\%) at the best and the final checkpoint relative to the full recipe; blue: the largest loss.}
 \label{tab:needs}
 \setlength{\tabcolsep}{5pt}
 \begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}llcc@{}}
 \toprule
-choice it tests & variant & $\Delta$ max. & $\Delta$ final \\
+\textbf{Choice} & \textbf{Variant} & \textbf{$\Delta$ max.} & \textbf{$\Delta$ final} \\
 \midrule
-\S\ref{sec:pathwise}, objective & actor ascends $\mathrm{sig}(V_\phi)$ instead of $V_\phi$ & $-4.0$ & $-6.1$ \\
-\S\ref{sec:jpc_2d}, pooling & actor ascends $\min_iR_{k,i}$ instead of the mean & $-3.1$ & $-2.5$ \\
-\S\ref{sec:joint}, one chain & trained under the cheap chain, read at deployment & $-9.4$ & $-9.4$ \\
+objective & actor ascends $\mathrm{sig}(V_\phi)$ instead of $V_\phi$ & $-4.0$ & $-6.1$ \\
+pooling & actor ascends the minimum over positions instead of the mean & $-3.1$ & $-2.5$ \\
+sampler & trained under the cheap sampler, read at deployment & \cellcolor{blue!12}$-9.4$ & \cellcolor{blue!12}$-9.4$ \\
 \bottomrule
 \end{tabular*}
 \end{table}
 
-
-
-\paragraph{The amortisation loop.}\label{sec:exp_loop}
-Table~\ref{tab:loop} applies Algorithm~\ref{alg:loop} to the 2D-critic policy on Countdown and K\&K with a pool of unlabelled problems. ELF's supervised loss trains the denoiser at every time, so fine-tuning on the policy's verified samples carries the gain to other chains (\S\ref{sec:loop}). On Countdown and K\&K the 16-step chain ends above the base's deployment accuracy, and on K\&K the deployment chain rises further, close to solving the task.
+\paragraph{Effect of the amortisation loop.}\label{sec:exp_loop}
+Table~\ref{tab:loop} applies the amortisation loop (Algorithm~\ref{alg:loop}) to the 2D-critic policy on Countdown and K\&K with a pool of unlabelled problems. After the loop the cheap sampler ends above the base's deployment accuracy on both tasks, and on K\&K the deployment sampler rises to \hl{99.1}, above every model of Table~\ref{tab:main}. ELF's supervised loss trains the denoiser at every noise level, so fine-tuning on the policy's verified samples benefits every sampler.
 
 \begin{table}[!t]
 \centering\small
-\caption{Held-out accuracy (\%) under the cheap and the deployment chain: the base, the 2D-critic policy the loop starts from, and the model after the loop. Bold: over 1.0 point above the start; blue: the full pipeline.}
+\caption{\textbf{Amortisation loop:} accuracy (\%) under the cheap and the deployment sampler before and after the loop. Bold: over 1.0 point above the loop start; shaded: the full pipeline.}
 \label{tab:loop}
-\begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lcccc@{}}
+\setlength{\tabcolsep}{2pt}
+\begin{tabular}{@{}l*{4}{>{\centering\arraybackslash}p{1.9cm}}@{}}
 \toprule
- & \multicolumn{2}{c}{Countdown} & \multicolumn{2}{c}{K\&K} \\
+\textbf{Model} & \multicolumn{2}{c}{\textbf{Countdown}} & \multicolumn{2}{c}{\textbf{K\&K}} \\
 \cmidrule{2-3}\cmidrule{4-5}
- & cheap & deploy. & cheap & deploy. \\
+ & \textbf{cheap} & \textbf{deploy.} & \textbf{cheap} & \textbf{deploy.} \\
 \midrule
 base & 23.1 & 42.2 & 58.1 & 67.5 \\
 2D-critic policy (loop start) & 23.9 & 50.4 & 68.8 & 80.0 \\
-\hl{+ amortisation loop} & \textbf{\OURScdg} & 50.2 & \textbf{\OURSkkg} & \textbf{\OURSkk} \\
+\rowcolor{gray!15}\textbf{+ amortisation loop} & \textbf{\OURScdg} & 50.2 & \textbf{\OURSkkg} & \textbf{\OURSkk} \\
 \bottomrule
-\end{tabular*}
+\end{tabular}
 \end{table}
