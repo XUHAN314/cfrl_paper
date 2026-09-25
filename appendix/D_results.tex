@@ -446,11 +446,11 @@ This group supports the loop paragraph of Section~\ref{sec:experiments}: every r
 
 \subsubsection{The loop in full: rounds, controls and the guided sampler}
 \label{app:loop_full}
-On Countdown and K\&K the rounds lift the cheap chain by seventeen to thirty-six points from every start, RL or not. On K\&K fresh puzzles give near-full coverage from any start and the rounds close the task; RL adds nothing there that the rounds do not. On Sudoku one round covers three quarters of the pool from every start and moves accuracy by about a point at most at either sampler, as the gold-solution control confirms ($+1.3$ on the cheap chain, $+0.9$ at deployment). On Countdown two plain rounds shrink coverage and give back part of the RL gain; rounds 3 and 4, drawn with the critic-guided cheap chain, raise coverage past its start and return the deployment chain to the RL level, four to five points above sampling plainly from the base or the \methodGRPO{} policy. A plain-round control separates the two (below).
-Table~\ref{tab:loop_full} gives every round behind Table~\ref{tab:loop} with the pool's coverage and the controls. Two further plain rounds continued from the round-2 model (the two control rows after round 4) leave coverage at $31$k and accuracy at the round-2 level ($45.7$ and $45.8$ at deployment, $41.4$ on the 16-step chain), whereas the critic-guided rounds from the same model cover about six thousand more problems than the plain rounds (37.2k and 37.8k against 31.2k and 31.3k) and recover $3.5$--$3.8$ points at deployment; the recovery in rounds 3--4 is therefore due to the critic-guided pools, not to the additional rounds (the guided rounds also use the cheap chain, whose unguided samples are weaker than the deployment chain's, so the change of chain cannot account for the gain). Table~\ref{tab:guided} isolates the critic-guided sampler that drew Countdown's rounds 3--4, on the first 5{,}000 pool problems with the loop's starting policy and its jointly trained critic at $\gamma4$@16 (a chain the Countdown critic's features were pre-trained on, Appendix~\ref{app:details}): pruning four chains at random changes nothing; pruning them by the critic's minimum score~(\ref{eq:minscore}) doubles the acceptance rate and raises coverage by a third (2{,}783 to 3{,}712 of 5{,}000 problems), and the push~(\ref{eq:guide}) adds to both. The minimum was not compared with the pooled mean as the ranking score.
+On Countdown and K\&K the rounds lift the cheap chain by 17 to 35 points from every start, RL or not. On K\&K fresh puzzles give near-full coverage from any start and the rounds close the task; RL adds nothing there that the rounds do not. On Sudoku one round covers three quarters of the pool from every start and moves accuracy by at most 1.4 points at either sampler, as the gold-solution control confirms ($+0.5$ on the cheap chain, $+0.8$ at deployment). On Countdown two plain rounds shrink coverage and give back part of the RL gain; rounds 3 and 4, drawn with the critic-guided cheap chain, raise coverage past its start and return the deployment chain to the RL level, 5 to 7 points above sampling plainly from the base or the \methodGRPO{} policy. A plain-round control separates the two (below).
+Table~\ref{tab:loop_full} gives every round behind Table~\ref{tab:loop} with the pool's coverage and the controls. Two further plain rounds continued from the round-2 model (the two control rows after round 4) leave coverage at $31$k and accuracy at the round-2 level ($45.5$ at deployment, $41.1$ on the 16-step chain), whereas the critic-guided rounds from the same model cover about six thousand more problems than the plain rounds (37.2k and 37.8k against 31.2k and 31.3k) and recover $4.5$--$5.9$ points at deployment; the recovery in rounds 3--4 is therefore due to the critic-guided pools, not to the additional rounds (the guided rounds also use the cheap chain, whose unguided samples are weaker than the deployment chain's, so the change of chain cannot account for the gain). Table~\ref{tab:guided} isolates the critic-guided sampler that drew Countdown's rounds 3--4, on the first 5{,}000 pool problems with the loop's starting policy and its jointly trained critic at $\gamma4$@16 (a chain the Countdown critic's features were pre-trained on, Appendix~\ref{app:details}): pruning four chains at random changes nothing; pruning them by the critic's minimum score~(\ref{eq:minscore}) doubles the acceptance rate and raises coverage by a third (2{,}783 to 3{,}712 of 5{,}000 problems), and the push~(\ref{eq:guide}) adds to both. The minimum was not compared with the pooled mean as the ranking score.
 \begin{table}[H]
 \centering\small
-\caption{The amortisation loop, held-out accuracy (\%) at three samplers. Each block is one task: the SFT base, the 2D-critic policy the loop starts from, the model at the end of each round of Algorithm~\ref{alg:loop} (Countdown: all four rounds; K\&K: first and last of five; Sudoku: its one round), and, indented, the controls at their last round, which run the same rounds without a critic from the SFT base, from the GRPO policy, and on the gold derivations of the same pool, and, for Countdown, two further plain rounds continued from the round-2 model. \emph{Covered}: pool problems (of 50k) with at least one verified sample in that round. Game24 has no pool (Appendix~\ref{app:g24_loop}). Sudoku's cheap chain is $\gamma14$@16 and its deployment chain $\gamma28$@32. every round of every chain is in Appendix~\ref{app:cd_loop}. Bold: the last round of each loop where it clears the start by over a point.}
+\caption{The amortisation loop, held-out accuracy (\%) at three samplers. Each block is one task: the SFT base, the 2D-critic policy the loop starts from, the model at the end of each round of Algorithm~\ref{alg:loop} (Countdown: all four rounds; K\&K: first and last of five; Sudoku: its one round), and, indented, the controls at their last round, which run the same rounds without a critic from the SFT base, from the GRPO policy, and on the gold derivations of the same pool, and, for Countdown, two further plain rounds continued from the round-2 model. \emph{Covered}: pool problems (of 50k) with at least one verified sample in that round. Game24 has no pool (Appendix~\ref{app:g24_loop}). Sudoku's cheap chain is $\gamma14$@16 and its deployment chain $\gamma28$@32. Every round of every chain is in Appendix~\ref{app:cd_loop}. Bold: the last round of each loop where it is over 1.0 point above the start.}
 \label{tab:loop_full}
 \setlength{\tabcolsep}{4.5pt}
 \begin{tabular}{@{}llcccc@{}}
@@ -458,34 +458,34 @@ Table~\ref{tab:loop_full} gives every round behind Table~\ref{tab:loop} with the
  & pool sampler & covered & 16-step chain & ODE-64 & deployment \\
 \midrule
 \multicolumn{6}{@{}l}{\emph{Countdown}}\\
-SFT base & & & 23.1 & 28.1 & 42.2 \\
-2D-critic policy (start) & & & 23.9 & 34.6 & 50.4 \\
-round 1 & deployment chain & 35.1k & 38.6 & 41.0 & 47.9 \\
-round 2 & deployment chain & 31.2k & 41.4 & 42.5 & 46.4 \\
+SFT base & & & 23.8 & 28.5 & 42.8 \\
+2D-critic policy (start) & & & 24.3 & 34.8 & 50.5 \\
+round 1 & deployment chain & 35.1k & 37.9 & 42.4 & 45.8 \\
+round 2 & deployment chain & 31.2k & 40.8 & 42.6 & 46.0 \\
 round 3 & critic-guided, $\gamma4$@16 & 37.2k & \OURScdthreeg & \OURScdthreeo & \OURScdthree \\
 round 4 & critic-guided, $\gamma4$@16 & 37.8k & \textbf{\OURScdg} & \textbf{\OURScdo} & \OURScd \\
-\quad plain round 3 (control) & deployment chain & 31.2k & 41.4 & 41.9 & 45.7 \\
-\quad plain round 4 (control) & deployment chain & 31.3k & 41.4 & 42.4 & 45.8 \\
-\quad control: from the SFT base & deployment chain & 31.2k & 41.9 & 44.1 & 46.2 \\
-\quad control: from \methodGRPO{} & deployment chain & 30.9k & 41.6 & 42.1 & 45.1 \\
-\quad control: gold derivations & (labels) & 50.0k & 21.9 & 27.3 & 42.6 \\
+\quad plain round 3 (control) & deployment chain & 31.2k & 41.1 & 43.7 & 45.5 \\
+\quad plain round 4 (control) & deployment chain & 31.3k & 41.1 & 43.4 & 45.5 \\
+\quad control: from the SFT base & deployment chain & 31.2k & 42.7 & 44.5 & 46.4 \\
+\quad control: from \methodGRPO{} & deployment chain & 30.9k & 41.1 & 42.9 & 44.7 \\
+\quad control: gold derivations & (labels) & 50.0k & 22.5 & 26.4 & 40.8 \\
 \midrule
 \multicolumn{6}{@{}l}{\emph{K\&K}}\\
-SFT base & & & 58.1 & 57.8 & 67.5 \\
-2D-critic policy (start) & & & 68.8 & 70.4 & 80.0 \\
-round 1 & deployment chain & 41.1k & 74.5 & 78.0 & 83.2 \\
+SFT base & & & 58.6 & 57.5 & 68.2 \\
+2D-critic policy (start) & & & 68.8 & 69.7 & 79.8 \\
+round 1 & deployment chain & 41.1k & 73.4 & 76.6 & 82.1 \\
 round 5 & deployment chain & 48.8k & \textbf{\OURSkkg} & \textbf{\OURSkko} & \textbf{\OURSkk} \\
-\quad control: from the SFT base & deployment chain & 49.4k & 94.1 & 97.2 & 99.6 \\
-\quad control: from \methodGRPO{} & deployment chain & 48.3k & 92.2 & 94.7 & 98.3 \\
-\quad control: gold labels & (labels) & 50.0k & 94.8 & 98.2 & 99.7 \\
+\quad control: from the SFT base & deployment chain & 49.4k & 93.5 & 97.0 & 99.6 \\
+\quad control: from \methodGRPO{} & deployment chain & 48.3k & 91.7 & 94.6 & 97.9 \\
+\quad control: gold labels & (labels) & 50.0k & 94.8 & 98.0 & 99.6 \\
 \midrule
 \multicolumn{6}{@{}l}{\emph{Sudoku}}\\
-SFT base & & & 62.0 & 62.3 & 66.2 \\
-2D-critic policy (start) & & & 65.0 & 67.3 & 71.3 \\
-round 1 & deployment chain & 39.3k & 65.5 & 67.3 & 71.4 \\
-\quad control: from the SFT base & deployment chain & 36.1k & 61.7 & 62.0 & 65.5 \\
-\quad control: from \methodGRPO{} & deployment chain & 39.3k & 66.2 & 68.5 & 71.9 \\
-\quad control: gold solutions & (labels) & 50.0k & 66.3 & 67.0 & 72.2 \\
+SFT base & & & 60.0 & 60.6 & 64.0 \\
+2D-critic policy (start) & & & 63.4 & 65.3 & 68.9 \\
+round 1 & deployment chain & 39.3k & 63.1 & 65.4 & \textbf{70.3} \\
+\quad control: from the SFT base & deployment chain & 36.1k & 58.7 & 60.7 & 63.6 \\
+\quad control: from \methodGRPO{} & deployment chain & 39.3k & 64.2 & 67.7 & 69.6 \\
+\quad control: gold solutions & (labels) & 50.0k & 63.9 & 65.2 & 69.7 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -508,88 +508,88 @@ best of 4 by the critic + push & \GBe{1} & \GBe{2} & \GBe{3} \\
 
 \subsubsection{Cheap samplers after the loop}
 \label{app:samplers}
-Table~\ref{tab:samplers} reads one 2D-critic checkpoint per task and its loop across sampler cost. RL alone moves Countdown's cheap samplers little ($+0.4$ at $\gamma4$@16 against $+8$ at deployment), whereas on K\&K the RL gain carries to every sampler and on Sudoku to all but the cheapest. One loop moves the rest: after it, the 16-step sampler reaches or passes the accuracy the 64-step deployment sampler had before RL on Countdown and K\&K ($\OURScdg$ vs $42.2$, $\OURSkkg$ vs $67.5$), and on K\&K it passes the deployment accuracy of the RL policy itself ($\OURSkkg$ vs $80.0$). Sudoku, whose loop is null, is unchanged at every sampler; Game24 has no loop (Appendix~\ref{app:g24_loop}).
+Table~\ref{tab:samplers} reads one 2D-critic checkpoint per task and its loop across sampler cost. RL alone moves Countdown's cheap samplers little ($+0.5$ at $\gamma4$@16 against $+7.7$ at deployment), whereas on K\&K and Sudoku the RL gain carries to every sampler. One loop moves the rest: after it, the 16-step sampler reaches or passes the accuracy the 64-step deployment sampler had before RL on Countdown and K\&K ($\OURScdg$ vs $42.8$, $\OURSkkg$ vs $68.2$), and on K\&K it passes the deployment accuracy of the RL policy itself ($\OURSkkg$ vs $79.8$). Sudoku, whose loop is null, moves by at most 1.4 points at any sampler; Game24 has no loop (Appendix~\ref{app:g24_loop}).
 
 \begin{table}[H]\centering\small
 \caption{The loop moves what the policy can do to the cheap samplers. Held-out accuracy (\%) at samplers of increasing cost: the SFT base, the 2D-critic policy and the model after the loop (final round). $^\dagger$On Sudoku this column is $\gamma14$@16 and the deployment column is $\gamma28$@32. Bold: the best row of each block; blue: recommended variant.}\label{tab:samplers}
 \begin{tabular}{@{}llcccc@{}}\toprule
  & & $\gamma4$@16 & $\gamma28$@32$^\dagger$ & ODE-64 & deployment\\\midrule
-\multirow{3}{*}{Countdown} & SFT base & 23.1 & 38.0 & 28.1 & 42.2\\
- & 2D-critic policy & 23.5 & 43.9 & 34.4 & \textbf{50.2}\\
- & \hl{+ loop} & \textbf{\OURScdg} & \textbf{\OURScdt} & \textbf{\OURScdo} & \textbf{\OURScd}\\\midrule
-\multirow{3}{*}{Sudoku} & SFT base & 55.3 & 62.0 & 62.3 & 66.2\\
- & 2D-critic policy & 56.0 & 65.0 & 66.7 & 71.0\\
- & \hl{+ loop} & \textbf{56.2} & \textbf{65.5} & \textbf{67.3} & \textbf{71.4}\\\midrule
-\multirow{3}{*}{K\&K} & SFT base & 58.1 & 65.8 & 57.8 & 67.5\\
- & 2D-critic policy & 68.7 & 76.5 & 69.9 & 79.6\\
- & \hl{+ loop} & \textbf{\OURSkkg} & \textbf{\OURSkkt} & \textbf{\OURSkko} & \textbf{\OURSkk}\\\midrule
-\multirow{3}{*}{Game24} & SFT base & 35.4 & 42.6 & 35.2 & 45.0\\
- & 2D-critic policy & \textbf{38.6} & \textbf{54.5} & \textbf{41.8} & \textbf{58.8}\\
+\multirow{3}{*}{Countdown} & SFT base & 23.8 & 38.1 & 28.5 & 42.8\\
+ & 2D-critic policy & 24.3 & 43.9 & 34.8 & 50.5\\
+ & \hl{+ loop} & \textbf{45.6} & \textbf{51.1} & \textbf{47.8} & \textbf{51.4}\\\midrule
+\multirow{3}{*}{Sudoku} & SFT base & 52.5 & 60.0 & 60.6 & 64.0\\
+ & 2D-critic policy & \textbf{54.2} & \textbf{63.4} & 65.3 & 68.9\\
+ & \hl{+ loop} & 53.7 & 63.1 & \textbf{65.4} & \textbf{70.3}\\\midrule
+\multirow{3}{*}{K\&K} & SFT base & 58.6 & 66.3 & 57.5 & 68.2\\
+ & 2D-critic policy & 68.8 & 76.3 & 69.7 & 79.8\\
+ & \hl{+ loop} & \textbf{93.8} & \textbf{97.9} & \textbf{95.7} & \textbf{99.1}\\\midrule
+\multirow{2}{*}{Game24} & SFT base & 35.6 & 43.5 & 36.2 & 44.0\\
+ & 2D-critic policy & \textbf{38.9} & \textbf{54.2} & \textbf{43.5} & \textbf{59.6}\\
 \bottomrule\end{tabular}\end{table}
 
 \subsubsection{Countdown loop round by round}
 \label{app:cd_loop}
-Table~\ref{tab:cd_loop} lists every round of the Countdown loop at all four samplers, together with three of the controls of Table~\ref{tab:loop_full}, which run the same four rounds from the SFT base, from the GRPO policy, and from the 2D policy on the gold labels of the same pools. Three regularities are visible. (i) The loop transfers the policy's ability to the cheap samplers at once: one round takes the ODE sampler from $34.6$ to $41.0$ and $\gamma4$@16 from $23.9$ to $38.6$ while the deployment sampler gives back two points. (ii) Plain self-sampling loses ground at the deployment sampler ($50.4\to47.9\to46.4$) and the pool's coverage shrinks (35.1k to 31.2k solved problems). (iii) Sampling the pool with the jointly trained 2D critic (best-of-4 pruning at the midpoint of the 16-step chain plus gradient guidance, Appendix~\ref{app:details}) restores coverage and lifts the deployment sampler ($\OURScdthree$ after round 3, $\OURScd$ after round 4). The plain chains from the base and from the GRPO policy show the first two regularities and stop at $45$--$47$; the gold-label chain falls from $50.4$ to $44.5$ in its first round and drifts to $42.6$ by round 4 (ODE-64 from $34.6$ to $27.3$): fine-tuning the RL policy on gold derivations undoes part of what RL changed rather than adding to it.
+Table~\ref{tab:cd_loop} lists every round of the Countdown loop at all four samplers, together with three of the controls of Table~\ref{tab:loop_full}, which run the same four rounds from the SFT base, from the GRPO policy, and from the 2D policy on the gold labels of the same pools. Three regularities are visible. (i) The loop transfers the policy's ability to the cheap samplers at once: one round takes the ODE sampler from $34.8$ to $42.4$ and $\gamma4$@16 from $24.3$ to $37.9$ while the deployment sampler gives back nearly 5 points. (ii) Plain self-sampling loses ground at the deployment sampler ($50.5\to45.8\to46.0$) and the pool's coverage shrinks (35.1k to 31.2k solved problems). (iii) Sampling the pool with the jointly trained 2D critic (best-of-4 pruning at the midpoint of the 16-step chain plus gradient guidance, Appendix~\ref{app:details}) restores coverage and lifts the deployment sampler ($\OURScdthree$ after round 3, $\OURScd$ after round 4). The plain chains from the base and from the GRPO policy show the first two regularities and stop at $45$--$46$; the gold-label chain falls from $50.5$ to $45.5$ in its first round and drifts to $40.8$ by round 4 (ODE-64 from $34.8$ to $26.4$): fine-tuning the RL policy on gold derivations undoes part of what RL changed rather than adding to it.
 
 \begin{table}[H]\centering\small
 \caption{Countdown amortisation loop, held-out accuracy at the end of each round (20 epochs of fine-tuning per round; verifier-accepted sequences and distinct problems in each pool). From top: loop from the 2D-critic policy (Table~\ref{tab:loop}); from the SFT base with no RL; from the GRPO policy; from the 2D-critic policy on the gold labels of the same pools.}\label{tab:cd_loop}
 \scriptsize\setlength{\tabcolsep}{2.5pt}
 \begin{tabular}{@{}llcccc@{}}\toprule
 round & pool & ODE-64 & $\gamma4$@16 & $\gamma28$@32 & $\gamma56$@64\\\midrule
-SFT base (epoch 60) & & 28.1 & 23.1 & 38.0 & 42.2\\
-\methodSVGTwoD{} policy (start) & & 34.6 & 23.9 & 44.5 & 50.4\\
-round 1 & deployment sampler, 91.9k sequences / 35.1k problems & 41.0 & 38.6 & 46.4 & 47.9\\
-round 2 & deployment sampler, 57.4k / 31.2k & 42.5 & 41.4 & 44.9 & 46.4\\
+SFT base (epoch 60) & & 28.5 & 23.8 & 38.1 & 42.8\\
+\methodSVGTwoD{} policy (start) & & 34.8 & 24.3 & 43.9 & 50.5\\
+round 1 & deployment sampler, 91.9k sequences / 35.1k problems & 42.4 & 37.9 & 45.0 & 45.8\\
+round 2 & deployment sampler, 57.4k / 31.2k & 42.6 & 40.8 & 45.3 & 46.0\\
 round 3 & 2D-critic-guided sampler, \OURSpoolthree & \OURScdthreeo & \OURScdthreeg & \OURScdthreet & \OURScdthree\\
 round 4 & 2D-critic-guided sampler, \OURSpoolfour & \OURScdo & \OURScdg & \OURScdt & \OURScd\\\midrule
-no-RL round 1 & deployment sampler, 82.4k / 34.2k & 39.8 & 35.8 & 44.7 & 46.1\\
-no-RL round 2 & 59.1k / 30.8k & 43.2 & 40.8 & 46.2 & 46.5\\
-no-RL round 3 & 52.2k / 30.8k & 43.8 & 42.7 & 45.6 & 46.7\\
-no-RL round 4 & 48.5k / 31.2k & 44.1 & 41.9 & 46.4 & 46.2\\\midrule
-GRPO policy (start) & & 28.9 & 24.3 & 39.6 & 43.3\\
-GRPO round 1 & deployment sampler, 82.7k / 34.1k & 41.3 & 37.0 & 45.6 & 45.9\\
-GRPO round 2 & 58.3k / 30.5k & 43.5 & 39.8 & 45.4 & 46.2\\
-GRPO round 3 & 51.3k / 30.4k & 44.5 & 41.1 & 45.4 & 46.2\\
-GRPO round 4 & 47.2k / 30.9k & 42.1 & 41.6 & 44.4 & 45.1\\\midrule
-gold round 1 & gold derivations, 50k / 50k & 28.3 & 24.7 & 39.3 & 44.5\\
-gold round 2 & & 28.3 & 23.2 & 39.9 & 42.1\\
-gold round 3 & & 27.0 & 23.2 & 38.8 & 42.0\\
-gold round 4 & & 27.3 & 21.9 & 37.6 & 42.6\\\bottomrule\end{tabular}\end{table}
+no-RL round 1 & deployment sampler, 82.4k / 34.2k & 40.1 & 34.4 & 44.8 & 46.6\\
+no-RL round 2 & 59.1k / 30.8k & 42.0 & 39.9 & 45.5 & 46.8\\
+no-RL round 3 & 52.2k / 30.8k & 43.7 & 43.3 & 45.8 & 46.1\\
+no-RL round 4 & 48.5k / 31.2k & 44.5 & 42.7 & 46.3 & 46.4\\\midrule
+GRPO policy (start) & & 29.5 & 23.7 & 40.1 & 43.0\\
+GRPO round 1 & deployment sampler, 82.7k / 34.1k & 42.7 & 39.0 & 44.8 & 46.0\\
+GRPO round 2 & 58.3k / 30.5k & 43.0 & 39.8 & 45.7 & 47.1\\
+GRPO round 3 & 51.3k / 30.4k & 45.2 & 41.2 & 45.7 & 47.1\\
+GRPO round 4 & 47.2k / 30.9k & 42.9 & 41.1 & 44.2 & 44.7\\\midrule
+gold round 1 & gold derivations, 50k / 50k & 28.2 & 24.6 & 40.2 & 45.5\\
+gold round 2 & & 27.1 & 23.5 & 40.1 & 42.0\\
+gold round 3 & & 25.8 & 23.2 & 40.4 & 41.0\\
+gold round 4 & & 26.4 & 22.5 & 37.6 & 40.8\\\bottomrule\end{tabular}\end{table}
 
 \subsubsection{Game24: why there is no loop row}
 \label{app:g24_loop}
-Game24 is split by number set (Appendix~\ref{app:datasets}): every solvable set is either a training set or a held-out set, so there is no pool of unlabelled problems the policy has not trained on, which is what a round of Algorithm~\ref{alg:loop} needs. Table~\ref{tab:g24_loop} shows what happens when the rounds are run regardless, on the 4{,}693 other orderings of the 1{,}076 training sets, from the 2D-critic policy and from the three control starting points. The starting policy already solves $81\%$ of that pool, so a round mostly re-fits derivations of sets it knows. Read the deployment column against the cheap-sampler columns: the rounds move the ODE and 16-step samplers up by eight to ten points, as on the other tasks, while the deployment sampler loses three points in the first round and then holds. Sampling rounds 3--4 with the critic-guided cheap chain of Appendix~\ref{app:loop}, the recipe of the Countdown loop, raises the pool's coverage a little further and lowers every held-out number: the extra accepted derivations are more of the same sets. The gold-label control isolates the cost: fine-tuning the same policy on the gold derivations of the same prompts loses ten points at deployment and lowers the cheap samplers by two to four points, where the self-samples raise them by eight to ten. What the rounds cost is the supervised fitting of training-set derivations, the effect that already limits the supervised epochs on this task (Appendix~\ref{app:g24_sft}); what they give is the transfer across samplers that the self-samples carry and the gold derivations do not. From the SFT base and from the GRPO policy the rounds gain one to two points at deployment and five to seven at ODE-64. None of this is the loop of Appendix~\ref{app:loop}, whose gain comes from covering problems the policy does not yet solve, so Table~\ref{tab:loop} carries no Game24 entry.
+Game24 is split by number set (Appendix~\ref{app:datasets}): every solvable set is either a training set or a held-out set, so there is no pool of unlabelled problems the policy has not trained on, which is what a round of Algorithm~\ref{alg:loop} needs. Table~\ref{tab:g24_loop} shows what happens when the rounds are run regardless, on the 4{,}693 other orderings of the 1{,}076 training sets, from the 2D-critic policy and from the three control starting points. The starting policy already solves $81\%$ of that pool, so a round mostly re-fits derivations of sets it knows. Read the deployment column against the cheap-sampler columns: the rounds move the ODE and 16-step samplers up by 7 to 11 points, as on the other tasks, while the deployment sampler loses about 3 points in the first round and then holds. Sampling rounds 3--4 with the critic-guided cheap chain of Appendix~\ref{app:loop}, the recipe of the Countdown loop, raises the pool's coverage a little further and lowers every held-out number: the extra accepted derivations are more of the same sets. The gold-label control isolates the cost: fine-tuning the same policy on the gold derivations of the same prompts loses about 10 points at deployment and lowers the cheap samplers by 2 to 5 points, where the self-samples raise them by 7 to 11. What the rounds cost is the supervised fitting of training-set derivations, the effect that already limits the supervised epochs on this task (Appendix~\ref{app:g24_sft}); what they give is the transfer across samplers that the self-samples carry and the gold derivations do not. From the SFT base and from the GRPO policy the rounds gain 2 to 3 points at deployment and 3 to 6 at ODE-64. None of this is the loop of Appendix~\ref{app:loop}, whose gain comes from covering problems the policy does not yet solve, so Table~\ref{tab:loop} carries no Game24 entry.
 \begin{table}[H]\centering\small
 \caption{Rounds of Algorithm~\ref{alg:loop} on Game24's re-ordered training sets, held-out accuracy (\%) at the end of each round (8 epochs of fine-tuning per round). \emph{Covered}: pool problems with at least one verified sample. From top: from the 2D-critic policy (final checkpoint) with plain deployment-chain sampling, then the same chain continued from round 2 with critic-guided sampling in rounds 3--4; from the SFT base; from the GRPO policy; from the 2D-critic policy on the gold derivations of the same pool.}\label{tab:g24_loop}
 \scriptsize\setlength{\tabcolsep}{4pt}
-\begin{tabular}{@{}llcccc@{}}\toprule
+\begin{tabular}{@{}llccc@{}}\toprule
 start / round & covered & $\gamma56$@64 & ODE-64 & $\gamma4$@16\\\midrule
-\methodSVGTwoD{} policy (start) & & 59.3 & 42.2 & 38.9\\
-round 1, plain & 3.79k / 4.69k & 56.5 & 46.5 & 43.9\\
-round 2, plain & 3.54k & 56.3 & 49.3 & 48.6\\
-round 3, plain & 3.58k & 55.9 & 50.2 & 48.0\\
-round 4, plain & 3.64k & 56.0 & 50.5 & 49.0\\
-round 3, critic-guided (from round 2) & 3.96k & 55.0 & 48.4 & 47.9\\
-round 4, critic-guided & 3.95k & 51.2 & 47.0 & 46.7\\\midrule
-SFT base (start) & & 45.0 & 35.2 & 35.4\\
-rounds 1--4, plain & & 45.6 / 44.3 / 44.4 / 46.1 & 37.9 / 38.5 / 39.3 / 40.2 & 36.6 / 37.2 / 36.9 / 38.8\\\midrule
-GRPO policy (start) & & 48.6 & 36.5 & ---\\
-rounds 1--4, plain & & 49.3 / 48.1 / 50.6 / 50.5 & 40.7 / 40.7 / 42.6 / 43.5 & 40.2 / 40.0 / 39.9 / 41.8\\\midrule
-gold derivations, rounds 1--4 & 4.69k & 54.1 / 50.0 / 49.8 / 49.2 & 39.0 / 38.9 / 39.1 / 38.7 & 38.5 / 37.2 / 36.5 / 36.9\\
+\methodSVGTwoD{} policy (start) & & 59.6 & 43.5 & 38.9\\
+round 1, plain & 3.79k / 4.69k & 56.8 & 46.9 & 44.2\\
+round 2, plain & 3.54k & 56.4 & 49.1 & 48.2\\
+round 3, plain & 3.58k & 56.5 & 49.1 & 47.9\\
+round 4, plain & 3.64k & 57.0 & 50.5 & 50.2\\
+round 3, critic-guided (from round 2) & 3.96k & 55.9 & 48.1 & 48.1\\
+round 4, critic-guided & 3.95k & 51.2 & 47.1 & 45.9\\\midrule
+SFT base (start) & & 44.0 & 36.2 & 35.6\\
+rounds 1--4, plain & & 45.2 / 44.5 / 44.6 / 46.0 & 37.1 / 37.5 / 38.5 / 38.9 & 37.1 / 36.9 / 36.5 / 39.2\\\midrule
+GRPO policy (start) & & 48.5 & 37.4 & 36.6\\
+rounds 1--4, plain & & 49.4 / 48.5 / 51.7 / 51.2 & 40.0 / 40.9 / 43.1 / 43.2 & 40.5 / 40.6 / 39.6 / 42.1\\\midrule
+gold derivations, rounds 1--4 & 4.69k & 54.0 / 50.4 / 49.5 / 48.8 & 38.9 / 38.4 / 39.6 / 39.0 & 39.2 / 36.9 / 36.5 / 36.5\\
 \bottomrule\end{tabular}\end{table}
 
 \subsubsection{Sampler sweep on the Countdown base model}
 \label{app:sampler_sweep}
-Table~\ref{tab:sampler_sweep} records the held-out accuracy of the Countdown SFT model under the samplers we swept before fixing the four reporting samplers. Two regularities hold on every task we tried: at a fixed number of steps $K$ the best $\gamma$ is the one that keeps the per-step retention $\alpha_k$ near $0.125$ (so $\gamma\approx K\cdot0.875$: $\gamma4$@16 is deliberately \emph{below} this and is the cheap sampler; $\gamma14$@16, $\gamma28$@32, $\gamma56$@64 and $\gamma112$@128 are on it), and at that retention more steps keep helping with diminishing returns ($38.0\to42.2\to44.9$ from 32 to 64 to 128 steps). The deployment sampler $\gamma56$@64 is the last point at which the rollout cost is acceptable for RL (64 network evaluations per sample, one of which is recomputed with gradients).
+Table~\ref{tab:sampler_sweep} records the held-out accuracy of the Countdown SFT model under the samplers we swept before fixing the four reporting samplers. Two regularities hold on every task we tried: at a fixed number of steps $K$ the best $\gamma$ is the one that keeps the per-step retention $\alpha_k$ near $0.125$ (so $\gamma\approx K\cdot0.875$: $\gamma4$@16 is deliberately \emph{below} this and is the cheap sampler; $\gamma14$@16, $\gamma28$@32, $\gamma56$@64 and $\gamma112$@128 are on it), and at that retention more steps keep helping with diminishing returns ($38.1\to42.8\to44.0$ from 32 to 64 to 128 steps). The deployment sampler $\gamma56$@64 is the last point at which the rollout cost is acceptable for RL (64 network evaluations per sample, one of which is recomputed with gradients).
 
 \begin{table}[H]\centering\small
-\caption{Countdown held-out accuracy of the SFT model under different samplers (classifier-free guidance 2 unless stated). Left: the base checkpoint used in the paper (epoch 60). Right: an earlier checkpoint (epoch 42) on which the wider grid was run.}\label{tab:sampler_sweep}
+\caption{Countdown held-out accuracy of the SFT model under different samplers (classifier-free guidance 2 unless stated). Left: the base checkpoint used in the paper (epoch 60). Right: an earlier checkpoint (epoch 42) on which the wider grid was run, evaluated on the full held-out set.}\label{tab:sampler_sweep}
 \resizebox{\linewidth}{!}{%
 \begin{tabular}{@{}lc@{\qquad}lc@{}}\toprule
 sampler (epoch 60) & acc. & sampler (epoch 42) & acc.\\\midrule
-ODE, 64 steps & 28.1 & ODE, 64 / 128 steps & 23.4 / 24.6\\
-$\gamma4$@16 & 23.1 & $\gamma4$@16 / $\gamma14$@16 & 19.9 / 24.1\\
-$\gamma28$@32 & 38.0 & $\gamma20$@32 / $\gamma28$@32 / $\gamma28$@32 (guidance 3) & 28.4 / 31.6 / 30.2\\
-$\gamma56$@64 (deployment) & 42.2 & $\gamma48$@64 / $\gamma56$@64 / $\gamma56$@64 (guidance 1.5) & 33.8 / 35.0 / 34.9\\
-$\gamma112$@128 & 44.9 & $\gamma112$@128 & 37.4\\\bottomrule\end{tabular}}\end{table}
+ODE, 64 steps & 28.5 & ODE, 64 / 128 steps & 23.4 / 24.6\\
+$\gamma4$@16 & 23.8 & $\gamma4$@16 / $\gamma14$@16 & 19.9 / 24.1\\
+$\gamma28$@32 & 38.1 & $\gamma20$@32 / $\gamma28$@32 / $\gamma28$@32 (guidance 3) & 28.4 / 31.6 / 30.2\\
+$\gamma56$@64 (deployment) & 42.8 & $\gamma48$@64 / $\gamma56$@64 / $\gamma56$@64 (guidance 1.5) & 33.8 / 35.0 / 34.9\\
+$\gamma112$@128 & 44.0 & $\gamma112$@128 & 37.4\\\bottomrule\end{tabular}}\end{table}
 
