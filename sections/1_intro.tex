@@ -16,13 +16,7 @@ Continuous language models (CLMs) have historically lagged behind their discrete
 %credit-assignment problem, leaving effective RL post-training for continuous flow language models unresolved.
 %\citep{zhao2025d1,rojas2026improving,zhu2025llada15,shao2026papo}.
 
-In this work, we propose \textbf{C}ontinuous \textbf{F}low \textbf{R}einforcement learning for \textbf{L}anguage models (\method{}), a post-training framework to improve the reasoning ability of CLMs. We use a verifier on decoded discrete tokens as the reward and then apply the flow-based GRPO \citep{black2023ddpo,fan2023dpok,liu2025flowgrpo,xue2025dancegrpo} to train the model. We then exploits  the differentiable transitions of CLMs, in which only the last step decode continuous token vectors to discrete tokens. Therefore, we train a critic that takes a denoising state as the input and predict the verifier result based 
-on later generated response. The critic is fairly accurate at the end of the denoising trajectory because it 
-contains almost all the information of discrete tokens. Then the critic can be used to backpropagate the approximate 
-reward through the continuous flow trajectory. We also design an new critic architecture that allows the reward to 
-give feedback to each token vector in the transformer calculation. We compute a value from each token vector, compare 
-it to the verifier result for the entire sequence, and compute a loss term from the comparison. In this design, 
-each token vector can receive a gradient from the verifier result, which allows the model to learn more efficiently. 
+In this work, we propose \textbf{C}ontinuous \textbf{F}low \textbf{R}einforcement learning for \textbf{L}anguage models (\method{}), a post-training framework for improving CLM reasoning. We first adapt denoising-based GRPO \citep{black2023ddpo,fan2023dpok,liu2025flowgrpo,xue2025dancegrpo}, using a verifier applied to the decoded response as the reward. We then exploit the differentiability of the continuous trajectory. Because discrete tokens and verifier rewards are available only after the final readout, we train a critic to predict the expected verifier outcome from intermediate denoising states. Near the end of the trajectory, the critic can accurately predict this outcome because the state contains nearly all the information needed to determine the decoded response. Its prediction provides a differentiable reward estimate that can be back-propagated through the flow transition. We further design a novel critic architecture that propagates reward feedback to each token representation. The critic predicts a value from every token representation and trains each prediction against the sequence-level verifier outcome. This design provides position-specific gradients from the verifier signal, enabling more effective policy optimization.
 
 %Unlike categorical sampling, 
 %continuous flow trajectories admit pathwise gradients that differentiate a reward estimate through generation, as in continuous 
@@ -50,11 +44,9 @@ each token vector can receive a gradient from the verifier result, which allows 
 %transferring the reward improvement to cheaper samplers.
 
 
-We evaluate our new method under a unified protocol on four program-verifiable reasoning tasks: Countdown, 
-Sudoku, Knights-and-Knaves, and Game24. Models trained with our method achieve better or comparable performance than baseline models with similar or bigger sizes. 
-We summarize our contributions are summarized as follows.
+We evaluate our framework under a unified protocol on four program-verifiable reasoning tasks: Countdown, Sudoku, Knights-and-Knaves, and Game24. Our models achieve performance comparable to or better than baselines of similar or larger size. We summarize our contributions as follows.
 \begin{itemize}
-    \item To our best knowledge, we are the first to propose an RL framework for post-training of CLMs and reliably improve their performance through RL post-training.
-    \item Our innovation of the neural architecture for the critic not only improves the RL performance but also are readilly applied to various desnoising-based RL models.  
-    \item We conduct empirical study on four program-verifiable reasoning tasks and verify the effectiveness of our approach.
+    \item To our best knowledge, we demonstrate the first reliable improvement in the reasoning capabilities of a CLM through pathwise reinforcement learning.
+    \item We propose a novel critic architecture that consistently improves RL performance and can be readily adapted to other denoising-based generative models.
+    \item We evaluate our approach on four program-verifiable reasoning tasks and demonstrate its effectiveness.
 \end{itemize}
