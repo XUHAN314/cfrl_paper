@@ -7,24 +7,24 @@ frozen T5 encoder \citep{raffel2020t5}. Let $\rvx=(x_1, \ldots, x_L)$ be embeddi
 If the target sequence is conditioned on a context (e.g., a prompt), then let $\rvc$ be the embeddings of the context tokens.  
 
 ELF fits the distribution $p_\theta(\rvx | \rvc)$ with an FM model, which learns a neural network to denoise noisy states to generate clean embeddings. A noisy state $\rvz_t=(1-t)\,\varepsilon+t\,\rvx$ is an interpolation 
-between a scaled Gaussian noise $\varepsilon\sim\mathcal N(0, c_\sigma^2)$ and a clean embeddings $\rvx$. Here $c_\sigma^2$ is a fixed noise scale, and 
+between a scaled Gaussian noise $\varepsilon\sim\mathcal N(0, c_\sigma^2I)$ and a clean embeddings $\rvx$. Here $c_\sigma^2$ is a fixed noise scale, and 
 $t\in[0,1]$ is the time in the FM model. The ELF denoiser is parameterized as an x-flow: it predicts $\rvx_{t}$ from a noisy state $\rvz_t$ and aims to match the clean embedding $\rvx$ with $\rvx_{t}$.  
 Let $0=t_0<\dots<t_K=1$ be a discretization of $t$, then the denoising step is: 
 \begin{align} 
 \rvx_{t_{k}} = \mathrm{d}_\theta(\rvz_{t_{k}}, t_{k}, \rvx_{t_{k-1}}, \rvc)
 \label{eq:denoiser}
 \end{align} 
-Here we explicitly show the self-conditioning technique \citep{chen2022selfcond}: the denoiser $\mathrm{d}_\theta$ includes the previous estimate $\rvx_{t_{k-1}}$ as one input. 
+Here we explicitly show the self-conditioning technique \citep{chen2022analog}: the denoiser $\mathrm{d}_\theta$ includes the previous estimate $\rvx_{t_{k-1}}$ as one input. 
 The network $\mathrm{d}_\theta$ is constructed with a transformer, with $\theta$ denoting learnable parameters. It is trained to minimize the mean squared error (MSE) 
 between the predicted clean embedding $\rvx_{t}$ and the true clean embedding $\rvx$. 
 
-In the inference stage, we consider the SDE version of ELP. It injects random noise during the generation steps. 
+In the inference stage, we consider the SDE version of ELF. It injects random noise during the generation steps. 
 \begin{align} 
 \rvz_{t_k} =  \lambda_k  \rvz_{t_{k-1}} + \eta_k \rvx_{t_{k-1}} + \psi_k \varepsilon, \qquad k=1, \ldots, K  
 \label{eq:sde}
 \end{align} 
 Here the three scalars $\lambda_k, \eta_k, \psi_k$ are determined by the step size and the noise re-injection scale in the ELF algorithm.  
-The steps start with $\rvz_{0}=\varepsilon$ and $\rvx_{t_{-1}} = \mathbf{0}$. After $K$ steps, it generates
+The steps start with $\rvz_{0}\sim \mathcal{N}(0, c_\sigma^2I)$ and $\rvx_{t_{-1}} = \mathbf{0}$. After $K$ steps, it generates
 $\rvz_{1}$, which is considered as $\rvx$ samples. 
 
 ELF learns a decoder $p_\theta(\rvw|\rvx)$ to map the denoised embeddings $\rvz_{1}$ to the discrete tokens $\rvw$. Each embedding in $\rvz_{1}$ is decoded to a discrete token with a linear layer. 
@@ -34,75 +34,7 @@ w_i \sim \mathrm{softmax}(W \rvz_{1}[i]), \qquad i=1, \ldots, L
 Here $W$ is the linear layer that maps an embedding to a logit vector. We also include $W$ into the learnable parameters $\theta$ of the model, 
 then ELF defines a language distribution $p_\theta(\rvw | \rvc)$ through $p_\theta(\rvx|\rvc)$ and $p_\theta(\rvw|\rvx)$. 
 
-\noindent\fbox{\parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}{%
-The official implementation of ELF uses the following stochastic sampler with churn $\gamma$ 
-\citep{hu2026elf}. The implementation is slightly different from Algorithm 6 in the original 
-paper. Here we provide the derivation based on the code, and the notations are 
-mostly consistent with the original paper. 
-
-At step $k$, let the current time be $t_{k-1}$ and the step size be $h$, so that
-$t_{k} = t_{k-1} + h$. Let $\gamma \ge 0$ be the noise re-injection scale, and
-$t_{\text{eps}}=0.05$ is the lower bound used in the velocity conversion.
-Define
-\begin{equation}
-  \alpha = \operatorname{clip}\!\left(1 - \gamma h,\; 0,\; 1\right),
-  \quad
-  \tilde{t}_{k-1} = \alpha t,
-  \quad
-  D = \max\!\left(1 - \tilde{t}_{k-1},\; t_{\text{eps}}\right)
-    = \max\!\left(1 - \alpha t_{k-1},\; t_{\text{eps}}\right).
-\end{equation}
-
-With $\epsilon \sim \mathcal{N}(0, I)$, one step performs
-\begin{align}
-  \tilde z_{k-1} &= \alpha\, z_{k-1} + (1 - \alpha)\, \epsilon,
-    \label{eq:renoise} \\
-  x_{k-1} &= \mathrm{d}_\theta\!\left(\tilde z_{k-1},\, \tilde t, x_{k-2}, c\right),
-    \label{eq:predict} \\
-  v_{k-1} &= \frac{x_{k-1} - \tilde z_{k-1}}{D},
-    \label{eq:velocity} \\
-  z_k &= \tilde z_{k-1} + \left(t_k - \tilde{t}_{k-1} \right) v_{k-1}. 
-    \label{eq:update} \\
-  \tilde{z}_k &= \alpha\, z_{k} + (1 - \alpha)\, \epsilon.
-    \label{eq:renoise2}
-\end{align}
-Note that $x_{k-1}$ is the prediction at the re-noised input
-$(\tilde z_{k-1}, \tilde t)$, not at $(z_{k-1}, t)$. At each step, 
-the code record $(z_k, x_{k-1})$ at each step. At $k = 1$, we 
-use $z_{0} = \varepsilon$ and $x_{-1} = 0$. 
-
-In our derivation, we use $(\tilde{z}_{k}, x_{k-1})$ as the state, which is $(\rvz_{t_k}, \rvx_{t_{k-1}})$ in our notation. We write: 
-\begin{align}
-\tilde{z}_k = \lambda_k \tilde{z}_{k-1} + \eta_k x_{k-1} + \psi_k \epsilon
-\end{align}
-with 
-\begin{align}
-\lambda_k &= \alpha \left(1 - \frac{t + h - \tilde t}{D}\right), \quad
-\eta_k = \frac{\alpha (t + h - \tilde t)}{D}, \quad
-\psi_k = 1 - \alpha,
-\end{align}
-for $k =1, \ldots, K - 1$. When $k = K$, we set $\alpha=1$ and eliminate the re-noising step, 
-\begin{align}
-\lambda_K &= \left(1 - \frac{t + h - \tilde t}{D}\right), \quad
-\eta_K = \frac{(t + h - \tilde t)}{D}, \quad
-\psi_K = 0,
-\end{align}
-so that $\tilde{z}_K = z_K$, matching the ELF implementation.
-
-To derive these, substitute \eqref{eq:velocity} into \eqref{eq:update} and group the terms by $\tilde z_{k-1}$ and $x_{k-1}$:
-\begin{align*}
-z_k &= \tilde z_{k-1} + \frac{t + h - \tilde t}{D}\left(x_{k-1} - \tilde z_{k-1}\right) \\
-    &= \left(1 - \frac{t + h - \tilde t}{D}\right)\tilde z_{k-1} + \frac{t + h - \tilde t}{D}\, x_{k-1}.
-\end{align*}
-Substituting this into \eqref{eq:renoise2} gives
-\begin{align*}
-\tilde z_k = \alpha\left(1 - \frac{t + h - \tilde t}{D}\right)\tilde z_{k-1} + \frac{\alpha\,(t + h - \tilde t)}{D}\, x_{k-1} + (1 - \alpha)\,\epsilon,
-\end{align*}
-from which $\lambda_k$, $\eta_k$ and $\psi_k$ are read off. The noise enters only through the re-noising after the update, so $\psi_k$ carries no factor from the step.
-
-
-
-}}
+The code-level derivation of ELF's stochastic sampler is provided in Appendix~\ref{app:kernels}.
 
 
 
