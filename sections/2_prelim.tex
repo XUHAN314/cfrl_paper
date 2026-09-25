@@ -1,38 +1,28 @@
 \section{Preliminaries: Continuous Flow Language Modeling and RL}
-\label{sec:estimators}
+\label{sec:prelim}
 
 \paragraph{Continuous flow language modeling.}
-We base our work on ELF \citep{hu2026elf}, a flow-based language model. ELF embeds tokens in the text with a 
-frozen T5 encoder \citep{raffel2020t5}. Let $\rvx=(x_1, \ldots, x_L)$ be embeddings of tokens in a target sequence $\rvw = (w_1, \ldots, w_L)$. 
-If the target sequence is conditioned on a context (e.g., a prompt), then let $\rvc$ be the embeddings of the context tokens.  
+We build our work on ELF \citep{hu2026elf}, a flow-based language model. ELF represents text tokens using embeddings produced by a frozen T5 encoder \citep{raffel2020t5}. Let $\rvx=(x_1,\ldots,x_L)$ denote the embeddings of the tokens in a target sequence $\rvw=(w_1,\ldots,w_L)$. When the target sequence is conditioned on additional context, such as a prompt, we denote the corresponding context-token embeddings by $\rvc$. 
 
-ELF fits the distribution $p_\theta(\rvx | \rvc)$ with an FM model, which learns a neural network to denoise noisy states to generate clean embeddings. A noisy state $\rvz_t=(1-t)\,\varepsilon+t\,\rvx$ is an interpolation 
-between a scaled Gaussian noise $\varepsilon\sim\mathcal N(0, c_\sigma^2I)$ and a clean embeddings $\rvx$. Here $c_\sigma^2$ is a fixed noise scale, and 
-$t\in[0,1]$ is the time in the FM model. The ELF denoiser is parameterized as an x-flow: it predicts $\rvx_{t}$ from a noisy state $\rvz_t$ and aims to match the clean embedding $\rvx$ with $\rvx_{t}$.  
-Let $0=t_0<\dots<t_K=1$ be a discretization of $t$, then the denoising step is: 
+ELF models the conditional distribution $p_\theta(\rvx \mid \rvc)$ using flow matching (FM), where a neural network learns to transform noisy states into clean token embeddings. At time $t\in[0,1]$, the noisy state is defined as $\rvz_t=(1-t)\,\epsilon+t\,\rvx$, where $\epsilon\sim\mathcal N(0, c_\sigma^2I)$ is Gaussian noise with fixed scale $c_\sigma^2$, and $\rvx$ denotes the clean target embeddings. ELF adopts an $x$-prediction parameterization: given a noisy state $\rvz_t$, the denoiser predicts an estimate $\rvx_t$ of the clean embeddings $\rvx$. Let $0=t_0<\cdots<t_K=1$, denote a discretization of the flow time. The corresponding denoising update is
 \begin{align} 
 \rvx_{t_{k}} = \mathrm{d}_\theta(\rvz_{t_{k}}, t_{k}, \rvx_{t_{k-1}}, \rvc)
 \label{eq:denoiser}
 \end{align} 
-Here we explicitly show the self-conditioning technique \citep{chen2022analog}: the denoiser $\mathrm{d}_\theta$ includes the previous estimate $\rvx_{t_{k-1}}$ as one input. 
-The network $\mathrm{d}_\theta$ is constructed with a transformer, with $\theta$ denoting learnable parameters. It is trained to minimize the mean squared error (MSE) 
-between the predicted clean embedding $\rvx_{t}$ and the true clean embedding $\rvx$. 
+We explicitly incorporate the self-conditioning technique of \citet{chen2022analog}, whereby the denoiser $\mathrm{d}\theta$ takes the previous clean-embedding estimate $\rvx{t_{k-1}}$ as an additional input. The denoiser $\mathrm{d}_\theta$ is implemented as a Transformer, with $\theta$ denoting its learnable parameters. It is trained by minimizing the mean squared error (MSE) between the predicted clean embedding $\rvx_t$ and the corresponding ground-truth embedding $\rvx$.
 
-In the inference stage, we consider the SDE version of ELF. It injects random noise during the generation steps. 
+At inference time, we consider the stochastic differential equation (SDE) formulation of ELF, which injects stochastic noise at each generation step. This stochastic formulation is particularly useful for the reinforcement learning framework introduced later, as it induces a distribution over generation trajectories rather than a single deterministic path.
 \begin{align} 
-\rvz_{t_k} =  \lambda_k  \rvz_{t_{k-1}} + \eta_k \rvx_{t_{k-1}} + \psi_k \varepsilon, \qquad k=1, \ldots, K  
+\rvz_{t_k} =  \lambda_k  \rvz_{t_{k-1}} + \eta_k \rvx_{t_{k-1}} + \psi_k \epsilon, \qquad k=1, \ldots, K  
 \label{eq:sde}
 \end{align} 
-Here the three scalars $\lambda_k, \eta_k, \psi_k$ are determined by the step size and the noise re-injection scale in the ELF algorithm.  
-The steps start with $\rvz_{0}\sim \mathcal{N}(0, c_\sigma^2I)$ and $\rvx_{t_{-1}} = \mathbf{0}$. After $K$ steps, it generates
-$\rvz_{1}$, which is considered as $\rvx$ samples. 
+The scalars $\lambda_k$, $\eta_k$, and $\psi_k$ are determined by the step size and the noise reinjection scale specified by the ELF sampling algorithm. Sampling is initialized with $\rvz_0 \sim \mathcal{N}(0,c_\sigma^2 I)$ and $\rvx_{t_{-1}}=\mathbf{0}$. After $K$ denoising steps, the procedure produces $\rvz_1$, which corresponds  to the clean embedding $\rvx$.
 
-ELF learns a decoder $p_\theta(\rvw|\rvx)$ to map the denoised embeddings $\rvz_{1}$ to the discrete tokens $\rvw$. Each embedding in $\rvz_{1}$ is decoded to a discrete token with a linear layer. 
+ELF further learns a decoder $p_\theta(\rvw \mid \rvx)$ that maps the final denoised embeddings $\rvz_1$ to the discrete token sequence $\rvw$. Specifically, each embedding in $\rvz_1$ is projected to the token vocabulary through a linear output layer, yielding a distribution over discrete tokens.
 \begin{align}
 w_i \sim \mathrm{softmax}(W \rvz_{1}[i]), \qquad i=1, \ldots, L
 \end{align}
-Here $W$ is the linear layer that maps an embedding to a logit vector. We also include $W$ into the learnable parameters $\theta$ of the model, 
-then ELF defines a language distribution $p_\theta(\rvw | \rvc)$ through $p_\theta(\rvx|\rvc)$ and $p_\theta(\rvw|\rvx)$. The derivation of ELF's stochastic sampler is provided in Appendix~\ref{app:kernels}.
+Here, $W$ denotes the linear output layer that maps each embedding to a vector of vocabulary logits. We include $W$ in the set of learnable parameters $\theta$. Together, $p_\theta(\rvx\mid\rvc)$ and the decoder $p_\theta(\rvw\mid\rvx)$ define the conditional language distribution $p_\theta(\rvw\mid\rvc)$. A derivation of the stochastic ELF sampler is provided in Appendix~\ref{app:kernels}.
 
 
 
