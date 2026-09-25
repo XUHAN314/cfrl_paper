@@ -4,6 +4,73 @@
 \label{app:kernels}
 The implemented sampler is the one displayed in Section~\ref{sec:estimators} (re-noise, estimate, partial step), with the transition kernel of~(\ref{eq:chain}), $\alpha_k=1-\gamma\Delta_k$, $\sigma_k=(1-\alpha_k)c_\sigma$ and a fixed $c_\sigma$ ($\sigma_k$ is set so that the two noise coefficients add up linearly to that of the training interpolant at $\tilde t_k$, $\alpha_k(1-t_{k-1})+(1-\alpha_k)=1-\tilde t_k$; the noises are independent, so this matches coefficients, not variances); the first transition has no denoiser call, the last step is deterministic, and the readout is $\prod_{i\in\mathcal G}\pi^i_\theta(w_i\mid z_K)$ with $\pi^i_\theta=\mathrm{softmax}(\ell_i)$, $\ell_i$ the decoder head's logits at position $i$ (Section~\ref{sec:grpo}). The trajectory log-likelihood is the sum of the transition and readout terms and requires no bound. We verified the implementation on CPU: recomputing the log-probability of a stored trajectory under the same parameters agrees with the value recorded at rollout to relative error $7\times10^{-5}$ (flow steps) and $10^{-3}$ (readout). Two caveats matter in practice: $\gamma\Delta_k=1$ makes $\alpha_k=0$ and every parameter gradient of that transition exactly zero, and $\gamma\Delta_k>1$ makes $\alpha_k<0$ and flips the sign of the signal the transition carries (we assert $\alpha_k>0$); and storing states in bfloat16 perturbs summed log-ratios by $O(1)$ over $|\mathcal G|\times d$ dimensions, so ratio-based estimators need per-dimension normalisation or fp32 storage.
 
+\noindent\fbox{\parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule\relax}{%
+The official implementation of ELF uses the following stochastic sampler with churn $\gamma$
+\citep{hu2026elf}. The implementation is slightly different from Algorithm 6 in the original
+paper. Here we provide the derivation based on the code, and the notations are
+mostly consistent with the original paper.
+
+At step $k$, let the current time be $t_{k-1}$ and the step size be $h$, so that
+$t_{k} = t_{k-1} + h$. Let $\gamma \ge 0$ be the noise re-injection scale, and
+$t_{\text{eps}}=0.05$ is the lower bound used in the velocity conversion.
+Define
+\begin{equation}
+  \alpha = \operatorname{clip}\!\left(1 - \gamma h,\; 0,\; 1\right),
+  \quad
+  \tilde{t}_{k-1} = \alpha t_{k-1},
+  \quad
+  D = \max\!\left(1 - \tilde{t}_{k-1},\; t_{\text{eps}}\right)
+    = \max\!\left(1 - \alpha t_{k-1},\; t_{\text{eps}}\right).
+\end{equation}
+
+With $\epsilon \sim \mathcal{N}(0, c_\sigma^2I)$, one step performs
+\begin{align}
+  \tilde z_{k-1} &= \alpha\, z_{k-1} + (1 - \alpha)\, \epsilon,
+    \label{eq:renoise} \\
+  x_{k-1} &= \mathrm{d}_\theta\!\left(\tilde z_{k-1},\, \tilde t_{k-1}, x_{k-2}, c\right),
+    \label{eq:predict} \\
+  v_{k-1} &= \frac{x_{k-1} - \tilde z_{k-1}}{D},
+    \label{eq:velocity} \\
+  z_k &= \tilde z_{k-1} + \left(t_k - \tilde{t}_{k-1} \right) v_{k-1}.
+    \label{eq:update} \\
+  \tilde{z}_k &= \alpha\, z_{k} + (1 - \alpha)\, \epsilon.
+    \label{eq:renoise2}
+\end{align}
+Note that $x_{k-1}$ is the prediction at the re-noised input
+$(\tilde z_{k-1}, \tilde t)$, not at $(z_{k-1}, t)$. At each step,
+the code record $(z_k, x_{k-1})$ at each step. At $k = 1$, we
+use $z_{0} = \varepsilon$ and $x_{-1} = 0$.
+
+In our derivation, we use $(\tilde{z}_{k}, x_{k-1})$ as the state, which is $(\rvz_{t_k}, \rvx_{t_{k-1}})$ in our notation. We write:
+\begin{align}
+\tilde{z}_k = \lambda_k \tilde{z}_{k-1} + \eta_k x_{k-1} + \psi_k \epsilon
+\end{align}
+with
+\begin{align}
+\lambda_k &= \alpha \left(1 - \frac{t + h - \tilde t}{D}\right), \quad
+\eta_k = \frac{\alpha (t + h - \tilde t)}{D}, \quad
+\psi_k = 1 - \alpha,
+\end{align}
+for $k =1, \ldots, K - 1$. When $k = K$, we set $\alpha=1$ and eliminate the re-noising step,
+\begin{align}
+\lambda_K &= \left(1 - \frac{t + h - \tilde t}{D}\right), \quad
+\eta_K = \frac{(t + h - \tilde t)}{D}, \quad
+\psi_K = 0,
+\end{align}
+so that $\tilde{z}_K = z_K$, matching the ELF implementation.
+
+To derive these, substitute \eqref{eq:velocity} into \eqref{eq:update} and group the terms by $\tilde z_{k-1}$ and $x_{k-1}$:
+\begin{align*}
+z_k &= \tilde z_{k-1} + \frac{t + h - \tilde t}{D}\left(x_{k-1} - \tilde z_{k-1}\right) \\
+    &= \left(1 - \frac{t + h - \tilde t}{D}\right)\tilde z_{k-1} + \frac{t + h - \tilde t}{D}\, x_{k-1}.
+\end{align*}
+Substituting this into \eqref{eq:renoise2} gives
+\begin{align*}
+\tilde z_k = \alpha\left(1 - \frac{t + h - \tilde t}{D}\right)\tilde z_{k-1} + \frac{\alpha\,(t + h - \tilde t)}{D}\, x_{k-1} + (1 - \alpha)\,\epsilon,
+\end{align*}
+from which $\lambda_k$, $\eta_k$ and $\psi_k$ are read off. The noise enters only through the re-noising after the update, so $\psi_k$ carries no factor from the step.
+}}
+
 \subsection{Score-function and pathwise gradients}
 \label{app:variance}
 For~(\ref{eq:chain}), $\nabla_\theta\log\mathcal N(y_k;\alpha_kD_\theta(s_{k-1}),\sigma_k^2I)=\sigma_k^{-2}(y_k-\alpha_kD_\theta)^{\top}\alpha_k\partial D_\theta/\partial\theta=\sigma_k^{-1}\varepsilon_k^{\top}\alpha_k\,\partial D_\theta/\partial\theta$, which is~(\ref{eq:sf}) summed over the positions. The estimator's variance is that of a sum of $(K-2)\cdot|\mathcal G|\cdot d$ terms per trajectory ($|\mathcal K|\cdot|\mathcal G|\cdot d$ per update) each proportional to an independent standard normal, weighted by an advantage that depends on the trajectory only through the final reward. Write the reward as a function of the noise path, $r=r(\varepsilon_{0:K-1})$; the transition part of the implemented score-function gradient is $\mathbb E[r\sum_k\sigma_k^{-1}\varepsilon_k^{\top}\alpha_k\,\partial_\theta D_k]$ with $\partial_\theta D_k=\partial D_\theta(s_{k-1})/\partial\theta$, so a coordinate contributes signal only through the covariance of $r$ with that coordinate's noise. In an AR model the analogous decomposition has one term per token and every term is a categorical decision the reward depends on; in the flow model the covariance of $r$ with a noise coordinate is, as far as we can measure, undetectable: the half-split cosine of the score-function gradient stays at the level of a zero-mean control up to $N=2048$ rollouts (Appendix~\ref{app:snr}), while every coordinate contributes its full variance. A mechanism consistent with this, though not a proof of it, is that most positions decode to their final token from the first denoiser call on (Appendix~\ref{app:commit}); a coordinate whose token no longer changes can still move that token's confidence, other positions through attention, and later self-conditioned estimates. With $N$ trajectories in an update the signal scales as $N$ times the coordinates' covariances with $r$, which the measurement above finds undetectable, and the noise as $\sqrt{N\,|\mathcal K|\,|\mathcal G|\,d}$, which is the origin of the signal-to-noise problem discussed in Section~\ref{sec:grpo}. Refining the advantage (per step, per position) changes which coordinates receive weight but not this ratio, which is consistent with no variant of Table~\ref{tab:sf_variants} clearing $+5$.

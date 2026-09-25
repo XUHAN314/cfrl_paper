@@ -1,41 +1,31 @@
 \section{Method}
 
-We formulate language generation with a CLM as a Markov decision process (MDP). With a CLM like ELF introduced in Section~\ref{sec:prelim}, 
-the generation always have $K+1$ steps. The state $s_k = (\rvz_{t_k}, \rvx_{t_{k-1}})$ at a generation step $k \in \{1, \ldots, K\}$ is considered the MDP state. 
-The initial state is $s_0 = (\epsilon, \mathbf{0})$, with $\epsilon$ being a random Gaussian noise as we have defined. Here we need to record $\rvx_{t_{k-1}}$ in the state 
-because it is used in the self-conditioning of the FM. The last state $s_{K+1} = \rvw$ is the decoded response.
+For a CLM such as ELF, introduced in Section~\ref{sec:prelim}, generation proceeds over a fixed horizon of $K+1$ steps. At each generation step $k\in\{1,\ldots,K\}$, we define the MDP state as $s_k = (\rvz_{t_k}, \rvx_{t_{k-1}})$. The initial state is $s_0 = (\epsilon, \mathbf{0})$, where $\epsilon$ is the Gaussian noise defined above. We include $\rvx_{t_{k-1}}$ in the state because it is required by the self-conditioning mechanism of ELF.  The terminal state $s_{K+1} = \rvw$  corresponds to the decoded response.
 
-Actions are denoising steps and the final decoding step. Specifically, the action $a_{k} = \rvx_{t_{k}}$ for $k \in \{0, \ldots, K-1\}$. 
-The policy $\pi(a_k | s_k)$ is the denoising probability given by $\mathrm{d}_\theta$. The last action $a_{K} = \rvw$, and the probabiliy $\pi(a_K | s_K)$ is 
-the decoding probability $p_\theta(\rvw | \rvz_{t_K})$. 
+The actions consist of the denoising predictions followed by the final decoding step. Specifically, for $k \in \{0, \ldots, K-1\}$, we define the action as $a_{k} = \rvx_{t_{k}}$. The corresponding policy $\pi(a_k | s_k)$ is induced by the denoising distribution parameterized by  $\mathrm{d}_\theta$. The final action is $a_{K} = \rvw$, whose policy is given by the decoding distribution $\pi(a_K | s_K)=p_\theta(\rvw | \rvz_{t_K})$. 
 
-The transition probability is defined by the denoising process in~(\ref{eq:sde}). The reward $r(s_{K+1})$ is obtained from a verifier $R(\rvw)$ that evaluates 
-the decoded response $\rvw$. The objective of RL is to maximize the expected reward over the generation trajectory: 
+The transition probability is defined by the denoising process in~(\ref{eq:sde}). A terminal reward  $r(s_{K+1})$ is provided by a verifier $R(\rvw)$ that evaluates 
+the decoded response $\rvw$. The reinforcement learning objective is to maximize the expected terminal reward over trajectories induced by the policy:
 \begin{equation}
-\max_\theta \mathbb E_{s_0\sim p_0, a_k\sim \pi_\theta(\cdot|s_k), s_{k+1}\
-sim p(\cdot|s_k, a_k)}[R(s_{K+1})],
+\max_\theta \mathbb E_{s_0\sim p_0, a_k\sim \pi_\theta(\cdot|s_k), s_{k+1}\sim p(\cdot|s_k, a_k)}[R(s_{K+1})].
 \label{eq:objective}
 \end{equation}
 
 \subsection{Learning with group-relative REINFORCE}
 
-Similar to other LMs, the CLM can be trained with an RL method based on policy-gradient methods [TODO: cite the standard RL book], 
-without concerning the last non-differentible decoding step. Here we consider a variant of group-relative REINFORCE methods \citep{yao2026grouprelative}. 
-For each context $\rvc$, we sample $G$ responses $(s^1_{K+1}, \ldots, s^G_{K+1})$. For each response, we also record the 
-rollout $(s^g_0, a^g_0, s^g_1, a^g_1, \ldots, s^g_K, a^g_K)$. Let 
+Similar to other language models, a CLM can be optimized using policy-gradient methods \citep{sutton1998reinforcement}, without concerning the last non-differentible decoding step. We consider a variant of group-relative REINFORCE method \citep{yao2026grouprelative}. 
+For each context $\rvc$, we sample a group of $G$ responses, $(s^1_{K+1}, \ldots, s^G_{K+1})$. For each response, we additionally record the corresponding generation trajectory, $(s^g_0, a^g_0, s^g_1, a^g_1, \ldots, s^g_K, a^g_K)$. Let 
 $r^g = R(s^g_{K+1})$, then the group advantage is computed as $A^g =  \frac{r(s^g_{K+1}) - \mathrm{mean}(r^{1:G})}{\mathrm{std}(r^{1:G})}$.
-The training objective is:
+Our training objective is:
 \begin{equation}
 \mathcal L_{\mathrm{GRR}}(\theta)=-\frac1G\sum_{g=1}^{G}A^g\Bigl[\sum_{k=0}^{K-1}\log\pi_\theta\bigl(a^g_k \mid s^g_{k}\bigr)+\frac{1}{L} \log\pi_\theta\bigl(a^g_{K} \mid s^g_K\bigr)\Bigr].
 \label{eq:grpo_loss}
 \end{equation}
-Note that the last step $\pi_\theta\bigl(a^g_{K} \mid s^g_K\bigr)$ decodes $L$ tokens from embeddings using the same weight matrix. 
-We damp its update with the factor $\frac{1}{L}$ because it is relatively easy to learn. 
+Note that the last step $\pi_\theta\bigl(a^g_{K} \mid s^g_K\bigr)$ decodes all $L$ token embeddings using a shared output weight matrix. 
+Since this decoding step is comparatively easy to optimize, we downweight its contribution by a factor of $\frac{1}{L}$ to prevent it from dominating the policy update.
 
-We have also tested GRPO \citep{shao2024deepseekmath} with various setting and find that ratio clipping and KL penalty are not necessary for our setting. 
-The finding is consistent with DAPO \citep{yu2025dapo}. In our case, the denoiser works in a continuous space with a dimensionality of $dL$, 
-while an autoregressive LM works in a discrete space with a dimensionality of the vocabulary size. The different model architectures
-should require different training techniques. We leave the exploration to the future work. 
+We also experimented with GRPO \citep{shao2024deepseekmath} with various settings and found that neither ratio clipping nor a KL penalty was necessary in our setting.
+This observation is consistent with findings reported in DAPO \citep{yu2025dapo}. One important distinction is that our denoiser operates over a continuous state space of dimension $dL$, whereas an AR language model defines a discrete distribution over a vocabulary at each generation step. These differences in the underlying generation process and policy parameterization may call for different RL optimization strategies. We leave a systematic investigation of such training techniques for CLMs to future work.
 
 %so $\log\pi_\theta\bigl(a^g_k \mid s^g_{k}\bigr)$ in our case has higher variance
 
