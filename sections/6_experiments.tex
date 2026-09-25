@@ -1,7 +1,7 @@
 \section{Experiments}
 \label{sec:experiments}
 \paragraph{Setup.}
-We evaluate on four program-verified tasks: \textbf{Countdown}, \textbf{Sudoku}, \textbf{Knights-and-Knaves} (K\&K) and \textbf{Game24}. Every model is fine-tuned on each task from its released checkpoint before RL; ELF-B's (105M) task-SFT model is the base of all flow runs. Held-out prompts (2{,}000 per task; 1{,}601 for Game24) are split into a validation half, on which checkpoints are selected, and a test half, on which every accuracy is reported. The deployment chain is $\gamma56$@64 (churn $\gamma{=}56$, $K{=}64$ steps; $\gamma28$@32 on Sudoku), the cheap chain $\gamma4$@16, both through the same denoiser. GPT-2 \citep{radford2019gpt2} with token-level GRPO/PPO and LLaDA-8B-Instruct \citep{nie2025llada} with d1's diffu-GRPO \citep{zhao2025d1}, trained on the same data, are cross-architecture references. Diagnostics use Game24. Data, budgets and every supporting result are in Appendix~\ref{app:results}.
+We evaluate on four program-verified tasks: \textbf{Countdown}, \textbf{Sudoku}, \textbf{Knights-and-Knaves} (K\&K) and \textbf{Game24}. Every model is fine-tuned on each task before RL; the ELF-B (105M) task-SFT model is the base of all flow runs. Accuracy is measured on 2{,}000 held-out prompts per task (1{,}601 for Game24). The deployment chain is $\gamma56$@64 (churn $\gamma{=}56$, $K{=}64$ steps; $\gamma28$@32 on Sudoku), the cheap chain $\gamma4$@16, both through the same denoiser. GPT-2 \citep{radford2019gpt2} with token-level GRPO/PPO and LLaDA-8B-Instruct \citep{nie2025llada} with d1's diffu-GRPO \citep{zhao2025d1}, trained on the same data, are cross-architecture references. Diagnostics use Game24. Data, budgets and every supporting result are in Appendix~\ref{app:results}.
 
 \begin{table}[t]
 \centering\small
@@ -35,7 +35,7 @@ released model & \phantom{0}0.0 & \phantom{0}0.0 & \phantom{0}0.0 & \phantom{0}0
 \centering
 \includegraphics[width=\linewidth]{figures/fig_estimator.pdf}
 \end{minipage}
-\caption{\textbf{Left:} held-out accuracy (\%) under the deployment chain: the released model with no task training, its task-SFT model (our supervised stage), and RL from the task-SFT model; RL rows carry the gain over the task-SFT row in parentheses; bold: best ELF\mbox{-}B row; blue: recommended variant. \textbf{Right:} Game24 rollouts of each model's SFT base (ELF\mbox{-}B under the deployment chain); control: $A{=}1$, whose expected gradient is zero (top), a random direction (bottom); GPT-2 in the top panel only. Top: half-split cosine against the number of rollouts $N$. Bottom: accuracy change after one AdamW-normalised step, in units of $\Lambda$, the distance the 2D-critic policy travels from the base over training; bands: paired $95\%$ intervals.}
+\caption{\textbf{Left:} held-out accuracy (\%) under the deployment chain; RL rows carry the gain over the task-SFT row in parentheses; bold: best ELF\mbox{-}B row; blue: recommended variant. \textbf{Right:} Game24 rollouts of each model's SFT base (ELF\mbox{-}B under the deployment chain); control: $A{=}1$, whose expected gradient is zero (top), a random direction (bottom); GPT-2 in the top panel only. Top: half-split cosine against the number of rollouts $N$. Bottom: accuracy change after one AdamW-normalised step, in units of $\Lambda$, the distance the 2D-critic policy travels from the base over training; bands: paired $95\%$ intervals.}
 \label{tab:main}
 \end{table}
 
