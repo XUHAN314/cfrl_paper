@@ -5,29 +5,35 @@
 \label{fig:mechanism}
 \end{figure}
 
-\subsection{The critic: one value per state, or per state and position}
-\label{sec:critic}\label{sec:jpc_scalar}\label{sec:jpc_2d}
-The critic takes the state $s_k=(y_k,\hat x_{k-1})$ and the time $\tilde t_k$ as input. Because $\hat x_{k-1}$ is the denoiser's current prediction of the decoded sequence, the critic reuses the denoiser to read it: a copy $\hat X_{\bar\theta}$, initialised from $\theta_{\rm ref}$, fine-tuned once with the head before RL and then held fixed, is evaluated without guidance and gives per-position features $f_i(s_k)=\hat X_{\bar\theta}(y_k,\tilde t_k;\hat x_{k-1})_i\in\mathbb R^d$; a small MLP head $h_\phi$, the part of the critic refit during RL, turns them into a value in one of two orders,
-\begin{alignat}{2}
-&\text{\methodSVGScalar{}:}&\quad V_\phi(s_k)&=h_\phi\big(\tfrac1{|\mathcal G|}\textstyle\sum_{i\in\mathcal G}f_i(s_k),\,\tilde t_k\big),
-\label{eq:critic1d}\\
-&\text{\methodSVGTwoD{}:}&\quad V_\phi(s_k)&=\tfrac1{|\mathcal G|}\textstyle\sum_{i\in\mathcal G}R_{k,i},\qquad R_{k,i}=h_\phi\big(f_i(s_k),\tilde t_k\big).
-\label{eq:critic2d}
-\end{alignat}
-A flow model refines all positions at once over $K$ steps, so credit has two axes, \emph{when} along the flow and \emph{where} along the sequence (Figure~\ref{fig:mechanism}). RL for diffusion and flow models treats the whole state as one action indexed by the step \citep{liu2025flowgrpo,xue2025dancegrpo}, as \methodGRPO{} and \methodSVGScalar{} do; \methodSVGTwoD{} indexes the value by both. The actor ascends the pooled value through~(\ref{eq:pw}) in both; the critics differ in the order of head and mean and, through it, in the loss below. The order decides what each position is asked to change. The actor's signal at position $i$ is $\sum_{j}(\partial V_\phi/\partial f_j)(\partial f_j/\partial s_{k,i})$, with $s_{k,i}=(y_{k,i},\hat x_{k-1,i})$ position $i$ of the state, where
-\begin{equation}
-\text{head after the mean: }\ \frac{\partial V_\phi}{\partial f_j}=\frac{\nabla h_\phi(\bar f)}{|\mathcal G|}\ \ \forall j,\qquad \text{head before the mean: }\ \frac{\partial V_\phi}{\partial f_j}=\frac{\nabla h_\phi(f_j)}{|\mathcal G|},
-\label{eq:headgrad}
-\end{equation}
-with $\bar f$ the mean feature and $\nabla h_\phi$ the gradient in the feature argument. Either every position is pushed along one direction of feature space, the head's slope at the mean, or each along the head's slope at its own reading, the change that would raise its own estimate of success. At a given training step the two updates are similar, because both critics use the same features and outcome labels (Appendices~\ref{app:critic_equiv}, \ref{app:actor_signal}); they diverge over training as the policy evolves and the heads are refitted (Figure~\ref{fig:dyn}). A head on the mean moreover sees the positions only through the bottleneck $\bar f$: it can be written as a mean of per-position readings only if it is affine (Proposition~\ref{prop:additive}).
 
-\paragraph{Supervision without token labels.}
-Both critics are trained on states of rollouts labelled with the rollout's outcome $r$, by binary cross-entropy (BCE); the 2D critic minimises
+\subsection{Token-wise reward feedback}
+\label{sec:critic}\label{sec:jpc_scalar}\label{sec:jpc_2d}
+
+A plain design of the critic architecture needs to aggregate transformer outputs $\rvh=(h_1, \ldots, h_L)$ into a single vector and then compute the value from it. The aggregation can be mean pooling (our method) or weighted average with attention weights from a special class token.  
+In either case, the aggregation creates a bottleneck for information flow. From the perspective of gradient calculation, the signal from the reward is distributed to multiple tokens. In this subsection, we design a special architecture that allows 
+reward signal to directly pass to single tokens. 
+
+In the new neural architecture, we compute a prediction of the reward $r_{k,i}$ for each token and aggregate these token-wise
+predictions to get the critic output.  
+\begin{align}
+V_\phi(s_k) = \sum_{i=1}^{L} r_{k, i},  \quad r_{k,i} = f_{\phi}(h_i). 
+\end{align}
+Here $h_i$ is the output embedding for token $i$ when the transformer takes $s_k$ as the input. The function $f_{\phi}(\cdot)$ 
+is an MLP head. 
+
+During model training, we compare both the token prediction $r_{k, i}$ and the final prediction $V_\phi(s_k)$ against the reward 
+$R(s_k)$. The loss for fitting the new critic is: 
 \begin{equation}
-\mathcal L_{\rm 2D}(\phi)=\mathbb E_{(s_k,r)}\Big[\tfrac12\,\mathrm{BCE}\big(\mathrm{sig}(V_\phi(s_k)),r\big)+\tfrac12\,\tfrac1{|\mathcal G|}\textstyle\sum_{i\in\mathcal G}\mathrm{BCE}\big(\mathrm{sig}(R_{k,i}),r\big)\Big],
+\mathcal L_{\rm 2D}(\phi)=\mathbb E_{s_k}\Big[\tfrac12\,\mathrm{BCE}\big(V_\phi(s_k)), R(s_k) \big)
++\tfrac12\,\tfrac1{L}\textstyle\sum_{i=1}^L\mathrm{BCE}\big(r_{k,i}, R(s_k)\big)\Big]. 
 \label{eq:critic2d_loss}
 \end{equation}\eqalias{eq:bce}
-whereas the scalar critic minimises the first term alone. The first term fits $V_\phi$ to $\mathrm{logit}\,V^\star_k$, the log-odds that the update ascends; the second, present only for the 2D critic, makes every reading a calibrated log-odds on its own, without which the field $R_{k,\cdot}$ would be constrained only through its mean. One reason to expect the field to stay a usable target \emph{under the refit}: a head on the mean is one function of one vector, which the actor can raise by moving that vector wherever the head reads success, whereas a rise of the pooled field has to be carried by $|\mathcal G|$ readings, each taken by the refit head at its own position and, with the second term, each fitted to the outcome. Without the refit either critic is exploited (Table~\ref{tab:critic_design}; Appendices~\ref{app:frozen}, \ref{app:critic_equiv}). $R_{k,i}$ is not a verifier of token $i$: every reading attends over the whole state and predicts the outcome of the whole response, and within a failed response the readings barely tell wrong positions from right ones (Appendix~\ref{app:critic_maps}). What the field changes is the behaviour of the update under joint training (Figure~\ref{fig:dyn}).
+
+
+% Without the refit either critic is exploited (Table~\ref{tab:critic_design}; Appendices~\ref{app:frozen}, \ref{app:critic_equiv}). 
+%$R_{k,i}$ is not a verifier of token $i$: every reading attends over the whole state and predicts the outcome of the whole 
+%response, and within a failed response the readings barely tell wrong positions from right ones (Appendix~\ref{app:critic_maps}). 
+%What the field changes is the behaviour of the update under joint training (Figure~\ref{fig:dyn}).
 
 \subsection{Architecture and model training}
 
