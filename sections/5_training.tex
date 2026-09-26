@@ -55,7 +55,7 @@ critic on these state--reward pairs using a binary cross-entropy (BCE) loss. We 
 the pre-trained critic $V_\phi$, which is used to initialize the joint actor-critic training. 
 
 We then jointly train the critic and policy following Algorithm~\ref{alg:jpc}. During this stage, the critic backbone 
-is frozen and only the projection head $u$ is updated. For each policy update, we sample a transition index $k$ 
+is frozen and only the MLP head $f_\phi$ is updated. For each policy update, we sample a transition index $k$ 
 uniformly from a predefined window $\mathcal W={k_{\mathrm{lo}},\ldots,k_{\mathrm{hi}}}\subseteq {2,\ldots,K-2}$. 
 The window excludes the earliest denoising steps because the states remain highly noisy and provide little variation 
 in predicted value, and exclude the final steps because the generation has largely committed to its eventual output. 
