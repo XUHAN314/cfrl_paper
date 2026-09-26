@@ -3,7 +3,7 @@ For a CLM such as ELF, introduced in Section~\ref{sec:prelim}, generation procee
 
 The actions consist of the denoising predictions followed by the final decoding step. Specifically, for $k \in \{0, \ldots, K-1\}$, we define the action as $a_{k} = \rvx_{t_{k}}$. The corresponding policy $\pi(a_k | s_k)$ is induced by the denoising distribution parameterized by  $\mathrm{d}_\theta$. The final action is $a_{K} = \rvw$, whose policy is given by the decoding distribution $\pi(a_K | s_K)=p_\theta(\rvw | \rvz_{t_K})$. 
 
-The transition probability is defined by the denoising process in~(\ref{eq:sde}). A terminal reward  $r(s_{K+1})$ is provided by a verifier $R(\rvw)$ that evaluates 
+The transition probability is defined by the denoising process in~(\ref{eq:sde}). A terminal reward  $R(s_{K+1})$ is provided by a verifier that evaluates 
 the decoded response $\rvw$. The reinforcement learning objective is to maximize the expected terminal reward over trajectories induced by the policy:
 \begin{equation}
 \max_\theta \mathbb E_{s_0\sim p_0, a_k\sim \pi_\theta(\cdot|s_k), s_{k+1}\sim p(\cdot|s_k, a_k)}[R(s_{K+1})].
