@@ -45,30 +45,11 @@ $R(s_k)$. The loss for fitting the new critic is:
 
 
 %\subsection{Training the critic with the policy}
-For each task, we first perform supervised fine-tuning (SFT) on the pre-trained ELF model to obtain a 
-task-specific policy. We then generate full trajectories using the task-SFT ELF sampler and evaluate 
-each decoded response with the task verifier to obtain its terminal reward. To initialize the critic, 
-we sample a subset of intermediate states from these trajectories and pair each state with the corresponding 
-terminal reward. Starting from a copy of the task-SFT denoiser backbone with an added value head, we train the 
-critic on these state--reward pairs using a binary cross-entropy (BCE) loss. We refer to the resulting model as 
-the pre-trained critic $V_\phi$, which is used to initialize the joint actor-critic training. 
+For each task, we first perform supervised fine-tuning (SFT) on the pre-trained ELF model to obtain a task-specific policy. We then pre-train the critic on this policy's own rollouts: we generate full trajectories with the task-SFT sampler, evaluate each decoded response with the task verifier to obtain its terminal reward $R(s_{K+1})$, and pair a subset of intermediate states $s_k$ of every trajectory with that reward. The critic starts from a copy of the task-SFT denoiser backbone with an added value head $f_\phi$, and backbone and head are both trained on these state--reward pairs with the BCE loss~(\ref{eq:critic_loss}) or~(\ref{eq:critic2d_loss}).
 
-We then jointly train the critic and policy following Algorithm~\ref{alg:jpc}. During this stage, the critic backbone 
-is frozen and only the MLP head $f_\phi$ is updated. For each policy update, we sample a transition index $k$ 
-uniformly from a predefined window $\mathcal W={k_{\mathrm{lo}},\ldots,k_{\mathrm{hi}}}\subseteq {2,\ldots,K-2}$. 
-The window excludes the earliest denoising steps because the states remain highly noisy and provide little variation 
-in predicted value, and exclude the final steps because the generation has largely committed to its eventual output. 
-For a batch of prompts, we first roll out the current policy to $s_{k-1}$ without gradient tracking, then differentiate 
-only through the denoiser call that produces $s_k$. The policy parameters $\theta$ are updated to increase the critic 
-value $V_\phi(s_k)$, so that the sampled denoising transition is encouraged to move the trajectory toward states associated 
-with higher eventual reward. After each policy update, we generate a fresh batch of complete rollouts with the current 
-policy, decode their final outputs, and evaluate them with the verifier. Critic updates are performed using a replay 
-buffer containing states collected from these rollouts at step $k_{\mathrm{hi}}$, together with their corresponding 
-terminal outcomes. To ensure that the critic remains sufficiently informative as the policy evolves, we monitor its 
-ability to rank successful and unsuccessful outcomes on the most recently collected buffer states. If this ranking 
-performance, measured by AUC, falls below a predefined threshold, we perform additional critic-head updates before 
-taking the next policy update.
+We then train the policy and the critic jointly, alternating one policy update with a few critic updates (Algorithm~\ref{alg:jpc}); the critic backbone stays frozen and only its head is updated. A policy update picks one denoising step from the middle of the trajectory, where the state already carries information about the outcome but the generation has not yet committed to it. We roll out the current policy up to that step without gradients, then differentiate through the single denoiser call at that step and update $\theta$ to increase $V_\phi$: the policy learns to move the trajectory toward states of higher predicted reward. A critic update uses fresh rollouts of the updated policy, decoded and verified, and refits the head to their states and outcomes.
 
+After RL, we add an optional self-training loop. Each round samples the RL policy on unlabelled problems, keeps the answers the verifier accepts, and fine-tunes the model on them with ELF's supervised loss. Since that loss trains the whole denoiser, the gain becomes a property of the model rather than of the sampler used in RL, so faster samplers benefit too.
 %NOTE: I don't understand this paragraph, but it seems to contain important information 
 %We train the critic jointly with the policy because two things move the condition under which the bias $b_k$ of~(\ref{eq:biasm}) vanishes: 
 %as $\theta$ changes, so do the states the policy visits and so does $V^\star_k$ itself, so a critic fitted to an earlier policy is stale even on a state it has seen, and the actor, ascending $V_\phi$ wherever 
@@ -94,5 +75,5 @@ taking the next policy update.
 
 
 
-\label{sec:loop}
-The SVG variants' gains are specific to their training chain and need not transfer to a cheaper chain through the same denoiser (Appendix~\ref{app:samplers}). An optional amortisation step transfers them to other samplers through the supervised objective, which trains the denoiser at every time $t$: a round samples the policy on a pool of unlabelled prompts, keeps the verified, distinct responses, and fine-tunes the model on them with ELF's loss (Algorithm~\ref{alg:loop}, Appendix~\ref{app:loop}). This is rejection-sampling fine-tuning \citep{yuan2023rft}, the M-step of an EM view of the per-prompt reward in~(\ref{eq:objective}), whose bound is tight at the current model for plain sampling before de-duplication (Proposition~\ref{prop:em}). A round learns only from prompts with accepted responses, so its reach is limited by the pool's coverage, which the 2D critic can help expand: it uses its most pessimistic position, $\min_{i}\mathrm{sig}(R_{k,i})$, to prune parallel chains and to guide the state before decoding, so that pools can be drawn with a cheap chain (Appendix~\ref{app:loop}).
+% \label{sec:loop}
+% The SVG variants' gains are specific to their training chain and need not transfer to a cheaper chain through the same denoiser (Appendix~\ref{app:samplers}). An optional amortisation step transfers them to other samplers through the supervised objective, which trains the denoiser at every time $t$: a round samples the policy on a pool of unlabelled prompts, keeps the verified, distinct responses, and fine-tunes the model on them with ELF's loss (Algorithm~\ref{alg:loop}, Appendix~\ref{app:loop}). This is rejection-sampling fine-tuning \citep{yuan2023rft}, the M-step of an EM view of the per-prompt reward in~(\ref{eq:objective}), whose bound is tight at the current model for plain sampling before de-duplication (Proposition~\ref{prop:em}). A round learns only from prompts with accepted responses, so its reach is limited by the pool's coverage, which the 2D critic can help expand: it uses its most pessimistic position, $\min_{i}\mathrm{sig}(R_{k,i})$, to prune parallel chains and to guide the state before decoding, so that pools can be drawn with a cheap chain (Appendix~\ref{app:loop}).
