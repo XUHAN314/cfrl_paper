@@ -1,5 +1,15 @@
 \subsection{CFRL-SVG: Learn with pathwise RL with a critic}
 \label{sec:method}
+\begin{wrapfigure}[19]{r}{0.49\columnwidth}
+  \vspace{-0.8\baselineskip}
+  \centering
+  \includegraphics[width=\linewidth]{figures/figure1_new.pdf}
+  \caption{\textbf{Joint actor--critic training.}
+  The denoiser serves as the actor. The critic uses a frozen copy of the
+  denoiser backbone and a value head trained jointly with the actor.}
+  \label{fig:mechanism}
+  \vspace{-0.6\baselineskip}
+\end{wrapfigure}
 
 In our MDP formulation, only the last decoding step blocks gradient flow from the reward to the policy. We consider the stochastic 
 value gradients (SVG) \citealp{heess2015svg} and learn a critic to backpropagate the reward signal in denoising steps.  

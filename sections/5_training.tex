@@ -5,12 +5,12 @@
 % \label{fig:mechanism}
 % \end{figure}
 
-\begin{wrapfigure}[19]{r}{0.49\columnwidth}
-\centering
-\includegraphics[width=\linewidth]{figures/figure1_new.pdf}
-\caption{\textbf{Joint training of actor and critic.} The denoiser serves as the actor. The critic uses a frozen copy of the denoiser as its backbone, augmented with a trainable value head that is updated jointly with the actor.}
-\label{fig:mechanism}
-\end{wrapfigure}
+% \begin{wrapfigure}[19]{r}{0.49\columnwidth}
+% \centering
+% \includegraphics[width=\linewidth]{figures/figure1_new.pdf}
+% \caption{\textbf{Joint training of actor and critic.} The denoiser serves as the actor. The critic uses a frozen copy of the denoiser as its backbone, augmented with a trainable value head that is updated jointly with the actor.}
+% \label{fig:mechanism}
+% \end{wrapfigure}
 
 \subsection{CFRL-SVG-2D: Token-wise reward feedback}
 \label{sec:critic}\label{sec:jpc_scalar}\label{sec:jpc_2d}
@@ -23,8 +23,7 @@ In the new neural architecture, we compute a prediction of the reward $r_{k,i}$ 
 predictions to get the critic output.  
 \begin{align}
 \label{eq:value2}
-&V_\phi(s_k) = \mathrm{sigmoid}\left(\sum_{i=1}^{L} f_{\phi}(h_i)\right),  \\
-&r_{k,i} = \mathrm{sigmoid}(f_{\phi}(h_i)). 
+V_\phi(s_k) = \mathrm{sigmoid}\left(\sum_{i=1}^{L} f_{\phi}(h_i)\right), \quad r_{k,i} = \mathrm{sigmoid}(f_{\phi}(h_i)). 
 \end{align}
 Here $h_i$ is the output embedding for token $i$ when the transformer takes $s_k$ as the input. The function $f_{\phi}(\cdot)$ is an MLP head. 
 
