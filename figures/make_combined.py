@@ -32,7 +32,7 @@ for ax,(title,log,pref,key,base,off) in zip(axes[:2],panels):
     pk=e[np.argmax(e[:,1])]; ax.annotate("reported peak",xy=(pk[0],pk[1]),xytext=(pk[0]+off[0],pk[1]+off[1]),fontsize=10.5,arrowprops=dict(arrowstyle="->",lw=0.8))
     for a in (ax,ax2):
         for h,l in zip(*a.get_legend_handles_labels()): H.setdefault(l,h)
-ax=axes[2]; labels=["SFT\nbase","2D\npolicy","loop:\n2D","loop:\nbase","loop:\nGRPO","gold\nlabels"]
+ax=axes[2]; labels=["SFT\nbase","2D\npolicy","loop:\n2D","loop:\nbase","loop:\nGRR","gold\nlabels"]
 dep=[45.0,59.3,56.0,46.1,50.5,49.2]; ode=[35.2,42.2,50.5,40.2,43.5,38.7]; xx=np.arange(len(labels))
 ax.bar(xx-0.2,dep,0.4,color="#1a9c5b",label="deployment ($\\gamma$56@64)"); ax.bar(xx+0.2,ode,0.4,color="#7fc9a5",label="ODE-64")
 for xi,d_,o in zip(xx,dep,ode): ax.text(xi-0.2,d_+0.7,f"{d_:.1f}",ha="center",fontsize=9); ax.text(xi+0.2,o+0.7,f"{o:.1f}",ha="center",fontsize=9)
