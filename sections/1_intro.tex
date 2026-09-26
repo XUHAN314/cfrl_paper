@@ -12,11 +12,10 @@ discrete tokens and take discrete actions during generation, RL methods for them
 and GRPO \citep{shao2024deepseekmath}, rely mainly on score-function (REINFORCE) gradients \citep{williams1992reinforce}.
 
 
-Continuous language models (CLMs) have historically lagged behind their discrete counterparts in language generation 
+Continuous language models (CLMs) have historically lagged behind discrete counterparts in language generation 
 \citep{li2022diffusionlm,gong2022diffuseq,dieleman2022continuous}. The recent ELF \citep{hu2026elf}, a CLM based on
 flow matching \citep{lipman2022flow,liu2022rectified}, closes this gap: it achieves lower generative perplexity with fewer
-sampling steps while using ten times fewer training tokens. ELF generates real-valued token embeddings by progressively
-denoising Gaussian noise, then decodes the final embeddings into discrete tokens. Its continuous generation trajectory is
+sampling steps while using ten times fewer training tokens. ELF progressively denoises Gaussian noise into real-valued token embeddings, then decodes the final embeddings into discrete tokens. Its continuous generation trajectory is
 differentiable, which makes it possible to backpropagate reward signals through the denoising process.
 
 %when the verifier reward becomes available; thus, no transition or noise coordinate directly corresponds 
