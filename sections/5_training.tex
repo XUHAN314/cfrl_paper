@@ -23,7 +23,8 @@ In the new neural architecture, we compute a prediction of the reward $r_{k,i}$ 
 predictions to get the critic output.  
 \begin{align}
 \label{eq:value2}
-V_\phi(s_k) = \sum_{i=1}^{L} r_{k, i},  r_{k,i} = \mathrm{sigmoid}(f_{\phi}(h_i)). 
+&V_\phi(s_k) = \mathrm{sigmoid}\left(\sum_{i=1}^{L} f_{\phi}(h_i)\right),  \\
+&r_{k,i} = \mathrm{sigmoid}(f_{\phi}(h_i)). 
 \end{align}
 Here $h_i$ is the output embedding for token $i$ when the transformer takes $s_k$ as the input. The function $f_{\phi}(\cdot)$ is an MLP head. 
 
