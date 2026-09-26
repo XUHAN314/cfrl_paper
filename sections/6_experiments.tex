@@ -42,7 +42,7 @@ released model & \phantom{0}0.0 & \phantom{0}0.0 & \phantom{0}0.0 & \phantom{0}0
 \end{table}
 
 \paragraph{Main results.}\label{sec:exp_main}
-Table~\ref{tab:main} compares the three \method{} variants with the two references. Every variant raises the flow model's average accuracy over the four tasks, \methodGRPO{}, which needs no critic, by the least and \methodSVGTwoD{} by the most; \methodSVGTwoD{} is the best flow row on every task. Across architectures the flow model and the autoregressive model trade tasks: GPT-2 leads on Countdown and K\&K, whose answers are longer derivations, the flow model on Game24 and on Sudoku, which neither reference learns. The 8B masked-diffusion model stays far below the flow model on every task, and \methodSVGTwoD{} gains more than diffu-GRPO on every task. Two regularities run through the table. The score-function recipes are capped: \methodGRPO{} on the flow model and diffu-GRPO on the 8B masked model each gain at most a few points on any task, whatever the model's size, whereas the gains of the critic variants vary with the task and grow well beyond that. And the critic's resolution matters more than the critic itself: the scalar critic does not beat \methodGRPO{} on every task, but the 2D critic beats both on all four. The gains are large: \methodSVGTwoD{} lifts Game24 by \hl{14.2} points and takes Sudoku to \hl{68.7}, so a 105M flow model becomes the strongest model on Sudoku and Game24 and the strongest flow model on all four tasks.
+Table~\ref{tab:main} compares the three \method{} variants with the two references. Every variant raises the flow model's average accuracy over the four tasks, \methodGRPO{}, which needs no critic, by the least and \methodSVGTwoD{} by the most; \methodSVGTwoD{} is the best flow row on every task. Across architectures the flow model and the autoregressive model trade tasks: GPT-2 leads on Countdown and K\&K, whose answers are longer derivations, the flow model on Game24 and on Sudoku, which neither reference learns. The 8B masked-diffusion model stays far below the flow model on every task, and \methodSVGTwoD{} gains more than diffu-GRPO on every task. Two regularities run through the table. The score-function recipes are capped: \methodGRPO{} on the flow model and diffu-GRPO on the 8B masked model each gain at most a few points on any task, whatever the model's size, whereas the gains of the critic variants vary with the task and grow well beyond that. And the critic's resolution matters more than the critic itself: the 1D critic does not beat \methodGRPO{} on every task, but the 2D critic beats both on all four. The gains are large: \methodSVGTwoD{} lifts Game24 by \hl{14.2} points and takes Sudoku to \hl{68.7}, so a 105M flow model becomes the strongest model on Sudoku and Game24 and the strongest flow model on all four tasks.
 
 
 \paragraph{Effect of the gradient estimator.}\label{sec:exp_estimator}
@@ -62,8 +62,8 @@ The two panels say the same thing from two sides. The score-function gradient of
 \textbf{Critic} & \textbf{Pearson} & \textbf{pick@$V_\phi$} & \textbf{max.} & \textbf{final} \\
 \midrule
 \multicolumn{5}{c}{\emph{critic input and initialisation}}\\
-\rowcolor{gray!15}\textbf{fine-tuned copy, reads $(y_k,\hat x_{k-1})$} & \CDa{1} & \CDa{3} & \CDa{5} & \CDa{6} \\
-\quad without $\hat x_{k-1}$ in the input & \CDb{1} & \CDb{3} & \CDb{5} & \CDb{6} \\
+\rowcolor{gray!15}\textbf{fine-tuned copy, reads $(y_k,x_{t_{k-1}})$} & \CDa{1} & \CDa{3} & \CDa{5} & \CDa{6} \\
+\quad without $x_{t_{k-1}}$ in the input & \CDb{1} & \CDb{3} & \CDb{5} & \CDb{6} \\
 \quad copy not fine-tuned & \CDc{1} & \CDc{3} & \CDc{5} & \CDc{6} \\
 \quad random initialisation & \CDd{1} & \CDd{3} & 37.9 & \phantom{0}4.1 \\
 \midrule
@@ -82,17 +82,17 @@ The two panels say the same thing from two sides. The score-function gradient of
 \end{table}
 
 \paragraph{Effect of the critic design.}\label{sec:exp_critic}
-Table~\ref{tab:critic_design} changes one element of the critic at a time. Without the estimate $\hat x_{k-1}$, or with the copy not fine-tuned, the critic reads the outcome worse offline, and the policy first rises above the base and then falls far below it; a random initialisation never clears the base. The outcome is readable from $\hat x_{k-1}$, and the pre-trained denoiser is what reads it. Training the copy during RL does not help, so only the head is refit. Without the refit the actor exploits the critic: in the right panel the critic's value is driven to certainty while the true success of the same batch falls to zero.
+Table~\ref{tab:critic_design} changes one element of the critic at a time. Without the estimate $x_{t_{k-1}}$, or with the copy not fine-tuned, the critic reads the outcome worse offline, and the policy first rises above the base and then falls far below it; a random initialisation never clears the base. The outcome is readable from $x_{t_{k-1}}$, and the pre-trained denoiser is what reads it. Training the copy during RL does not help, so only the head is refit. Without the refit the actor exploits the critic: in the right panel the critic's value is driven to certainty while the true success of the same batch falls to zero.
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.85\linewidth]{figures/fig_dyn.pdf}
-\caption{\textbf{Scalar versus 2D critic.} Game24 accuracy (\%) over training. \textbf{Left:} scalar- and 2D-critic runs (thin) and their means (thick). \textbf{Right:} critics exchanged at iteration 250 (dashed) or not (solid); colour: the critic in charge afterwards.}
+\caption{\textbf{1D versus 2D critic.} Game24 accuracy (\%) over training. \textbf{Left:} 1D- and 2D-critic runs (thin) and their means (thick). \textbf{Right:} critics exchanged at iteration 250 (dashed) or not (solid); colour: the critic in charge afterwards.}
 \label{fig:dyn}
 \end{figure}
 
-\paragraph{Scalar versus 2D critic.}\label{sec:exp_2d}
-Figure~\ref{fig:dyn} follows the scalar- and 2D-critic runs of Table~\ref{tab:main} on Game24; the two recipes differ only in the critic's head, one reading of the pooled features against one reading per position. \emph{Left:} the 2D critic rises faster from the first checkpoint on and plateaus well above the scalar critic, which levels off early. \emph{Right:} to tell whether this is the critic's doing or a better start, the two critics are exchanged at iteration 250, while the two policies are still close. Each exchanged run (dashed) ends where the critic now in charge takes it, whichever policy it inherited: the run that switches to the 2D critic climbs to the 2D level, the run that switches to the scalar critic falls to the scalar level. The advantage is therefore made during joint training, by the gradient the critic hands the actor, not by a head start; one reading per position steers the policy further than one reading of the whole state.
+\paragraph{1D versus 2D critic.}\label{sec:exp_2d}
+Figure~\ref{fig:dyn} follows the 1D- and 2D-critic runs of Table~\ref{tab:main} on Game24; the two recipes differ only in the critic's head, one reading of the pooled features against one reading per position. \emph{Left:} the 2D critic rises faster from the first checkpoint on and plateaus well above the 1D critic, which levels off early. \emph{Right:} to tell whether this is the critic's doing or a better start, the two critics are exchanged at iteration 250, while the two policies are still close. Each exchanged run (dashed) ends where the critic now in charge takes it, whichever policy it inherited: the run that switches to the 2D critic climbs to the 2D level, the run that switches to the 1D critic falls to the 1D level. The advantage is therefore made during joint training, by the gradient the critic hands the actor, not by a head start; one reading per position steers the policy further than one reading of the whole state.
 
 \paragraph{Effect of the objective, the pooling and the sampler.}\label{sec:ablations}
 Table~\ref{tab:needs} removes three choices one at a time, and each costs accuracy: ascending the success probability instead of its log-odds, which amplify the gradient where the outcome is nearly decided; pooling positions by the minimum, whose gradient reaches only one position per state; and, most of all, training under the cheap sampler, whose values differ from those of the deployment sampler.
@@ -106,7 +106,7 @@ Table~\ref{tab:needs} removes three choices one at a time, and each costs accura
 \toprule
 \textbf{Choice} & \textbf{Variant} & \textbf{$\Delta$ max.} & \textbf{$\Delta$ final} \\
 \midrule
-objective & actor ascends $\mathrm{sig}(V_\phi)$ instead of $V_\phi$ & $-4.0$ & $-6.1$ \\
+objective & actor ascends $(V_\phi)$ instead of $\mathrm{logit}V_\phi$ & $-4.0$ & $-6.1$ \\
 pooling & actor ascends the minimum over positions instead of the mean & $-3.1$ & $-2.5$ \\
 sampler & trained under the cheap sampler, read at deployment & \cellcolor{blue!12}$-9.4$ & \cellcolor{blue!12}$-9.4$ \\
 \bottomrule
