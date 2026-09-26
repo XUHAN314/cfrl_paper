@@ -38,6 +38,7 @@ $(\rvz_{t_{k}}, t_k, \rvx_{t_{k-1}}, \rvc)$ as input and produce a sequence of
 $L$ token-level hidden representations, $\rvh = (h_1, \ldots, h_L)$. Then mean pooling is applied over 
 these hidden representations to give a sequence-level representation, which is then mapped to a scalar value estimate:
 \begin{align}
+\label{eq:value1}
 V_{\phi}(s_k) = \mathrm{sigmoid}(f_{\phi}(\cdot \mathrm{mean}(\rvh)))    
 \end{align}
 Here $f_{\phi}$ is an MLP and is included in the critic parameters $\phi$.  
