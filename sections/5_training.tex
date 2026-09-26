@@ -37,18 +37,35 @@ $R(s_k)$. The loss for fitting the new critic is:
 
 \subsection{Architecture and model training}
 
-To leverage the representations and knowledge already learned by the policy denoiser, we initialize the critic $V_\phi$ with a copy of the denoiser Transformer backbone.  At generation step $k$, both the policy denoiser and the critic backbone take $(\rvz_{t_{k}}, t_k, \rvx_{t_{k-1}}, \rvc)$ as input and produce a sequence of  $L$ token-level hidden representations, $\rvh = (h_1, \ldots, h_L)$ , from the Transformer backbone.
-The critic then applies mean pooling over these hidden representations to obtain a sequence-level representation, which is mapped to a scalar value estimate:\begin{align}
-V_{\phi}(s_k) = \mathrm{sigmoid}(u \cdot \mathrm{mean}(\rvh))
-\end{align}
-Here $u$ denotes a learnable projection vector and is included in the critic parameters $\phi$.  
-
-
 
 %\subsection{Training the critic with the policy}
-For each task, we first perform supervised fine-tuning (SFT) on the pre-trained ELF model to obtain a task-specific policy. We then generate full trajectories using the task-SFT ELF sampler and evaluate each decoded response with the task verifier to obtain its terminal reward. To initialize the critic, we sample a subset of intermediate states from these trajectories and pair each state with the corresponding terminal reward. Starting from a copy of the task-SFT denoiser backbone with an added value head, we train the critic on these state--reward pairs using a binary cross-entropy (BCE) loss. We refer to the resulting model as the pre-trained critic $V_\phi$, which is used to initialize the joint actor-critic training. 
+For each task, we first perform supervised fine-tuning (SFT) on the pre-trained ELF model to obtain a 
+task-specific policy. We then generate full trajectories using the task-SFT ELF sampler and evaluate 
+each decoded response with the task verifier to obtain its terminal reward. To initialize the critic, 
+we sample a subset of intermediate states from these trajectories and pair each state with the corresponding 
+terminal reward. Starting from a copy of the task-SFT denoiser backbone with an added value head, we train the 
+critic on these state--reward pairs using a binary cross-entropy (BCE) loss. We refer to the resulting model as 
+the pre-trained critic $V_\phi$, which is used to initialize the joint actor-critic training. 
 
+<<<<<<< HEAD
 We then jointly train the critic and policy following Algorithm~\ref{alg:jpc}. During this stage, the critic backbone is frozen and only the projection head $u$ is updated. For each policy update, we sample a transition index $k$ uniformly from a predefined window $\mathcal W={k_{\mathrm{lo}},\ldots,k_{\mathrm{hi}}}\subseteq {2,\ldots,K-2}$. The window excludes the earliest denoising steps because the states remain highly noisy and provide little variation in predicted value, and exclude the final steps because the generation has largely committed to its eventual output. For a batch of prompts, we first roll out the current policy to $s_{k-1}$ without gradient tracking, then differentiate only through the denoiser call that produces $s_k$. The policy parameters $\theta$ are updated to increase the critic value $V_\phi(s_k)$, so that the sampled denoising transition is encouraged to move the trajectory toward states associated with higher eventual reward. After each policy update, we generate a fresh batch of complete rollouts with the current policy, decode their final outputs, and evaluate them with the verifier. Critic updates are performed using a replay buffer containing states collected from these rollouts at step $k_{\mathrm{hi}}$, together with their corresponding terminal outcomes. To ensure that the critic remains sufficiently informative as the policy evolves, we monitor its ability to rank successful and unsuccessful outcomes on the most recently collected buffer states. If this ranking performance, measured by AUC, falls below a predefined threshold, we perform additional critic-head updates before taking the next policy update.
+=======
+We then jointly train the critic and policy following Algorithm~\ref{alg}. During this stage, the critic backbone 
+is frozen and only the projection head $u$ is updated. For each policy update, we sample a transition index $k$ 
+uniformly from a predefined window $\mathcal W={k_{\mathrm{lo}},\ldots,k_{\mathrm{hi}}}\subseteq {2,\ldots,K-2}$. 
+The window excludes the earliest denoising steps because the states remain highly noisy and provide little variation 
+in predicted value, and exclude the final steps because the generation has largely committed to its eventual output. 
+For a batch of prompts, we first roll out the current policy to $s_{k-1}$ without gradient tracking, then differentiate 
+only through the denoiser call that produces $s_k$. The policy parameters $\theta$ are updated to increase the critic 
+value $V_\phi(s_k)$, so that the sampled denoising transition is encouraged to move the trajectory toward states associated 
+with higher eventual reward. After each policy update, we generate a fresh batch of complete rollouts with the current 
+policy, decode their final outputs, and evaluate them with the verifier. Critic updates are performed using a replay 
+buffer containing states collected from these rollouts at step $k_{\mathrm{hi}}$, together with their corresponding 
+terminal outcomes. To ensure that the critic remains sufficiently informative as the policy evolves, we monitor its 
+ability to rank successful and unsuccessful outcomes on the most recently collected buffer states. If this ranking 
+performance, measured by AUC, falls below a predefined threshold, we perform additional critic-head updates before 
+taking the next policy update.
+>>>>>>> 6d4ad2533781bfa9a63228d3f9629802ff8924c3
 
 %NOTE: I don't understand this paragraph, but it seems to contain important information 
 %We train the critic jointly with the policy because two things move the condition under which the bias $b_k$ of~(\ref{eq:biasm}) vanishes: 
