@@ -113,8 +113,8 @@ sampler & trained under the cheap sampler, read at deployment & \cellcolor{blue!
 \end{tabular*}
 \end{table}
 
-\paragraph{Effect of the amortisation loop.}\label{sec:exp_loop}
-Table~\ref{tab:loop} applies the amortisation loop (Algorithm~\ref{alg:loop}) to the 2D-critic policy on Countdown and K\&K with a pool of unlabelled problems. After the loop the cheap sampler ends above the base's deployment accuracy on both tasks, and on K\&K the deployment sampler rises to \hl{99.1}, above every model of Table~\ref{tab:main}. ELF's supervised loss trains the denoiser at every noise level, so fine-tuning on the policy's verified samples benefits every sampler.
+\paragraph{Effect of the amortization loop.}\label{sec:exp_loop}
+Table~\ref{tab:loop} applies the amortization loop (Algorithm~\ref{alg:loop}) to the 2D-critic policy on Countdown and K\&K with a pool of unlabelled problems. After the loop the cheap sampler ends above the base's deployment accuracy on both tasks, and on K\&K the deployment sampler rises to \hl{99.1}, above every model of Table~\ref{tab:main}. ELF's supervised loss trains the denoiser at every noise level, so fine-tuning on the policy's verified samples benefits every sampler.
 
 \paragraph{Effect of the loop across sampler cost.}
 The right panel of Table~\ref{tab:loop} reads the same three models at four samplers of increasing cost. RL alone leaves the curve steep on Countdown, where its gain sits at the expensive end and the 16-step sampler barely moves, whereas on K\&K it lifts every sampler. The loop flattens both curves: after it, accuracy varies by 5 to 6 points across the four samplers, so the cheapest sampler delivers nearly the deployment accuracy.
@@ -132,7 +132,7 @@ The right panel of Table~\ref{tab:loop} reads the same three models at four samp
 \midrule
 base & 23.8 & 42.8 & 58.6 & 68.2 \\
 2D-critic ckpt (loop start) & 24.3 & 50.5 & 68.8 & 79.8 \\
-\rowcolor{gray!15}\textbf{+ amortisation loop} & \textbf{45.6} & 51.4 & \textbf{93.8} & \textbf{99.1} \\
+\rowcolor{gray!15}\textbf{+ amortization loop} & \textbf{45.6} & 51.4 & \textbf{93.8} & \textbf{99.1} \\
 \bottomrule
 \end{tabular}
 \end{minipage}\hfill
@@ -140,6 +140,6 @@ base & 23.8 & 42.8 & 58.6 & 68.2 \\
 \centering
 \includegraphics[width=\linewidth]{figures/fig_samplers.pdf}
 \end{minipage}
-\caption{\textbf{Amortisation loop.} \textbf{Left:} accuracy (\%) under the cheap and the deployment sampler before and after the loop; bold: over 1.0 point above the loop start; shaded: the full pipeline. \textbf{Right:} the same three models across sampler cost.}
+\caption{\textbf{Amortization loop.} \textbf{Left:} accuracy (\%) under the cheap and the deployment sampler before and after the loop; bold: over 1.0 point above the loop start; shaded: the full pipeline. \textbf{Right:} the same three models across sampler cost.}
 \label{tab:loop}
 \end{table}
