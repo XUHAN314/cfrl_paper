@@ -11,11 +11,11 @@
   \vspace{-0.6\baselineskip}
 \end{wrapfigure}
 
-In our MDP formulation, only the last decoding step blocks gradient flow from the reward to the policy. We consider the stochastic 
+In our MDP formulation, only the last decoding step blocks gradient flow from the reward to the policy. We use stochastic 
 value gradients (SVG) \citep{heess2015svg} and learn a critic to backpropagate the reward signal in denoising steps.  
 
 The value function $V^\star_k(s_k) = \mathbb E[R(s_{K+1}) \mid s_k]$ of a state $s_k$ is the expected reward of all continuations from that state. 
-Since the reward $R(s_{K+1})$ is 0 or 1, the value $V^\star_k(s_k)$ is the probability $p_\theta(R(s_{K+1}) | s_k)$ of success from $s_k$. 
+Since the reward $R(s_{K+1})$ is binary, the value $V^\star_k(s_k)$ is the probability $p_\theta(R(s_{K+1}) | s_k)$ of success from $s_k$. 
 Note that the MDP problem here has a finite horizon so the value function is relatively easy to learn. 
 
 We train a critic $V_\phi$ to predict the value function $V^\star_k(s_k)$ from the state $s_k$. The critic is trained with 

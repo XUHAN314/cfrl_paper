@@ -20,7 +20,7 @@ The maximization objective is:
 \mathcal J_{\mathrm{GRR}}(\theta)=\frac1G\sum_{g=1}^{G}A^g\Bigl[\sum_{k=0}^{K-1}\log\pi_\theta\bigl(a^g_k \mid s^g_{k}\bigr)+\frac{1}{L} \log\pi_\theta\bigl(a^g_{K} \mid s^g_K\bigr)\Bigr].
 \label{eq:grpo_loss}
 \end{equation}
-The last step, $\pi_\theta\bigl(a^g_{K} \mid s^g_K\bigr)$, decodes all $L$ token embeddings with a shared output weight matrix.
+The last step, $\pi_\theta\bigl(a^g_{K} \mid s^g_K\bigr)$, decodes all $L$ token embeddings with a shared output matrix.
 Because this decoding step is comparatively easy to optimize, we scale its term by $\frac{1}{L}$ to slow its updates.
 
 We also experimented with GRPO \citep{shao2024deepseekmath} with various settings and found that neither ratio clipping nor a KL penalty was necessary in our setting.
