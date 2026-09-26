@@ -31,6 +31,20 @@ In the calculation of $\nabla_\theta \mathcal{J}_{\mathrm{SVG}}(\theta)$, we onl
 state $s_{k-1} = (\rvz_{t_{k - 1}}, \rvx_{t_{k-2}})$. Then the calcualtion $\mathcal{J}_{\mathrm{SVG}}(\theta)$ can be viewed reparameterization, 
 which allows the gradient to propagate from $V_\phi$ to $d_\theta$ directly.    
 
+In our architecture design, the critic $V_\phi$ uses the same transformer architecture with the policy $\phi_\theta$ but has its own 
+copy. To leverage the representations learned in pre-training, the critic  
+$V_\phi$ initilize the denoiser transformer backbone with the ELF model. The transformer takes 
+$(\rvz_{t_{k}}, t_k, \rvx_{t_{k-1}}, \rvc)$ as input and produce a sequence of  
+$L$ token-level hidden representations, $\rvh = (h_1, \ldots, h_L)$. Then mean pooling is applied over 
+these hidden representations to give a sequence-level representation, which is then mapped to a scalar value estimate:
+\begin{align}
+V_{\phi}(s_k) = \mathrm{sigmoid}(u \cdot \mathrm{mean}(\rvh))
+\end{align}
+Here $u$ denotes a learnable projection vector and is included in the critic parameters $\phi$.  
+
+
+
+
 %[NOTE: if space allows, we can put the gradient calculation here]
   
 
