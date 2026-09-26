@@ -12,7 +12,7 @@
 % \label{fig:mechanism}
 % \end{wrapfigure}
 
-\subsection{CFRL-SVG-2D: Token-wise reward feedback}
+\subsection{\methodSVGTwoD{}: Token-wise reward feedback}
 \label{sec:critic}\label{sec:jpc_scalar}\label{sec:jpc_2d}
 
 A plain design of the critic architecture needs to aggregate transformer outputs $\rvh=(h_1, \ldots, h_L)$ into a single vector and then compute the value from it. The aggregation can be mean pooling (our method) or weighted average with attention weights from a special class token.  
