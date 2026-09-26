@@ -1,7 +1,7 @@
 \section{Method}
-For a CLM such as ELF, introduced in Section~\ref{sec:prelim}, generation proceeds over a fixed horizon of $K+1$ steps. At each generation step $k\in\{1,\ldots,K\}$, we define the MDP state as $s_k = (\rvz_{t_k}, \rvx_{t_{k-1}})$. The initial state is $s_0 = (\epsilon, \mathbf{0})$, where $\epsilon$ is the Gaussian noise defined above. We include $\rvx_{t_{k-1}}$ in the state because it is required by the self-conditioning mechanism of ELF.  The terminal state $s_{K+1} = \rvw$  corresponds to the decoded response. 
+The generation procedure of ELF introduced in Section~\ref{sec:prelim} proceeds over a fixed horizon of $K+1$ steps. At each generation step $k\in\{1,\ldots,K\}$, we define the MDP state as $s_k = (\rvz_{t_k}, \rvx_{t_{k-1}})$. The initial state is $s_0 = (\epsilon, \mathbf{0})$, where $\epsilon$ is the Gaussian noise defined above. We include $\rvx_{t_{k-1}}$ in the state because it is required by the self-conditioning mechanism of ELF. We omit $\rvc$ and $t_{k}$ from the state $s_k$ for notational simplicity. The terminal state $s_{K+1} = \rvw$  corresponds to the decoded response. 
 
-The actions consist of the denoising predictions followed by the final decoding step. Specifically, for $k \in \{0, \ldots, K-1\}$, we define the action as $a_{k} = (\rvx_{t_{k}}, \epsilon)$. The corresponding policy $\pi(a_k | s_k)$ is induced by the denoising distribution parameterized by  $\mathrm{d}_\theta$. The final action is $a_{K} = \rvw$, whose policy is given by the decoding distribution $\pi(a_K | s_K)=p_\theta(\rvw | \rvz_{t_K})$. 
+The actions consist of the denoising predictions followed by the final decoding step. Specifically, for $k \in \{0, \ldots, K-1\}$, we define the action as $a_{k} = (\rvx_{t_{k}}, \epsilon)$. The corresponding policy $\pi_\theta(a_k | s_k)$ defined by the denoiser $\mathrm{d}_\theta$ and the noise distribution. The final action is $a_{K} = \rvw$, and the policy at this step is $\pi_\theta(a_K | s_K)=p_\theta(\rvw | \rvz_{t_K})$. 
 
 The transition probability is defined by the denoising process in~(\ref{eq:sde}). A terminal reward  $R(s_{K+1})$ is provided by a verifier that evaluates 
 the decoded response $\rvw$. The reinforcement learning objective is to maximize the expected terminal reward over trajectories induced by the policy:
@@ -10,21 +10,21 @@ the decoded response $\rvw$. The reinforcement learning objective is to maximize
 \label{eq:objective}
 \end{equation}
 
-\subsection{CFRL-GRR:Learning with group-relative REINFORCE}
+\subsection{CFRL-GRR: Learning with group-relative REINFORCE}
 
-Similar to other language models, a CLM can be optimized using policy-gradient methods \citep{sutton1998reinforcement}, without concerning the last non-differentible decoding step. We consider a variant of group-relative REINFORCE method \citep{yao2026grouprelative}. 
-For each context $\rvc$, we sample a group of $G$ responses, $(s^1_{K+1}, \ldots, s^G_{K+1})$. For each response, we additionally record the corresponding generation trajectory, $(s^g_0, a^g_0, s^g_1, a^g_1, \ldots, s^g_K, a^g_K)$. Let 
+Similar to other language models, an ELF model can be post-trained using policy-gradient methods \citep{sutton1998reinforcement}, without concerning the last non-differentible decoding step. We start with a simple method and consider a variant of the group-relative REINFORCE method \citep{yao2026grouprelative}. 
+For each context $\rvc$, we sample a group of $G$ responses, $(s^1_{K+1}, \ldots, s^G_{K+1})$. For each response, we additionally record the corresponding generation trajectory. Let 
 $r^g = R(s^g_{K+1})$, then the group advantage is computed as $A^g =  \frac{r(s^g_{K+1}) - \mathrm{mean}(r^{1:G})}{\mathrm{std}(r^{1:G})}$.
 The maximization objective is:
 \begin{equation}
 \mathcal J_{\mathrm{GRR}}(\theta)=\frac1G\sum_{g=1}^{G}A^g\Bigl[\sum_{k=0}^{K-1}\log\pi_\theta\bigl(a^g_k \mid s^g_{k}\bigr)+\frac{1}{L} \log\pi_\theta\bigl(a^g_{K} \mid s^g_K\bigr)\Bigr].
 \label{eq:grpo_loss}
 \end{equation}
-Note that the last step $\pi_\theta\bigl(a^g_{K} \mid s^g_K\bigr)$ decodes all $L$ token embeddings using a shared output weight matrix. 
-Since this decoding step is comparatively easy to optimize, we downweight its contribution by a factor of $\frac{1}{L}$ to prevent it from dominating the policy update.
+The last step, $\pi_\theta\bigl(a^g_{K} \mid s^g_K\bigr)$, decodes all $L$ token embeddings with a shared output weight matrix.
+Because this decoding step is comparatively easy to optimize, we scale its term by $\frac{1}{L}$ to slow its updates.
 
 We also experimented with GRPO \citep{shao2024deepseekmath} with various settings and found that neither ratio clipping nor a KL penalty was necessary in our setting.
-This observation is consistent with findings reported in DAPO \citep{yu2025dapo}. One important distinction is that our denoiser operates over a continuous state space of dimension $dL$, whereas an AR language model defines a discrete distribution over a vocabulary at each generation step. These differences in the underlying generation process and policy parameterization may call for different RL optimization strategies. We leave a systematic investigation of such training techniques for CLMs to future work.
+This observation that the KL-penalty has no benefit is consistent with findings reported in DAPO \citep{yu2025dapo}. One important distinction is that our denoiser operates over a continuous state space of dimension $dL$, whereas an AR language model defines a discrete distribution over a vocabulary at each generation step. These differences in the underlying generation process and policy parameterization may call for different RL optimization strategies. We leave an  investigation of such training techniques to future work.
 
 %so $\log\pi_\theta\bigl(a^g_k \mid s^g_{k}\bigr)$ in our case has higher variance
 
