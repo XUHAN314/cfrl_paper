@@ -12,7 +12,7 @@
 \end{wrapfigure}
 
 In our MDP formulation, only the last decoding step blocks gradient flow from the reward to the policy. We consider the stochastic 
-value gradients (SVG) \citealp{heess2015svg} and learn a critic to backpropagate the reward signal in denoising steps.  
+value gradients (SVG) \citep{heess2015svg} and learn a critic to backpropagate the reward signal in denoising steps.  
 
 The value function $V^\star_k(s_k) = \mathbb E[R(s_{K+1}) \mid s_k]$ of a state $s_k$ is the expected reward of all continuations from that state. 
 Since the reward $R(s_{K+1})$ is 0 or 1, the value $V^\star_k(s_k)$ is the probability $p_\theta(R(s_{K+1}) | s_k)$ of success from $s_k$. 
@@ -37,21 +37,20 @@ Now we can directly backpropagate the reward information to denoising actions. W
 = \mathbb{E}_{\rvz_{t_{k - 1}}, \rvx_{t_{k-2}}, \varepsilon} \Bigl[ V_\phi(\rvz_{t_k}, \rvx_{t_{k-1}}) \Bigr] \quad \text{with} \\
 \rvx_{t_{k-1}} &= \mathrm{d}_\theta(\rvz_{t_{k-1}}, \rvx_{t_{k-2}}),  \quad \rvz_{t_{k}} = \lambda_{k} \rvz_{t_{k-1}} + \eta_k \rvx_{t_{k-1}} + \psi_k \varepsilon
 \end{align}
-In the calculation of $\nabla_\theta \mathcal{J}_{\mathrm{SVG}}(\theta)$, we only use the gradient from on transition and do not take the derivative of 
-state $s_{k-1} = (\rvz_{t_{k - 1}}, \rvx_{t_{k-2}})$. Then the calcualtion $\mathcal{J}_{\mathrm{SVG}}(\theta)$ can be viewed reparameterization, 
+In the calculation of $\nabla_\theta \mathcal{J}_{\mathrm{SVG}}(\theta)$, we only use the gradient from one transition and do not take the derivative of 
+state $s_{k-1} = (\rvz_{t_{k - 1}}, \rvx_{t_{k-2}})$. Then the calcualtion of $\mathcal{J}_{\mathrm{SVG}}(\theta)$ can be viewed reparameterization, 
 which allows the gradient to propagate from $V_\phi$ to $d_\theta$ directly.    
 
-In our architecture design, the critic $V_\phi$ uses the same transformer architecture with the policy $\phi_\theta$ but has its own 
-copy. To leverage the representations learned in pre-training, the critic  
-$V_\phi$ initilize the denoiser transformer backbone with the ELF model. The transformer takes 
+In our architecture design, the critic $V_\phi$ takes Transformer architecture from the trained EFL model but keeps its own 
+copy. The Transformer takes 
 $(\rvz_{t_{k}}, t_k, \rvx_{t_{k-1}}, \rvc)$ as input and produce a sequence of  
 $L$ token-level hidden representations, $\rvh = (h_1, \ldots, h_L)$. Then mean pooling is applied over 
-these hidden representations to give a sequence-level representation, which is then mapped to a scalar value estimate:
+these hidden representations to give a sequence-level representation, which is then mapped to a scalar value prediction:
 \begin{align}
 \label{eq:value1}
-V_{\phi}(s_k) = \mathrm{sigmoid}(f_{\phi}(\cdot \mathrm{mean}(\rvh)))    
+V_{\phi}(s_k) = \mathrm{sigmoid}(f_{\phi}(\mathrm{mean}(\rvh)))    
 \end{align}
-Here $f_{\phi}$ is an MLP and is included in the critic parameters $\phi$.  
+Here $f_{\phi}$ is an MLP, whose parameters are included in $\phi$.  
 
 
 
