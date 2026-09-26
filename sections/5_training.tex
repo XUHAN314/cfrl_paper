@@ -85,9 +85,9 @@ taking the next policy update.
 \begin{algorithmic}[1]
 \REQUIRE policy parameters $\theta$; pre-trained critic $V_\phi$ with trainable head parameters $\phi$ on a fixed copy of the denoiser; verifier $R$; sampler $(\gamma,K)$; window $\mathcal W$ with top step $k_{\rm hi}$; buffer $\mathcal B$ and its size $N_{\mathcal B}$; iterations $T$, prompts per iteration $B$, critic minibatch $B'$ and steps $m_{\rm c}$, AUC check every $n_q$ iterations on the newest $N_q$ states with floor $a_0$ and $m'_{\rm c}$ extra steps; learning rates $\eta_\theta,\eta_\phi$
 \FOR{iteration $=1,\dots,T$}
-  \STATE \textbf{Actor.} For $B$ prompts and one $k\sim\mathcal U(\mathcal W)$: roll out under $(\gamma,K)$ to $s_{k-1}$ without gradients, take the denoiser call at $s_{k-1}$ with gradients to form $s_k$, and set $\theta\leftarrow\theta+\eta_\theta\,\mathrm{AdamW}\big(\nabla_\theta\frac1B\sum_{g=1}^{B}V_\phi(s^g_k)\big)$ \hfill (eq.~\ref{eq:value1}, eq.~\ref{eq:value2}; gradient-norm clipped)
+  \STATE \textbf{Actor.} For $B$ prompts and one $k\sim\mathcal U(\mathcal W)$: roll out under $(\gamma,K)$ to $s_{k-1}$ without gradients, take the denoiser call at $s_{k-1}$ with gradients to form $s_k$, and set $\theta\leftarrow\theta+\eta_\theta\,\mathrm{AdamW}\big(\nabla_\theta\frac1B\sum_{g=1}^{B}V_\phi(s^g_k)\big)$ \hfill (eq.~\ref{eq:value1}; eq.~\ref{eq:value2}; gradient-norm clipped)
   \STATE \textbf{Buffer.} Roll out $B$ fresh prompts under $(\gamma,K)$ to the end, decode, verify; push each $(s_{k_{\rm hi}},R(S_{K+1}))$ into $\mathcal B$, keeping the newest $N_{\mathcal B}$
-  \STATE \textbf{Critic.} $m_{\rm c}$ steps $\phi\leftarrow\phi-\eta_\phi\,\mathrm{AdamW}(\nabla_\phi\mathcal L_{\rm 2D})$ on minibatches of $B'$ states of $\mathcal B$; every $n_q$ iterations, $m'_{\rm c}$ more if the AUC of $V_\phi$ on the newest $N_q$ states is below $a_0$ \hfill (eq.~\ref{eq:critic2d_loss}; first term for eq.~(\ref{eq:value1}))
+  \STATE \textbf{Critic.} $m_{\rm c}$ steps $\phi\leftarrow\phi-\eta_\phi\,\mathrm{AdamW}(\nabla_\phi\mathcal L_{\rm 2D})$ on minibatches of $B'$ states of $\mathcal B$; every $n_q$ iterations, $m'_{\rm c}$ more if the AUC of $V_\phi$ on the newest $N_q$ states is below $a_0$ \hfill (eq.~\ref{eq:critic2d_loss}; eq.~(\ref{eq:critic_loss}))
 \ENDFOR
 \end{algorithmic}
 \end{algorithm}
