@@ -93,7 +93,7 @@ The pathwise estimator of $\mathcal J_{\rm SVG}$ uses the same reparameterisatio
 \nabla_\theta V_\phi(s_k)=\Big[\eta_k\,\nabla_{\rvz}V_\phi(s_k)+\nabla_{\rvx}V_\phi(s_k)\Big]\frac{\partial\,\mathrm d_\theta(s_{k-1})}{\partial\theta},
 \label{eq:pwgrad}
 \end{equation}
-the first channel through the re-noised embeddings, the second through the estimate that self-conditioning feeds to the next call. No noise factor appears: the weight on each coordinate is the critic's derivative there, which vanishes on every coordinate the predicted outcome does not depend on. One random $k$ per update suffices (next section), so the chain need not be differentiated end to end and memory is constant in $K$.
+the first channel through the re-noised embeddings, the second through the estimate that self-conditioning feeds to the next call. No noise factor appears: the weight on each coordinate is the critic's derivative there, which vanishes on every coordinate the predicted outcome does not depend on. One random $k$ per update suffices (next section), so the sampler need not be differentiated end to end and memory is constant in $K$.
 
 \subsection{Why differentiating one transition suffices}
 \label{app:pw_derivation}
