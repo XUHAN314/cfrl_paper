@@ -34,6 +34,7 @@ $R(s_k)$. The loss for fitting the new critic is:
 +\tfrac1{L}\textstyle\sum_{i=1}^L\mathrm{BCE}\big(r_{k,i}, R(s_{k+1})\big)\Big]. 
 \label{eq:critic2d_loss}
 \end{equation}\eqalias{eq:bce}
+In this new design, each token vector receives the reward signal directly. 
 
 
 % Without the refit either critic is exploited (Table~\ref{tab:critic_design}; Appendices~\ref{app:frozen}, \ref{app:critic_equiv}). 
