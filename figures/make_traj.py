@@ -15,7 +15,7 @@ def acc(pre, run, c, sampler, mfile):
     d = json.load(open(f)); return 100 * (d["all"]["solved"] if "all" in d else d["accuracy"])
 gap = json.load(open(f"{R}/outputs/analysis/train_log_gap.json"))
 fig, axes = plt.subplots(2, 4, figsize=(5.5, 3.4), sharex="col", gridspec_kw=dict(height_ratios=[1.35, 1], hspace=0.12, wspace=0.32))
-C = {"2D": style.ACC, "scalar": style.VAL}
+C = {"2D": style.ACC, "scalar": style.VAL}; NAME = {"2D": "2D", "scalar": "1D"}
 for j, (name, pre, p2d, psc, sampler, mfile, base) in enumerate(TASKS):
     ax, ax2 = axes[0, j], axes[1, j]
     for lab, pat in (("scalar", psc), ("2D", p2d)):
@@ -28,7 +28,7 @@ for j, (name, pre, p2d, psc, sampler, mfile, base) in enumerate(TASKS):
             if xs: ax.plot(xs, ys, color=C[lab], lw=0.7, alpha=0.3); curves.append(dict(zip(xs, ys)))
         allx = sorted(set(x for cv in curves for x in cv)); mean = [np.mean([cv[x] for cv in curves if x in cv]) for x in allx]
         n = [sum(x in cv for cv in curves) for x in allx]; keep = [i for i, k in enumerate(n) if k == 3]  # mean only where all seeds have the checkpoint
-        ax.plot([allx[i] for i in keep], [mean[i] for i in keep], color=C[lab], lw=1.8, marker="o", ms=3, label=f"{lab} critic")
+        ax.plot([allx[i] for i in keep], [mean[i] for i in keep], color=C[lab], lw=1.8, marker="o", ms=3, label=f"{NAME[lab]} critic")
         # AUC row from the logs
         per_seed = gap[name][lab]; ws = sorted(set(int(w) for ws_, _, _ in per_seed for w in ws_))
         auc = [np.nanmean([ws_[str(w)]["auc"] for ws_, _, _ in per_seed if str(w) in ws_]) for w in ws]

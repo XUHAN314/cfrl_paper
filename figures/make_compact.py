@@ -16,7 +16,7 @@ _fr = ["0.004", "0.008", "0.016", "0.032", "0.0625", "0.25", "0.5", "1"]; _x = [
 def _series(tag): 
     r = [_one[f"{tag}_eta{f}D"] for f in _fr]; return np.array([q["diff"] for q in r]), np.array([q["ci95"][0] for q in r]), np.array([q["ci95"][1] for q in r])
 fig, (ax, bx) = plt.subplots(2, 1, figsize=(2.1, 2.45), gridspec_kw=dict(hspace=0.78, height_ratios=[1, 1.08]))
-ax.plot(N, [0.03, 0.02, -0.03], "-", color=GRPO_C, marker="o", ms=3.0, lw=1.4, label="CFRL-GRPO")
+ax.plot(N, [0.03, 0.02, -0.03], "-", color=GRPO_C, marker="o", ms=3.0, lw=1.4, label="CFRL-GRR")
 ax.plot(N, [0.02, 0.04, 0.02], ":", color=style.BASE, marker="o", ms=3.0, lw=1.3, label="control")
 ax.plot(N, [0.79, 0.94, 0.97], "-", color=TD, marker="o", ms=3.0, lw=1.6, label="pathwise (2D)")
 ax.plot(N, [0.09, 0.35, 0.34], "-", color=GPT_C, marker="o", ms=3.0, lw=1.4, label="GPT-2")
@@ -69,7 +69,7 @@ def acc(pre, run, c, sampler, mfile):
     return 100 * json.load(open(f))["accuracy"]
 S64 = "sde-steps64-cfg2-ts_uniform-gamma56.0-cond"
 fig, (ax, bx) = plt.subplots(1, 2, figsize=(5.5, 1.45), sharey=True, gridspec_kw=dict(wspace=0.08))
-for lab, pat, col in (("scalar critic", "g24_TS_s%d", SC), ("2D critic", "g24_T_s%d", TD)):
+for lab, pat, col in (("1D critic", "g24_TS_s%d", SC), ("2D critic", "g24_T_s%d", TD)):
     curves = []
     for s in (1, 2, 3):
         xs, ys = [], []
@@ -84,8 +84,8 @@ ax.legend(loc="lower right", ncol=3, frameon=False, fontsize=6.5, handlelength=1
 ax.set_xlabel("actor iteration", labelpad=1); ax.set_ylabel("held-out acc. (%)")
 ax.set_xticks([250, 500, 750, 1000, 1250, 1500])
 its = [250, 500, 750, 1000, 1250, 1500]
-for lab, ys, col, ls in [("scalar throughout", [47.7, 49.8, 51.6, 49.8, 49.9, 50.8], SC, "-"), ("scalar$\\to$2D at 250", [47.7, 51.3, 51.5, 54.2, 55.8, 56.4], TD, "--"),
-                         ("2D throughout", [49.8, 52.3, 52.4, 56.1, 56.7, 57.3], TD, "-"), ("2D$\\to$scalar at 250", [49.8, 51.7, 51.8, 50.1, 50.1, 51.3], SC, "--")]:
+for lab, ys, col, ls in [("1D throughout", [47.7, 49.8, 51.6, 49.8, 49.9, 50.8], SC, "-"), ("1D$\\to$2D at 250", [47.7, 51.3, 51.5, 54.2, 55.8, 56.4], TD, "--"),
+                         ("2D throughout", [49.8, 52.3, 52.4, 56.1, 56.7, 57.3], TD, "-"), ("2D$\\to$1D at 250", [49.8, 51.7, 51.8, 50.1, 50.1, 51.3], SC, "--")]:
     bx.plot(its, ys, ls, color=col, lw=1.6, marker="o", ms=3, label=lab)
 bx.vlines(250, 45.5, 60, color=style.BASE, ls=":", lw=0.9); bx.axhline(45.0, color=style.BASE, ls="--", lw=0.8)
 bx.set_xlabel("actor iteration", labelpad=1); bx.set_xticks([250, 500, 750, 1000, 1250, 1500]); bx.set_xlim(200, 1550)
