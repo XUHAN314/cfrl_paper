@@ -1,12 +1,18 @@
-\begin{figure}[!b]
+% \begin{figure}[!b]
+% \centering
+% \includegraphics[width=0.84\linewidth]{figures/flow-rl-figure1.pdf}
+% \caption{Where the reward lands: (a) on the token axis in an AR model; (b) on the step axis in RL for diffusion and flow models; (c) on both in \methodSVGTwoD{}: $R_{k,i}$ for flow step $k$ and position $i$, each an estimate of the whole response's outcome, pooled into $V_\phi$.}
+% \label{fig:mechanism}
+% \end{figure}
+
+\begin{wrapfigure}{r}{0.49\columnwidth}
 \centering
-\includegraphics[width=0.84\linewidth]{figures/flow-rl-figure1.pdf}
-\caption{Where the reward lands: (a) on the token axis in an AR model; (b) on the step axis in RL for diffusion and flow models; (c) on both in \methodSVGTwoD{}: $R_{k,i}$ for flow step $k$ and position $i$, each an estimate of the whole response's outcome, pooled into $V_\phi$.}
+\includegraphics[width=\linewidth]{figures/figure1_new.pdf}
+\caption{\textbf{Joint training of actor and critic.} The denoiser serves as the actor. The critic uses a frozen copy of the denoiser as its backbone, augmented with a trainable value head that is updated jointly with the actor.}
 \label{fig:mechanism}
-\end{figure}
+\end{wrapfigure}
 
-
-\subsection{Token-wise reward feedback}
+\subsection{CFRL-SVG-2D: Token-wise reward feedback}
 \label{sec:critic}\label{sec:jpc_scalar}\label{sec:jpc_2d}
 
 A plain design of the critic architecture needs to aggregate transformer outputs $\rvh=(h_1, \ldots, h_L)$ into a single vector and then compute the value from it. The aggregation can be mean pooling (our method) or weighted average with attention weights from a special class token.  

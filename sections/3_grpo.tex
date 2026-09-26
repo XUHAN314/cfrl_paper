@@ -10,7 +10,7 @@ the decoded response $\rvw$. The reinforcement learning objective is to maximize
 \label{eq:objective}
 \end{equation}
 
-\subsection{Learning with group-relative REINFORCE}
+\subsection{CFRL-GRR:Learning with group-relative REINFORCE}
 
 Similar to other language models, a CLM can be optimized using policy-gradient methods \citep{sutton1998reinforcement}, without concerning the last non-differentible decoding step. We consider a variant of group-relative REINFORCE method \citep{yao2026grouprelative}. 
 For each context $\rvc$, we sample a group of $G$ responses, $(s^1_{K+1}, \ldots, s^G_{K+1})$. For each response, we additionally record the corresponding generation trajectory, $(s^g_0, a^g_0, s^g_1, a^g_1, \ldots, s^g_K, a^g_K)$. Let 
