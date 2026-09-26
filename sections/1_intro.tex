@@ -1,22 +1,39 @@
 \section{Introduction}
 \label{sec:intro}
 Reinforcement learning (RL) post-training has become a central mechanism for turning pretrained autoregressive (AR) language 
-models into reasoners \citep{ouyang2022instructgpt,shao2024deepseekmath,deepseek2025r1}. Their explicit token probabilities 
-provide a natural RL interface, treating each semantic token decision as an action that advantages can reinforce or suppress. 
-However, AR generation requires one sequential model evaluation per token, tying latency to sequence length. Diffusion-based 
-language models mitigate this bottleneck by jointly refining all token positions over a fixed number of denoising steps, potentially increasing generation speed substantially \citep{nie2025llada,sahoo2024mdlm, lou2023sedd}. 
-Recently, RL has been applied to diffusion-based language models 
-to guide generation, with promising results \citep{zhao2025d1,zhu2025llada15,shao2026papo}. Because these models operate on discrete tokens and take discrete ``actions'' during generation, RL methods for them, including PPO \citep{schulman2017ppo} and GRPO \citep{shao2024deepseekmath}, primarily rely on score-function (REINFORCE) gradients \citep{williams1992reinforce}.
+models into reasoners \citep{ouyang2022instructgpt,shao2024deepseekmath,deepseek2025r1}. The explicit token probabilities of AR models
+provide a natural RL interface: each token choice is an action that an advantage can reinforce or suppress.
+However, AR generation requires one sequential model evaluation per token, tying latency to sequence length. Diffusion-based
+language models ease this bottleneck by jointly refining all token positions over a fixed number of denoising steps,
+which can substantially speed up generation \citep{nie2025llada,sahoo2024mdlm,lou2023sedd}.
+RL has recently been applied to diffusion-based language models
+with promising results \citep{zhao2025d1,zhu2025llada15,shao2026papo}. Because these models operate on
+discrete tokens and take discrete actions during generation, RL methods for them, including PPO \citep{schulman2017ppo}
+and GRPO \citep{shao2024deepseekmath}, rely mainly on score-function (REINFORCE) gradients \citep{williams1992reinforce}.
 
 
-Continuous language models (CLMs) have historically lagged behind their discrete counterparts in language generation \citep{li2022diffusionlm, gong2022diffuseq, dieleman2022continuous}. The recently introduced ELF \citep{hu2026elf} closes this gap, achieving lower generative perplexity with fewer sampling steps while using ten times fewer training tokens. ELF uses flow  matching \citep{lipman2022flow,liu2022rectified}  to  generate real-valued token embeddings by progressively denoising Gaussian noise, then decodes the final embeddings into discrete tokens. Its continuous generation trajectory is differentiable, enabling reward signals to be back-propagated through the denoising process.  
+Continuous language models (CLMs) have historically lagged behind their discrete counterparts in language generation 
+\citep{li2022diffusionlm,gong2022diffuseq,dieleman2022continuous}. The recent ELF \citep{hu2026elf}, a CLM based on
+flow matching \citep{lipman2022flow,liu2022rectified}, closes this gap: it achieves lower generative perplexity with fewer
+sampling steps while using ten times fewer training tokens. ELF generates real-valued token embeddings by progressively
+denoising Gaussian noise, then decodes the final embeddings into discrete tokens. Its continuous generation trajectory is
+differentiable, which makes it possible to backpropagate reward signals through the denoising process.
 
 %when the verifier reward becomes available; thus, no transition or noise coordinate directly corresponds 
 %to a semantic token decision. This separation between continuous refinement and discrete readout creates a distinct 
 %credit-assignment problem, leaving effective RL post-training for continuous flow language models unresolved.
 %\citep{zhao2025d1,rojas2026improving,zhu2025llada15,shao2026papo}.
 
-In this work, we propose \textbf{C}ontinuous \textbf{F}low \textbf{R}einforcement learning for \textbf{L}anguage models (\method{}), a post-training framework for improving CLM reasoning. We first adapt denoising-based GRPO \citep{black2023ddpo,fan2023dpok,liu2025flowgrpo,xue2025dancegrpo}, using a verifier applied to the decoded response as the reward. We then exploit the differentiability of the continuous trajectory. Because discrete tokens and verifier rewards are available only after the final readout, we train a critic to predict the expected verifier outcome from intermediate denoising states. Near the end of the trajectory, the critic can accurately predict this outcome because the state contains nearly all the information needed to determine the decoded response. Its prediction provides a differentiable reward estimate that can be back-propagated through the flow transition. We further design a novel critic architecture that propagates reward feedback to each token representation. The critic predicts a value from every token representation and trains each prediction against the sequence-level verifier outcome. This design provides position-specific gradients from the verifier signal, enabling more effective policy optimization.
+In this work, we propose \textbf{C}ontinuous \textbf{F}low \textbf{R}einforcement learning for \textbf{L}anguage models (\method{}), 
+a post-training framework for improving CLM reasoning. We first adapt group-relative REINFORCE \citep{yao2026grouprelative}
+to CLM post-training, using a verifier applied to the decoded response as the reward. We then exploit the differentiability
+of the continuous trajectory. Because the CLM's decoder is not differentiable, we train a critic to predict the expected verifier
+outcome from intermediate denoising states. Near the end of the trajectory,
+the critic can predict this outcome accurately because the state contains nearly all the information needed to determine
+the decoded response. Its prediction is a differentiable reward estimate that can be backpropagated through a flow
+transition. We further design a novel critic architecture that propagates reward feedback to each token representation:
+it predicts a value from every token representation and trains each prediction against the sequence-level verifier outcome.
+This design turns the verifier signal into position-specific gradients, enabling more effective policy optimization.
 
 %Unlike categorical sampling, 
 %continuous flow trajectories admit pathwise gradients that differentiate a reward estimate through generation, as in continuous 
@@ -44,9 +61,10 @@ In this work, we propose \textbf{C}ontinuous \textbf{F}low \textbf{R}einforcemen
 %transferring the reward improvement to cheaper samplers.
 
 
-We evaluate our framework under a unified protocol on four program-verifiable reasoning tasks: Countdown, Sudoku, Knights-and-Knaves, and Game24. Our models achieve performance comparable to or better than baselines of similar or larger size. We summarize our contributions as follows.
+We evaluate our framework under a unified protocol on four program-verifiable reasoning tasks: Countdown, Sudoku, Knights-and-Knaves, and Game24. 
+Our models perform comparably to or better than baselines of similar or larger size. Our contributions are as follows.
 \begin{itemize}
-    \item To our best knowledge, we demonstrate the first reliable improvement in the reasoning capabilities of a CLM through pathwise reinforcement learning.
+    \item To the best of our knowledge, we demonstrate the first reliable improvement in the reasoning capabilities of a CLM through pathwise reinforcement learning.
     \item We propose a novel critic architecture that consistently improves RL performance and can be readily adapted to other denoising-based generative models.
     \item We evaluate our approach on four program-verifiable reasoning tasks and demonstrate its effectiveness.
 \end{itemize}
