@@ -51,7 +51,7 @@ The right panels of Table~\ref{tab:main} test the two estimators at the same poi
 The score-function gradient of the flow model does not separate from the zero-mean control at any $N$ up to 2{,}048, whereas the pathwise gradient agrees with itself from 256 rollouts on. GPT-2's token gradient separates from the control at 1{,}024 rollouts: indicating that the limitation lies not only in the score-function estimator itself but also in the flow model's action space. The one-step test says the same in accuracy: a single step along the pathwise direction, at a quarter or a half of $\Lambda$, raises held-out accuracy by about 4 points, whereas the score-function step and the random step stay within about 1 point of the base at every length. The two panels tell a consistent story. Relative to its mean, the flow model's score-function gradient has high variance that independent estimates disagree and a single update has no measurable effect, even at practical rollout budgets. By contrast, pathwise estimates agree within a few hundred rollouts, and one update recovers a substantial fraction of the full-training gain. Because this difference appears before training, it reflects the estimators rather than their training recipes.
 
 
-\begin{table}[!b]
+\begin{table}[!t]
 \centering\small
 \begin{minipage}[c]{0.60\linewidth}
 \centering
