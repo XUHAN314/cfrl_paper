@@ -106,7 +106,7 @@ Table~\ref{tab:needs} removes three choices one at a time, and each costs accura
 \toprule
 \textbf{Choice} & \textbf{Variant} & \textbf{$\Delta$ max.} & \textbf{$\Delta$ final} \\
 \midrule
-objective & actor ascends $(V_\phi)$ instead of $\mathrm{logit}V_\phi$ & $-4.0$ & $-6.1$ \\
+objective & actor ascends $V_\phi$ instead of $\mathrm{logit}(V_\phi)$ & $-4.0$ & $-6.1$ \\
 pooling & actor ascends the minimum over positions instead of the mean & $-3.1$ & $-2.5$ \\
 sampler & trained under the cheap sampler, read at deployment & \cellcolor{blue!12}$-9.4$ & \cellcolor{blue!12}$-9.4$ \\
 \bottomrule
