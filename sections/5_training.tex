@@ -24,8 +24,8 @@ is an MLP head.
 During model training, we compare both the token prediction $r_{k, i}$ and the final prediction $V_\phi(s_k)$ against the reward 
 $R(s_k)$. The loss for fitting the new critic is: 
 \begin{equation}
-\mathcal L_{\rm 2D}(\phi)=\mathbb E_{s_k}\Big[\tfrac12\,\mathrm{BCE}\big(V_\phi(s_k)), R(s_k) \big)
-+\tfrac1{2L}\textstyle\sum_{i=1}^L\mathrm{BCE}\big(r_{k,i}, R(s_k)\big)\Big]. 
+\mathcal L_{\rm 2D}(\phi)=\mathbb E_{s_k,s_{K+1}}\Big[\tfrac12\,\mathrm{BCE}\big(V_\phi(s_k)), R(s_{K+1}) \big)
++\tfrac1{2L}\textstyle\sum_{i=1}^L\mathrm{BCE}\big(r_{k,i}, R(s_{k+1})\big)\Big]. 
 \label{eq:critic2d_loss}
 \end{equation}\eqalias{eq:bce}
 
