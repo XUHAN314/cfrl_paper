@@ -9,9 +9,9 @@ ELF models the conditional distribution $p_\theta(\rvx \mid \rvc)$ using flow ma
 \rvx_{t_{k}} = \mathrm{d}_\theta(\rvz_{t_{k}}, t_{k}, \rvx_{t_{k-1}}, \rvc)
 \label{eq:denoiser}
 \end{align} 
-We explicitly incorporate the self-conditioning \citep{chen2022analog}, whereby the denoiser $\mathrm{d}_\theta$ takes the previous clean-embedding estimate $\rvx{t_{k-1}}$ as an additional input. The denoiser $\mathrm{d}_\theta$ is implemented as a Transformer \citep{vaswani2017attention}, with $\theta$ denoting its learnable parameters. It is trained by minimizing the mean squared error (MSE) between the predicted clean embedding $\rvx_t$ and the corresponding ground-truth embedding $\rvx$.
+We explicitly incorporate the self-conditioning \citep{chen2022analog}, whereby the denoiser $\mathrm{d}_\theta$ takes the previous clean-embedding estimate $\rvx_{t_{k-1}}$ as an additional input. The denoiser $\mathrm{d}_\theta$ is implemented as a diffusion Transformer \citep{peebles2023scalable}, with $\theta$ denoting its learnable parameters. It is trained by minimizing the mean squared error (MSE) between the predicted clean embedding $\rvx_t$ and the corresponding ground-truth embedding $\rvx$.
 
-At inference time, we consider the stochastic differential equation (SDE) formulation of ELF, which injects stochastic noise at each generation step. This stochastic formulation is particularly useful for the reinforcement learning framework introduced later, as it induces a distribution over generation trajectories rather than a single deterministic path.
+At inference time, we consider the SDE sampling of ELF, which injects stochastic noise at each generation step. This stochastic sampling is particularly useful for the reinforcement learning framework introduced later, as it induces a distribution over generation trajectories rather than a single deterministic path.
 \begin{align} 
 \rvz_{t_k} =  \lambda_k  \rvz_{t_{k-1}} + \eta_k \rvx_{t_{k-1}} + \psi_k \epsilon, \qquad k=1, \ldots, K  
 \label{eq:sde}
