@@ -2,7 +2,7 @@
 \label{app:results}
 
 \subsection{Main result: supporting results}
-This group stands behind Table~\ref{tab:main}: the learning curves of the autoregressive reference (Appendix~\ref{app:ar_curves}), \methodGRPO{} read under both samplers (Appendix~\ref{app:grpo_chain}), and the recipe of the masked-diffusion reference (Appendix~\ref{app:d1}).
+the learning curves of the autoregressive reference (Appendix~\ref{app:ar_curves}), \methodGRPO{} read under both samplers (Appendix~\ref{app:grpo_chain}), and the recipe of the masked-diffusion reference (Appendix~\ref{app:d1}).
 
 \subsubsection{Autoregressive reference: learning curves}
 \label{app:ar_curves}
@@ -111,31 +111,33 @@ problem & SFT base & pathwise policy & \\\midrule
 
 
 \subsection{The estimator}
-This group supports the estimator paragraph of Section~\ref{sec:experiments}: the credit-assignment variants of the score-function estimator (Appendix~\ref{app:sf_variants}), the parts of GRPO put back one at a time (Appendix~\ref{app:grpo_variants}), the two estimators on the same rollouts (Appendix~\ref{app:snr}), and one step along each gradient (Appendix~\ref{app:onestep}).
+This group supports the estimator paragraph of Section~\ref{sec:experiments}:  the parts of GRPO put back one at a time (Appendix~\ref{app:grpo_variants}), the two estimators on the same rollouts (Appendix~\ref{app:snr}), and one step along each gradient (Appendix~\ref{app:onestep}).
 
-\subsubsection{Score-function variants on Countdown}
-\label{app:sf_variants}
-Table~\ref{tab:sf_variants} lists the credit-assignment variants of the score-function estimator that we ran on Countdown before moving to the pathwise estimator. All keep the objective~(\ref{eq:grpo_loss}) and change only the advantage or the ratio: \emph{sparse credit} restricts the step sum to the last $n$ transitions; the \emph{oracle advantage} replaces the reward by the verifier's verdict on the greedy decode of every intermediate state, so that each transition is credited by the change in a privileged value; the \emph{advantage grid} gives every transition and position its own advantage from the change of a per-position value between successive states; \emph{per-position PPO ratios} reuse each batch with a clipped ratio per position; and \emph{critic-selected} advantages keep only the rollouts that a jointly trained critic ranks first in their group. The variants differ in which coordinates receive weight; none removes the noise factor of~(\ref{eq:sf}), and none lifts the estimator past $+5$ points, where the autoregressive reference with the same estimator gains $+15.8$ (Table~\ref{tab:main}).
+% the credit-assignment variants of the score-function estimator (Appendix~\ref{app:sf_variants}),
 
-\begin{table}[H]
-\centering\small
-\caption{Score-function variants on Countdown: best change in held-out accuracy (\%) over the base under the deployment sampler. No variant clears $+5$; the autoregressive reference with the same estimator gains $+15.8$.}
-\label{tab:sf_variants}
-\begin{tabular}{@{}lcc@{}}
-\toprule
-variant & what changes & best $\Delta$ at $\gamma56$@64 \\
-\midrule
-\methodGRPO{}, uniform credit over the steps & group baseline & $+2.8$ \\
-credit to the last $n$ steps only & sparse credit & $+1.6$ \\
-oracle advantage (verifier on every intermediate decode) & exact advantage & $+3.1$ \\
-per-step $\times$ per-position advantage grid & dense credit & $+3.9$ \\
-per-position PPO ratios, clip $0.2$ & clipped ratios & $+5.0$ \\
-jointly trained critic selects advantages (pick@$V_\phi$ = 1.0) & critic-selected & $+4.6$ \\
-\midrule
-GPT-2 (124M) + token-level GRPO/PPO & same estimator, token actions & $+15.8$ \\
-\bottomrule
-\end{tabular}
-\end{table}
+% \subsubsection{Score-function variants on Countdown}
+% \label{app:sf_variants}
+% Table~\ref{tab:sf_variants} lists the credit-assignment variants of the score-function estimator that we ran on Countdown before moving to the pathwise estimator. All keep the objective~(\ref{eq:grpo_loss}) and change only the advantage or the ratio: \emph{sparse credit} restricts the step sum to the last $n$ transitions; the \emph{oracle advantage} replaces the reward by the verifier's verdict on the greedy decode of every intermediate state, so that each transition is credited by the change in a privileged value; the \emph{advantage grid} gives every transition and position its own advantage from the change of a per-position value between successive states; \emph{per-position PPO ratios} reuse each batch with a clipped ratio per position; and \emph{critic-selected} advantages keep only the rollouts that a jointly trained critic ranks first in their group. The variants differ in which coordinates receive weight; none removes the noise factor of~(\ref{eq:sf}), and none lifts the estimator past $+5$ points, where the autoregressive reference with the same estimator gains $+15.8$ (Table~\ref{tab:main}).
+
+% \begin{table}[H]
+% \centering\small
+% \caption{Score-function variants on Countdown: best change in held-out accuracy (\%) over the base under the deployment sampler. No variant clears $+5$; the autoregressive reference with the same estimator gains $+15.8$.}
+% \label{tab:sf_variants}
+% \begin{tabular}{@{}lcc@{}}
+% \toprule
+% variant & what changes & best $\Delta$ at $\gamma56$@64 \\
+% \midrule
+% \methodGRPO{}, uniform credit over the steps & group baseline & $+2.8$ \\
+% credit to the last $n$ steps only & sparse credit & $+1.6$ \\
+% oracle advantage (verifier on every intermediate decode) & exact advantage & $+3.1$ \\
+% per-step $\times$ per-position advantage grid & dense credit & $+3.9$ \\
+% per-position PPO ratios, clip $0.2$ & clipped ratios & $+5.0$ \\
+% jointly trained critic selects advantages (pick@$V_\phi$ = 1.0) & critic-selected & $+4.6$ \\
+% \midrule
+% GPT-2 (124M) + token-level GRPO/PPO & same estimator, token actions & $+15.8$ \\
+% \bottomrule
+% \end{tabular}
+% \end{table}
 
 \subsubsection{GRPO with ratio, clipping and anchor}
 \label{app:grpo_variants}
