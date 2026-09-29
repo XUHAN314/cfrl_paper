@@ -165,7 +165,7 @@ ratio and clip, two steps & 43.9 & 68.0 & 74.1 & 50.0 \\\bottomrule
 \label{app:snr}
 The top right panel of Table~\ref{tab:main} asks, on one set of Game24 rollouts of the base under the deployment sampler and with one differentiable denoiser call as in Algorithm~\ref{alg:jpc}, how well the mean gradients of two random halves of the rollouts agree. The ruler is the $A{=}1$ control, whose true mean is zero. The flow model's score-function gradient is indistinguishable from it under every form of the advantage up to $2{,}048$ rollouts; GPT-2's token-level gradient looks the same at $256$ rollouts and then separates as $N$ grows, the signature of a weak but genuine per-sample signal (the estimator is the same, the action space is not); the pathwise gradient through the same denoiser call agrees with itself already at $256$ rollouts, with an SNR nearly three times the floor. Table~\ref{tab:snr} gives the numbers; the derivation of the two gradients is in Appendix~\ref{app:variance}.
 
-\begin{table}[H]
+\begin{table}[!t]
 \centering\small
 \caption{The score-function~(\ref{eq:sf}) and pathwise~(\ref{eq:pwgrad}) estimators on Game24 rollouts of the task-SFT policy at denoising step $k{=}24$ of 64 (256 rollouts for the SNR, up to 2{,}048 for the half-split cosine; pathwise term with the pre-trained 2D critic). SNR: norm of the mean per-sample gradient over its root-mean-square deviation; a zero-mean estimator sits at $1/\sqrt N=0.0625$, the $A{=}1$ row. Half-split cosine: agreement between the mean gradients of two disjoint halves of the rollouts (mean$\pm$sd over 10 splits) as the number of rollouts grows; a genuine signal rises with $N$, a zero-mean estimator stays at $0$. Last two rows: the same statistic for GPT-2's token-level GRPO on Game24 (the panel's line) and on Countdown. Bold: the pathwise estimator.}
 \label{tab:snr}
@@ -247,7 +247,7 @@ GPT-2, exact AR likelihood, Game24 & GRPO $(r-\bar r)/\mathrm{sd}$ & 256 & 0.30 
 \label{app:onestep}
 The half-split cosine says that the pathwise gradient is reproducible, not that it points the right way. The lower right panel of Table~\ref{tab:main} tests the direction by intervention at iteration 0 of RL, with the task-SFT base and the pre-trained 2D critic and no training. We draw $1{,}024$ rollouts of $128$ training prompts under the deployment sampler and compute, on the same rollouts and the same four denoising steps of the window per rollout, the mean score-function gradient of~(\ref{eq:grpo_loss}) and the mean pathwise gradient of $V_\phi(s_k)$. The policy is then moved once, $\theta'=\theta+\eta\,g/\lVert g\rVert$, and evaluated on the held-out prompts under the deployment sampler with the sampler's random stream fixed, so that every $\theta'$ sees the same prompts and the same noise as the base. The length $\eta$ is measured against $\Lambda$, the parameter distance that a 2D-critic run of Table~\ref{tab:main} travels from the base; each gradient is applied as AdamW applies a first step (global clipping at 1, then $g/(|g|+\epsilon)$ per coordinate) and, for comparison, raw; a Gaussian random direction is the control. Table~\ref{tab:onestep} gives the paired change in accuracy. In the form the optimizer uses, one pathwise step gains about four points on Game24 at a quarter to a half of $\Lambda$ and three to four on Countdown from a half of $\Lambda$ on, with intervals that exclude zero; the score-function step and the random step stay within about a point of the base at every length. The raw gradients are a different matter: over $0.9$ of the squared norm of either gradient lies in one percent of the coordinates, so a raw step of any useful length moves a few coordinates far outside the region where the critic was fitted and the raw pathwise step destroys the policy; the per-coordinate normalisation of AdamW is part of what makes the pathwise update work. On Game24 the gain turns over at $\eta{=}\Lambda$: a single direction from a critic that is not refit cannot be followed as far as training goes.
 
-\begin{table}[H]\centering\small
+\begin{table}[!t]\centering\small
 \caption{One step from the base along each mean gradient of $1{,}024$ rollouts. Each cell is the paired change in held-out accuracy (points) against the base under the deployment sampler with the sampling noise fixed; brackets: $95\%$ bootstrap interval over prompts. \emph{AdamW}: the direction of a first AdamW step of that gradient; \emph{raw}: the gradient itself; all steps have length $\eta$.}\label{tab:onestep}
 \begin{tabular}{@{}lccccc@{}}\toprule
 $\eta/\Lambda$ & pathwise, AdamW & score-function, AdamW & random & pathwise, raw & score-function, raw \\\midrule
@@ -304,7 +304,7 @@ The 2D critic produces one reading per generated position at every step of the t
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.98\linewidth]{figures/fig_critic_maps.pdf}
+\includegraphics[width=0.58\linewidth]{figures/fig_critic_maps.pdf}
 \caption{Per-position critic readings $r_{k,i}$ (colour) along the deployment-sampler trajectory (rows: denoising step $k$; columns: generated positions, labelled by the decoded token for Game24 and by Sudoku row) for one correct and one incorrect held-out sample per task. The correct samples are the median-valued correct rollout; the incorrect Game24 sample is the median-valued failed rollout and the incorrect Sudoku sample the failed rollout with the fewest wrong cells (dotted lines and markers).}
 \label{fig:critic_maps}
 \end{figure}
@@ -313,18 +313,18 @@ The 2D critic produces one reading per generated position at every step of the t
 \label{app:traj}
 Figure~\ref{fig:traj} extends the left panel of Figure~\ref{fig:dyn} from Game24 to the four tasks and adds the AUC of the jointly trained head. On Game24 and K\&K both heads keep up with the policy and the 2D critic's policy climbs further; on Countdown the pooled head falls behind the moving policy and its policy turns back; on Sudoku both heads keep their AUC while both policies turn back early, the 2D critic's later and from a higher peak.
 
-\begin{figure}[H]
+\begin{figure}[!t]
 \centering
-\includegraphics[width=\linewidth]{figures/fig_traj.pdf}
+\includegraphics[width=0.85\linewidth]{figures/fig_traj.pdf}
 \caption{1D against 2D critic over training: the runs of Table~\ref{tab:main}, individual runs (thin) and their mean (thick). Top: held-out accuracy (\%) at the deployment sampler of the checkpoint after that many actor iterations; dashed: the SFT base. Bottom: AUC of the jointly trained head against the outcome on the newest 256 replay-buffer states, averaged over 250-iteration windows of the training logs; dotted: the floor $a_0=0.9$ below which Algorithm~\ref{alg:jpc} gives the critic extra steps. Bottom-row curves are means over the runs. On Countdown the pooled head falls behind the moving policy and its policy turns back; on Sudoku both heads keep their AUC and the 1D critic's policy declines from the start; on Game24 and K\&K both heads keep up and the 1D critic's gain is smaller.}
 \label{fig:traj}
 \end{figure}
 
 \subsubsection{The 1D and the 2D critic are interchangeable at a fixed policy}
 \label{app:critic_equiv}
-Table~\ref{tab:critic_equiv} compares the pre-trained 1D and 2D critics of the Table~\ref{tab:main} runs on the same states of the same policy, and their jointly trained heads on fixed probe sets. Measured this way the two critics discriminate the reward equally well, prescribe parameter updates at cosine $0.83$--$0.90$ of each other, react equally, and weakly, to a single wrong token, and their heads refit equally stably. None of the fixed-policy measurements separates the two critics: whatever distinguishes the policies they train (Figures~\ref{fig:dyn} and~\ref{fig:traj}) is not visible in either critic's value, slope or stability at a fixed policy, which is why the main text attributes the difference to the joint training rather than to what the critics can represent.
+Table~\ref{tab:critic_equiv} compares the pre-trained 1D and 2D critics of the Table~\ref{tab:main} runs on the same states of the same policy, and their jointly trained heads on fixed probe sets. Measured this way the two critics discriminate the reward equally well, prescribe parameter updates at cosine $0.83$--$0.90$ of each other, react equally, and weakly, to a single wrong token, and their heads refit equally stably. None of the fixed-policy measurements separates the two critics: whatever distinguishes the policies they train (Figures~\ref{fig:dyn} and~\ref{fig:traj}) is not visible in either critic's value, slope or stability at a fixed policy, which is why we attribute the difference to the joint training rather than to what the critics can represent.
 
-\begin{table}[H]\centering\small
+\begin{table}[!t]\centering\small
 \caption{1D against 2D critic on the same states. Pre-trained critics unless a row says otherwise; $k$ is the denoising step of the state.}\label{tab:critic_equiv}
 \footnotesize\setlength{\tabcolsep}{3pt}
 \begin{tabular}{@{}p{0.35\linewidth}p{0.20\linewidth}>{\raggedright\arraybackslash}p{0.20\linewidth}>{\raggedright\arraybackslash}p{0.20\linewidth}@{}}\toprule
@@ -471,7 +471,7 @@ Figure~\ref{fig:dynamics_cd_kk} shows the Algorithm~\ref{alg:jpc} runs with the 
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\linewidth]{figures/fig_dynamics_cd_kk.pdf}
+\includegraphics[width=0.85\linewidth]{figures/fig_dynamics_cd_kk.pdf}
 \caption{Training dynamics of Algorithm~\ref{alg:jpc} (2D critic) on Countdown (left) and K\&K (right): held-out accuracy at the deployment sampler per checkpoint (blue), replay-buffer success rate (grey), and the critic's value on the training batch (red, right axis); dotted line: SFT base.}
 \label{fig:dynamics_cd_kk}
 \end{figure}
