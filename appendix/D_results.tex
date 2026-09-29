@@ -481,7 +481,9 @@ This group stands behind Table~\ref{tab:loop}: every round of every loop with it
 
 \subsubsection{The loop in full: rounds, controls and the guided sampler}
 \label{app:loop_full}
-Table~\ref{tab:loop_full} gives every round behind Table~\ref{tab:loop} with the pool's coverage and the controls. On Countdown and K\&K the rounds lift the cheap sampler by 17 to 35 points from every start, RL or not. On K\&K fresh puzzles give near-full coverage from any start and the rounds close the task; RL adds nothing there that the rounds do not. On Sudoku one round covers three quarters of the pool from every start and moves accuracy by at most 1.4 points at either sampler, as the gold-solution control confirms. On Countdown two plain rounds shrink coverage and give back part of the RL gain; rounds 3 and 4, drawn with the critic-guided cheap sampler, raise coverage past its start and return the deployment sampler to the RL level, 5 to 7 points above sampling plainly from the base or the \methodGRPO{} policy. Two further plain rounds continued from the round-2 model (the two control rows after round 4) leave coverage and accuracy at the round-2 level, whereas the critic-guided rounds from the same model cover about six thousand more problems and recover $4.5$--$5.9$ points at deployment; the recovery is therefore due to the critic-guided pools, not to the additional rounds. Table~\ref{tab:guided} isolates the guided sampler on the first $5{,}000$ pool problems with the loop's starting policy and its jointly trained critic at $\gamma4$@16: pruning four trajectories at random changes nothing; pruning them by the critic's minimum reading~(\ref{eq:minscore}) doubles the acceptance rate and raises coverage by a third, and the push~(\ref{eq:guide}) adds to both.
+Table~\ref{tab:loop_full} gives every round behind Table~\ref{tab:loop} with the pool's coverage and the controls. On Countdown and K\&K the rounds lift the cheap sampler by 17 to 35 points from every start, RL or not. On K\&K fresh puzzles give near-full coverage from any start and the rounds close the task; RL adds nothing there that the rounds do not. On Sudoku one round covers three quarters of the pool from every start and moves accuracy by at most 1.4 points at either sampler, as the gold-solution control confirms. On Countdown two plain rounds shrink coverage and give back part of the RL gain; rounds 3 and 4, drawn with the critic-guided cheap sampler, raise coverage past its start and return the deployment sampler to the RL level, 5 to 7 points above sampling plainly from the base or the \methodGRPO{} policy. Two further plain rounds continued from the round-2 model (the two control rows after round 4) leave coverage and accuracy at the round-2 level, whereas the critic-guided rounds from the same model cover about six thousand more problems and recover $4.5$--$5.9$ points at deployment; the recovery is therefore due to the critic-guided pools, not to the additional rounds. 
+
+% Table~\ref{tab:guided} isolates the guided sampler on the first $5{,}000$ pool problems with the loop's starting policy and its jointly trained critic at $\gamma4$@16: pruning four trajectories at random changes nothing; pruning them by the critic's minimum reading~(\ref{eq:minscore}) doubles the acceptance rate and raises coverage by a third, and the push~(\ref{eq:guide}) adds to both.
 
 \begin{table}[H]
 \centering\small
@@ -525,22 +527,22 @@ round 1 & deployment sampler & 39.3k & 63.1 & 65.4 & \textbf{70.3} \\
 \end{tabular}
 \end{table}
 
-\begin{table}[H]
-\centering\small
-\caption{The critic as a search heuristic. Each row is one way of drawing samples from the Countdown 2D-critic policy the loop starts from (Table~\ref{tab:loop_full}) and its jointly trained critic at $\gamma4$@16 on the first 5{,}000 pool problems, four samples per problem: \emph{acc.}, the fraction of samples the verifier accepts; \emph{coverage}, problems (of 5{,}000) with at least one accepted sample; \emph{distinct}, distinct accepted derivations.}
-\label{tab:guided}
-\begin{tabular}{@{}lccc@{}}
-\toprule
-sampler & acc.\ (\%) & coverage & distinct \\
-\midrule
-plain & \GBa{1} & \GBa{2} & \GBa{3} \\
-best of 4 at step 8, random & \GBb{1} & \GBb{2} & \GBb{3} \\
-best of 4 at step 8, by the critic & \GBc{1} & \GBc{2} & \GBc{3} \\
-push~(\ref{eq:guide}) at every step & \GBd{1} & \GBd{2} & \GBd{3} \\
-best of 4 by the critic + push & \GBe{1} & \GBe{2} & \GBe{3} \\
-\bottomrule
-\end{tabular}
-\end{table}
+% \begin{table}[H]
+% \centering\small
+% \caption{The critic as a search heuristic. Each row is one way of drawing samples from the Countdown 2D-critic policy the loop starts from (Table~\ref{tab:loop_full}) and its jointly trained critic at $\gamma4$@16 on the first 5{,}000 pool problems, four samples per problem: \emph{acc.}, the fraction of samples the verifier accepts; \emph{coverage}, problems (of 5{,}000) with at least one accepted sample; \emph{distinct}, distinct accepted derivations.}
+% \label{tab:guided}
+% \begin{tabular}{@{}lccc@{}}
+% \toprule
+% sampler & acc.\ (\%) & coverage & distinct \\
+% \midrule
+% plain & \GBa{1} & \GBa{2} & \GBa{3} \\
+% best of 4 at step 8, random & \GBb{1} & \GBb{2} & \GBb{3} \\
+% best of 4 at step 8, by the critic & \GBc{1} & \GBc{2} & \GBc{3} \\
+% push~(\ref{eq:guide}) at every step & \GBd{1} & \GBd{2} & \GBd{3} \\
+% best of 4 by the critic + push & \GBe{1} & \GBe{2} & \GBe{3} \\
+% \bottomrule
+% \end{tabular}
+% \end{table}
 
 % ---- CUT 2026-09-26 (not needed for the main narrative): Cheap samplers after the loop ----
 \iffalse
