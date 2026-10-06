@@ -1,0 +1,106 @@
+\documentclass{article}
+\usepackage{iclr2027_conference,times}
+% Use the non-anonymous layout and suppress review line numbers. The ICLR style
+% labels this mode as a conference publication; we replace that header below.
+\iclrfinalcopy
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{amsmath,amssymb,amsthm,bm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{xcolor}
+\usepackage{colortbl}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc,decorations.pathmorphing,fit,backgrounds}
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage{textcomp}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{wrapfig}
+\input{math_commands.tex}
+\newcommand{\jpc}{\textsc{JPC}}
+% The method name and its variants are defined in math_commands.tex (\methodname, \method, \methodGRPO, \methodSVGScalar, \methodSVGTwoD).
+% A bold run-in title that is the beginning of its sentence (no gap, no full stop).
+\newcommand{\runin}[1]{\par\addvspace{1ex plus .3ex minus .2ex}\noindent\textbf{#1} }
+% A second label for the equation that has just ended (several short equations share one display and one number).
+\makeatletter
+\newcommand{\eqalias}[1]{\begingroup\def\@currentlabel{\theequation}\label{#1}\endgroup\ignorespaces}
+\newcommand{\eqaliasprev}[1]{\begingroup\edef\@currentlabel{\the\numexpr\value{equation}-1\relax}\label{#1}\endgroup\ignorespaces}
+\makeatother
+\newcommand{\dep}{\gamma56@64}
+\newcommand{\hl}[1]{\textcolor{blue!70!black}{#1}}
+% ---- line keys for captions (colours match figures/style.py and make_compact.py)
+\definecolor{ctwod}{HTML}{2A6F97}\definecolor{cscalar}{HTML}{E76F51}\definecolor{cgrpo}{HTML}{C9553D}\definecolor{cctrl}{HTML}{495057}
+\definecolor{cgpt}{HTML}{2A9D8F}\definecolor{cgrey}{HTML}{8D99AE}\definecolor{cblack}{HTML}{212529}\definecolor{cpurple}{HTML}{6A4C93}
+\newcommand{\lk}[2][solid]{\tikz[baseline=-0.6ex]{\draw[#2,line width=1.1pt,#1] (0,0)--(1.5em,0); \fill[#2] (0.75em,0) circle (1.5pt);}}
+\newcommand{\lkn}[2][solid]{\tikz[baseline=-0.6ex]{\draw[#2,line width=1.1pt,#1] (0,0)--(1.5em,0);}}
+
+% Loop cells (final values of the 2D-policy chains)
+\newcommand{\OURScd}{51.4}\newcommand{\OURScdo}{47.8}\newcommand{\OURScdg}{45.6}\newcommand{\OURScdt}{51.1}
+\newcommand{\OURSkk}{99.1}\newcommand{\OURSkko}{95.7}\newcommand{\OURSkkg}{93.8}\newcommand{\OURSkkt}{97.9}\newcommand{\OURSkkfour}{97.5}
+\newcommand{\OURScdthree}{50.0}\newcommand{\OURScdthreeo}{46.3}\newcommand{\OURScdthreeg}{43.6}\newcommand{\OURScdthreet}{50.2}\newcommand{\OURSpoolthree}{95.6k / 37.2k}\newcommand{\OURSpoolfour}{99.1k / 37.8k}
+% d1 baseline cells (final)
+\newcommand{\PENDcd}{14.9}\newcommand{\PENDsd}{0.7}\newcommand{\PENDkk}{62.5}\newcommand{\PENDgt}{19.5}\newcommand{\PENDScd}{13.1}\newcommand{\PENDSsd}{0.7}\newcommand{\PENDSkk}{61.0}\newcommand{\PENDSgt}{16.1}
+
+% ---- values of the experiments of §6 (Game24 critic design and ablations, guided sampling) ----
+\newcommand{\SNRsfA}{0.065}\newcommand{\SNRsfB}{0.061}\newcommand{\SNRsfC}{0.061}\newcommand{\SNRpwA}{0.184}\newcommand{\SNRpwB}{0.177}\newcommand{\SNRpwC}{0.151}
+\newcommand{\COSsfA}{$0.02\pm0.03$}\newcommand{\COSsfB}{$-0.03\pm0.03$}\newcommand{\COSsfC}{$-0.02\pm0.02$}\newcommand{\COSpwA}{$0.81\pm0.02$}\newcommand{\COSpwB}{$0.79\pm0.03$}\newcommand{\COSpwC}{$0.70\pm0.03$}\newcommand{\SNRgA}{0.063}\newcommand{\SNRgB}{0.065}\newcommand{\SNRgC}{0.061}\newcommand{\SNRrA}{0.060}\newcommand{\SNRrB}{0.063}\newcommand{\SNRrC}{0.064}
+\newcommand{\COSxA}{$-0.00$}\newcommand{\COSxB}{$0.02$}\newcommand{\COSxC}{$-0.04$}
+\newcommand{\CDa}[1]{\ifcase#1 \or 0.93\or 0.97\or 0.94\or 1.00\or \textbf{58.2}\or \textbf{57.5}\fi}
+\newcommand{\CDb}[1]{\ifcase#1 \or 0.53\or 0.52\or 0.59\or 0.59\or 47.0\or 12.9\fi}
+\newcommand{\CDc}[1]{\ifcase#1 \or 0.65\or 0.65\or 0.82\or 0.81\or 51.7\or 13.4\fi}
+\newcommand{\CDd}[1]{\ifcase#1 \or 0.43\or 0.39\or 0.67\or 0.68\or ---\or ---\fi}
+\newcommand{\GBa}[1]{\ifcase#1 \or 25.4\or 2{,}783\or 4{,}978\fi}
+\newcommand{\GBb}[1]{\ifcase#1 \or 25.2\or 2{,}748\or 4{,}960\fi}
+\newcommand{\GBc}[1]{\ifcase#1 \or 52.8\or 3{,}712\or 10{,}204\fi}
+\newcommand{\GBd}[1]{\ifcase#1 \or 28.4\or 3{,}069\or 5{,}647\fi}
+\newcommand{\GBe}[1]{\ifcase#1 \or \textbf{59.3}\or \textbf{3{,}933}\or \textbf{11{,}753}\fi}
+\newcommand{\ABp}[1]{\ifcase#1 \or 49.9\or 54.8\or 53.0\or 51.7\or 51.8\or 51.9\or 54.8\fi}
+\newcommand{\ABm}[1]{\ifcase#1 \or 45.5\or 52.2\or 54.2\or 55.3\or 55.7\or 55.5\or 55.7\fi}
+\newcommand{\ABcp}[1]{\ifcase#1 \or 44.5\or 45.6\or 47.6\or 48.2\or 47.5\or 48.0\or 48.2\fi}
+\newtheorem{proposition}{Proposition}
+\newtheorem{remark}{Remark}
+
+%\title{Reinforcement Learning for Continuous Flow Language Models with 2D Critic}
+\title{Backpropagating Verifier Rewards Through Continuous Flow Language Models}
+\author{\makebox[\dimexpr\textwidth-2\tabcolsep\relax][c]{%
+\begin{tabular}{c}
+\textbf{Xu Han}\thanks{Equal contribution.},\qquad
+\textbf{Jiajing Hu}\footnotemark[1],\qquad
+\textbf{Li-Ping Liu}\thanks{Contact: \texttt{liping.liu@tufts.edu}.}\\
+\normalfont Tufts University
+\end{tabular}}}
+
+\hyphenation{Appendix Algorithm}
+\begin{document}
+\maketitle
+\lhead{Preprint. Under review.}
+\input{sections/0_abstract}
+\input{sections/1_intro}
+\input{sections/7_related.tex}
+\input{sections/2_prelim}
+\input{sections/3_grpo}
+\input{sections/4_jpc}
+\input{sections/5_training}
+\input{sections/6_experiments}
+
+\input{sections/8_conclusion}
+
+\subsubsection*{Reproducibility statement}
+\input{sections/9_statements}
+
+\bibliography{refs}
+\bibliographystyle{iclr2027_conference}
+
+\appendix
+\raggedbottom % appendix: many [H] floats; do not stretch the vertical glue of short pages
+\input{appendix/A_datasets}
+\input{appendix/B_derivations}
+\input{appendix/M_method}
+\input{appendix/C_details}
+\input{appendix/D_results}
+\input{appendix/E_related}
+\end{document}
