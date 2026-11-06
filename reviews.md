@@ -38,7 +38,7 @@ The unusually weak LLaDA baseline. In Table 1, after task-specific SFT, LLaDA-8B
 
 ### Questions For Authors (3 questions)
 
-1. Do Tables 1–3 use or as the actor objective, and a sum or mean of position logits for the critic? Which analysis applies to the implemented version?
+1. Do Tables 1–3 use $V_{\phi}$ or $logit(V_{\phi})$ as the actor objective, and a sum or mean of position logits for the critic? Which analysis applies to the implemented version?
 
 2. How much of the pathwise improvement remains when the self-conditioning gradient is detached?
 
