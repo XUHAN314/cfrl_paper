@@ -34,6 +34,28 @@
 ### Critical Weaknesses (1 weakness)
 
 The within-ELF comparison lacks compute matching and clear attribution. Appendix D reports 4–6M rollout denoiser calls for CFRL-SVG versus 1.2M for CFRL-GRR (about 2M for SVG on Sudoku), with additional critic pre-training and online computation. The same-rollout gradient experiments support update quality but do not establish performance under equal total compute. A budget-matched comparison including critic costs is needed.
+- Jiajing's response: we didn't include critic pretraining and refit costs for SVG. For GRR, it needs to recompute the log-density of every stored rollout (16 prompts x group size 8 = 128 rollouts per iteration) with gradients for the 8 sampled steps and the decoder step, whereas SVG only differentiates one step per rollout.
+- Cost accounting derived from the release settings (scripts/task_settings.sh, train_grr.sh, train_svg.sh, pretrain_critic.sh). "Forward-only" = no-grad denoiser/critic passes; "with backward" = passes that are backpropagated; "verified rollouts" = rollouts run to the end and scored by the verifier (labels consumed). SVG actor rollouts are counted only up to the sampled step k-1 (mean k = 24 of 64; 12 of 32 on Sudoku), so the RL column is smaller than the 4-6M upper bound in Appendix D. GPU-hours still to be measured on one GPU type.
+
+  Per iteration:
+
+  | | CFRL-GRR (gamma4@16, 600 it) | CFRL-SVG (deployment sampler, 1000-1500 it) |
+  |---|---|---|
+  | verified full rollouts | 128 (16 prompts x G=8) | 32 (buffer) |
+  | forward-only denoiser calls | 2,048 (128 x 16) | ~2,750 (32 x 64 buffer + 32 x ~22 actor) |
+  | denoiser calls with backward | 1,280 (128 x 8 transitions + 128 x 2 decoder) | 32 |
+  | critic passes | 0 | ~154 forward (refit 2 x 64, AUC check) + 32 with backward |
+
+  Per run, Countdown:
+
+  | | CFRL-GRR (Table 1) | CFRL-GRR, deployment sampler (Appendix E control) | SVG-2D, RL | SVG-2D, critic pre-training (64k rollouts x 16 steps; 60k x 12 epochs) | SVG-2D, total |
+  |---|---|---|---|---|---|
+  | forward-only passes | 1.2M | 4.9M | 4.4M | 1.0M | 5.4M |
+  | passes with backward | 0.77M | 0.77M | 0.10M | 0.72M | 0.82M |
+  | verified rollouts | 77k | 77k | 48k | 64k | 112k |
+  | GPU-hours (single GPU type) | TBD | TBD | TBD | TBD | TBD |
+
+  Other tasks, SVG-2D totals incl. critic (forward / backward / verified rollouts): Game24 5.4M / 0.17M / 64k; K&K 5.0M / 0.34M / 64k; Sudoku 2.5M / 0.40M / 64k. CFRL-GRR is 1.2M / 0.77M / 77k on every task. Counting a backward pass as ~3 forward passes (to be measured), SVG-2D with critic costs ~2.2x GRR on Countdown, ~1.7x on Game24 and K&K, ~1.0x on Sudoku. The deployment-sampler GRR control (4.9M fwd + 0.77M bwd) already matches SVG-2D's Countdown total and exceeds the Game24 total; it gained +0.1 (Countdown) and +3.5 (Game24). To do: extend it to Sudoku and K&K; add a cheap-sampler GRR run with iterations extended to the matched budget; measure GPU-hours on one GPU type.
 
 ### Questions For Authors (1 question)
 
