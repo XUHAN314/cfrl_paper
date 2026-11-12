@@ -180,4 +180,36 @@ We sincerely thank the reviewer for their time, thoughtful feedback, and constru
 
 ## Reviewer oqag
 
+We thank the reviewer for their positive assessment and thoughtful feedback. We particularly appreciate their recognition of our pathwise-gradient formulation as a meaningful contribution to continuous-flow language models, as well as their acknowledgment that our gradient reproducibility, single-step intervention, frozen-critic, and critic-swap experiments provide direct evidence supporting our methodology. We also appreciate the reviewer's constructive suggestions regarding token-level credit assignment and computational efficiency. We address these concerns below and provide additional experiments and analyses to further strengthen our empirical findings.
+
+> The evidence does not establish that the 2D critic performs token-level credit assignment in the semantic sense claimed by the paper. Every position is trained against the same sequence-level binary label. The gain could come from gradient scaling, conditioning, or optimization dynamics rather than identifying which token caused the failure. Can the authors evaluate the 2D readings on examples with known corrupted positions and test whether changing the highest-scored positions has a larger counterfactual effect than changing other positions? This would distinguish token-level credit assignment from a position-wise parameterization of a sequence-level value.
+
+We thank the reviewer for this insightful suggestion. We agree that supervising each token-wise critic output with the same sequence-level reward does not guarantee semantic token-level credit assignment. To investigate this, we conducted two additional experiments examining whether the 2D critic identifies incorrect token positions and whether its token-wise readings respond to targeted perturbations.
+
+**(1) Correlation between token-wise readings and incorrect positions.** We first evaluate whether the 2D critic assigns lower readings to incorrect token positions in failed Sudoku solutions. We focus on Sudoku because each output position corresponds directly to a specific answer cell, enabling unambiguous identification of incorrect tokens. We measure the AUC for discriminating correct and incorrect positions using the critic's token-wise readings, as well as P@1, the probability that the lowest-scored position is incorrect.
+
+| Metric | range over K steps |
+|---|---|
+| AUC | **0.65–0.66** |
+| P@1 | **0.62–0.65** |
+| Random baseline (P@1) | 0.42 |
+
+Both metrics exceed random performance. This suggests that the 2D critic's readings contain information about which token positions are incorrect, despite being trained with sequence-level supervision.
+
+**(2) Counterfactual token corruption.** Following the reviewer's suggestion, we conduct a controlled perturbation experiment to evaluate whether the 2D critic responds to token-level errors. Starting from a correct solution, we corrupt a single token and measure the change in each position's critic reading. We report the percentage of cases in which the corrupted position exhibits the **largest decrease in its critic reading** among all positions, compared with the random-position baseline.
+
+| Task | Corrupted position with largest reading decrease | Random baseline |
+|---|---:|---:|
+| Sudoku | 11–22% | 1.2% |
+| K&K | 23–30%  | 6.5% |
+| Countdown | 8-61% | 3.7% |
+| Game24 | 13–26% | 5.6% |
+
+Across all four tasks, the corrupted position is substantially more likely to exhibit the largest decrease in critic reading than expected by chance. These results demonstrate that the 2D critic is sensitive to localized token perturbations, providing evidence of position-specific reward attribution despite being trained with sequence-level supervision.
+
+**Interpretation and limitations.** We acknowledge that the 2D critic's performance gains may also arise from gradient scaling, conditioning, or optimization dynamics. While our experiments show that the critic captures position-specific information and responds to localized corruption, they do not establish that semantic token-level credit assignment is the sole source of its advantage. We have therefore refine our claims to distinguish position-sensitive reward estimation from fully interpretable token-level credit assignment.
+
+> The empirical evidence is limited to one 105M continuous-flow model that is separately fine-tuned for four synthetic tasks with exact verifiers. This is sufficient to demonstrate that CFRL can work, but not that the approach remains stable or computationally worthwhile at language-model scale. The autoregressive rows are also not matched in pretraining, model size, or task-specific adaptation, so they should not be interpreted as evidence that continuous-flow RL is competitive with autoregressive RL.
+
+
 
