@@ -78,7 +78,7 @@ R_k(s_k)\nabla_\theta
 }_{\text{REINFORCE term}}+
 \underbrace{
 \mathbb E\left[
-(\nabla\theta d\theta(s_{k-1}))^\top
+(\nabla_\theta d_\theta(s_{k-1}))^\top
 \nabla_{x_{k-1}}R_k(s_k)
 \right]
 }_{\text{Self-conditioning term}}.
