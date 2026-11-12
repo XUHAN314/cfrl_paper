@@ -213,3 +213,24 @@ Across all four tasks, the corrupted position is substantially more likely to ex
 
 
 
+### 3. Scalability and comparison with autoregressive models
+
+We thank the reviewer for highlighting the importance of scalability and fair comparisons. We agree that our autoregressive (AR) baselines, which differ in pretraining, model size, and task-specific adaptation, should not be interpreted as evidence that continuous-flow RL is competitive with autoregressive RL. We have clarified that these results serve only as reference points rather than controlled comparisons.
+
+**New experiments on a larger model.** To investigate whether CFRL's improvements extend beyond the 105M-parameter ELF-B model, we conducted additional experiments on **ELF-L (652M parameters)**, approximately 6.2× larger than ELF-B. We applied the same critic pre-training and RL hyperparameters without additional tuning, using the same validation-based checkpoint selection and averaging test accuracy over five sampling seeds.
+
+**Table R3.** Test accuracy (%) on ELF-L (652M). Improvements over task-SFT are shown in parentheses. The final column reports the corresponding SVG-2D improvement on ELF-B (105M) for comparison.
+
+| Task | SFT Base | CFRL-GRR | CFRL-SVG-1D | CFRL-SVG-2D | ELF-B SVG-2D Gain |
+|---|---:|---:|---:|---:|---:|
+| Countdown | 60.5 | 63.3 (+2.8) | 72.6 (+12.1) | **74.4 (+13.9)** | +6.9 |
+| Sudoku | 71.0 | 70.3 (-0.7) | **79.3 (+8.3)** | 77.9 (+6.9) | +4.7 |
+| Game24 | 58.6 | 66.9 (+8.3) | 70.5 (+11.9) | **71.0 (+12.4)** | +14.2 |
+| K&K | 100.0 | – | – | – | SFT saturated |
+
+**Results.** CFRL-SVG consistently improves over the SFT baseline and CFRL-GRR across all three non-saturated tasks. In particular, SVG-2D achieves improvements of +13.9, +6.9, and +12.4 percentage points on Countdown, Sudoku, and Game24, respectively. These gains are comparable to or greater than those observed on ELF-B, demonstrating that CFRL's effectiveness extends to a substantially larger continuous-flow model. On Sudoku, SVG-1D slightly outperforms SVG-2D, suggesting that the relative benefit of the token-wise critic can vary with model size and task.
+
+While these experiments provide encouraging evidence of **scalability from 105M to 652M parameters**, we acknowledge that they do not establish stability or computational efficiency at multi-billion-parameter scale. We have therefore clarified the scope of our claims and identified further scaling studies as future work.
+
+We have incorporated these additional experiments and clarifications into the revised manuscript, with all changes highlighted in blue.
+
