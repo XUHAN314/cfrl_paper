@@ -34,9 +34,9 @@ Test accuracy (%) on d1's original benchmarks.
 | LLaDA-8B-Instruct (d1) | 11.7 | 20.7 |
 | d1-LLaDA: SFT + diffu-GRPO (d1) | 22.1 | 42.2 |
 | ELF-B task-SFT base (105M, data-limited) | 49.2 | 41.6 |
-| + CFRL-GRR | 58.9 | 40.8 |
-| + CFRL-SVG-1D | 95.9 | [pending] |
-| + CFRL-SVG-2D | **96.1** | [pending] |
+| + CFRL-GRR | 58.9 | 43.7 |
+| + CFRL-SVG-1D | 95.9 | 61.4 |
+| + CFRL-SVG-2D | **96.1** | 62.8 |
 
 On 4×4 Sudoku, CFRL-SVG improves the ELF-B baseline from 49.2% to approximately 96%, compared with 58.9% for CFRL-GRR and 22.1% for d1-LLaDA. On Countdown-3, ELF-B starts at a comparable accuracy to d1-LLaDA (41.6% vs. 42.2%), allowing us to evaluate the effectiveness of subsequent RL improvements.
 
