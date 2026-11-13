@@ -50,9 +50,18 @@ We thank the reviewer for their thoughtful and constructive feedback and for rec
 
 > Eq. (7) maximizes $V_{\phi}$, while Table 3 uses $\mathrm{logit}(V_{\phi})$. Eq. (10) sums position logits, whereas Appendix B.4 assumes mean pooling. These discrepancies affect the method's specification and theoretical justification.
 
-We thank the reviewer for raising this question and we apologize for the confusion. For the actor objective, eq7 is the original objective and we use $\mathrm{logit}(V_{\phi})$ in SVG implementation as a surrogate for all reported results. We will clarify this in our revised manuscript. The two objectives give the same per-sample gradient direction, since $\nabla_\theta\mathrm{logit}(V_\phi)=\nabla_\theta V_\phi/\big(V_\phi(1-V_\phi)\big)$. However, directly maximizing $V_\phi$ introduces a multiplicative factor $V_\phi(1-V_\phi)$ in the pathwise gradient, which attenuates the learning signal when the critic confidently predicts success or failure. The logit transformation removes this sigmoid-induced attenuation while preserving the per-sample gradient direction, providing a stronger optimization signal, particularly for samples predicted to fail with high confidence. Table 3 confirms the effect: ascending $V_\phi$ instead lowers accuracy by 4.0 points on Game24 and 6.1 on Countdown.
+We thank the reviewer for raising this question and we apologize for the confusion. For the actor objective, eq7 is the original objective and we use $\mathrm{logit}(V_{\phi})$ in SVG implementation as a surrogate for all reported results. We will clarify this in our revised manuscript. Our critic is trained with binary cross-entropy to estimate the probability of eventual success, $V_\phi(x)\approx P_\pi(R=1\mid s_k)$. As in binary logistic classification, its pre-sigmoid score has a log-odds interpretation. By Bayes' rule,
 
-Training a scalar score through classification-based supervision and subsequently optimizing the score directly is established practice. In RLHF, reward models are trained using a log-sigmoid pairwise preference loss, while the policy directly maximizes the learned scalar reward ([1], Eqs. 1–2). Similarly, hinge-loss GANs train discriminators using a margin-based classification loss, while generators directly maximize the discriminator's unbounded score ([2]). Although these approaches differ from our success-probability critic, they provide precedent for optimizing learned scalar scores rather than bounded classification probabilities. We add the clarification of these connections in the revised manuscript.
+$$
+\mathrm{logit}(V_phi(s_k)) = \log\frac{p(s_k\mid R=1)}
+{p(s_k\mid R=0)}
++
+\log\frac{P(R=1)}{P(R=0)}.
+$$
+
+Thus, under an accurate probabilistic critic, the logit estimates a success-versus-failure log-density ratio up to a state-independent constant, consistent with the established connection between logistic classification and density-ratio estimation ([1], Sec. 2.2, Eqs. 3–9). Maximizing this score encourages the generator toward states that are relatively more characteristic of successful than unsuccessful trajectories. Furthermore, the two objectives give the same per-sample gradient direction, since $\nabla_\theta\mathrm{logit}(V_\phi)=\nabla_\theta V_\phi/\big(V_\phi(1-V_\phi)\big)$. However, directly maximizing $V_\phi$ introduces a multiplicative factor $V_\phi(1-V_\phi)$ in the pathwise gradient, which attenuates the learning signal when the critic confidently predicts success or failure. The logit transformation removes this sigmoid-induced attenuation while preserving the per-sample gradient direction, providing a stronger optimization signal, particularly for samples predicted to fail with high confidence. Table 3 confirms the effect: ascending $V_\phi$ instead lowers accuracy by 4.0 points on Game24 and 6.1 on Countdown.
+
+Training a scalar score through classification-based supervision and subsequently optimizing the score directly is established practice. In RLHF, reward models are trained using a log-sigmoid pairwise preference loss, while the policy directly maximizes the learned scalar reward ([2], Eqs. 1–2). Similarly, hinge-loss GANs train discriminators using a margin-based classification loss, while generators directly maximize the discriminator's unbounded score ([3]). Although these approaches differ from our success-probability critic, they provide precedent for optimizing learned scalar scores rather than bounded classification probabilities. We add the clarification of these connections in the revised manuscript.
 
 For the pooling method over positions, we used mean pooling in the implementation, consistent with 1D critic as well as Appendix B.4. The sum in Eq. (10) is a typo and we have corrected Eq. (10) highlighted in blue in the revised manuscript.
 
@@ -60,34 +69,9 @@ For the pooling method over positions, we used mean pooling in the implementatio
 
 We thank the reviewer for this insightful observation. We acknowledge that GRR retains the likelihood-ratio gradient through individual stochastic transitions but does not account for all gradient paths through deterministic self-conditioning. We clarify this distinction below and show how the omitted contribution can, in principle, be recovered by a full-trajectory likelihood-ratio estimator.
 
-**1. Gradient decomposition and connection to SVG.**
+**Recovering the full gradient through trajectory-level REINFORCE.**
 
-Although GRR uses a binary verifier only at the final generation step, we can define the expected terminal reward conditioned on an intermediate state as $R_k(s_k)=\mathbb E[R(s_{K+1})\mid s_k]$, where $s_k=(z_k,x_{k-1})$ and $x_{k-1}=d_\theta(s_{k-1})$. Unlike the binary verifier, this conditional expected reward may be differentiable with respect to its continuous state inputs.
-Following the stochastic computation graph framework ([3]), consider a fixed differentiable conditional value function $R_k$ and hold $s_{k-1}$ fixed. The local objective is $J_k(\theta)=\mathbb E_{z_k\sim\pi_\theta(\cdot\mid s_{k-1})}[R_k(z_k,d_\theta(s_{k-1}))]$. Differentiating under the integral gives
-
-$$
-\begin{aligned}
-\nabla_\theta J_k
-={}\underbrace{
-\mathbb E\left[
-R_k(s_k)\nabla_\theta
-\log\pi_\theta(z_k\mid s_{k-1})
-\right]
-}_{\text{REINFORCE term}}+
-\underbrace{
-\mathbb E\left[
-(\nabla_\theta d_\theta(s_{k-1}))^\top
-\nabla_{x_{k-1}}R_k(s_k)
-\right]
-}_{\text{Self-conditioning term}}.
-\end{aligned}
-$$
-
-Here, $z_k$ is held fixed when evaluating the second term. By Gaussian integration by parts, the first term is equivalent in expectation to the reparameterization gradient through $z_k$, corresponding to the first term of SVG in Eq. (23). The second term captures the direct gradient through $x_{k-1}$, corresponding to the second term of Eq. (23). This makes explicit the gradient contribution that is not directly represented by the local GRR estimator.
-
-**2. Recovering the full gradient through trajectory-level REINFORCE.**
-
-Importantly, the missing contribution can also be recovered without differentiating the binary terminal verifier. Consider the complete stochastic trajectory $\mathbf z=(z_1,\ldots,z_K)$, the full trajectory likelihood is $p_\theta(\mathbf z)=\prod_k\pi_\theta(z_k\mid s_{k-1})$. Assuming the terminal reward has no additional explicit parameter dependence when $\mathbf z$ is fixed, the exact REINFORCE gradient up to the final decoding step is
+Consider the complete stochastic trajectory $\mathbf z=(z_1,\ldots,z_K)$, the full trajectory likelihood is $p_\theta(\mathbf z)=\prod_k\pi_\theta(z_k\mid s_{k-1})$. Assuming the terminal reward has no additional explicit parameter dependence when $\mathbf z$ is fixed, the exact REINFORCE gradient up to the final decoding step is
 
 $$
 \mathbb E\left[R(s_{K+1})\sum_kD_\theta\log\pi_\theta(z_k\mid s_{k-1})\right],
@@ -114,10 +98,10 @@ $$
 D_\theta\log\pi_\theta(z_k\mid s_{k-1})
 ={}\underbrace{
 \frac{\eta}{\sigma^2}
-(\partial_\theta d_\theta(s_{k-1}))^{\top}(z_k-\mu_k)
+(z_k-\mu_k)(\partial_\theta d_\theta(s_{k-1}))^{\top}
 }_{\text{GRR gradient}}+\underbrace{
 \frac{\eta}{\sigma^2}
-\big((\partial_{x_{k-2}}d_\theta)\,D_\theta x_{k-2}\big)^{\top}(z_k-\mu_k)
+\big((z_k-\mu_k)(\partial_{x_{k-2}}d_\theta)\,D_\theta x_{k-2}\big)^{\top}
 }_{\text{Omitted trajectory gradient}}.
 \end{aligned}
 $$
@@ -131,12 +115,11 @@ $$
 R(s_{K+1})
 \sum_k
 \frac{\eta}{\sigma^2}
-\big((\partial_{x_{k-2}}d_\theta(s_{k-1}))\,D_\theta x_{k-2}\big)^{\top}
-(z_k-\mu_k)
+\big((z_k-\mu_k)(\partial_{x_{k-2}}d_\theta(s_{k-1}))\,D_\theta x_{k-2}\big)^{\top}
 \right],
 $$
 
-Here, $g_{\mathrm{GRR}}$ denotes the gradient implemented in GRR, which follows the transition-level likelihood-ratio formulation used in DDPO ([4]) and Flow-GRPO ([5]), which yields an unbiased trajectory-level policy gradient for samplers without parameter-dependent deterministic self-conditioning. With self-conditioning, recovering the exact trajectory-level gradient additionally requires differentiating each transition log-density through preceding denoiser predictions, substantially increasing computational and memory costs. We therefore retain the local transition gradient and omit these cross-step dependencies as a computationally motivated approximation. Similar gradient approximations have been adopted in diffusion-model optimization: DPOK ([6], Sec. 4.1 and App. A.3) omits gradients through earlier denoising transitions for efficiency, while DRaFT-K ([7]) truncates backpropagation to the final K sampling steps. Although these methods omit different gradient contributions, they provide precedent for balancing gradient completeness against computational cost.
+Here, $g_{\mathrm{GRR}}$ denotes the gradient implemented in GRR, which follows the transition-level likelihood-ratio formulation used in DDPO ([5]) and Flow-GRPO ([6]), which yields an unbiased trajectory-level policy gradient for samplers without parameter-dependent deterministic self-conditioning. With self-conditioning, recovering the exact trajectory-level gradient additionally requires differentiating each transition log-density through preceding denoiser predictions, substantially increasing computational and memory costs. We therefore retain the local transition gradient and omit these cross-step dependencies as a computationally motivated approximation. Similar gradient approximations have been adopted in diffusion-model optimization: DPOK ([7], Sec. 4.1 and App. A.3) omits gradients through earlier denoising transitions for efficiency, while DRaFT-K ([8]) truncates backpropagation to the final K sampling steps. Although these methods omit different gradient contributions, they provide precedent for balancing gradient completeness against computational cost.
 
 SVG instead estimates the additional self-conditioning gradient using a differentiable critic, avoiding the need to backpropagate through the entire sampling trajectory. Consequently, its improvement over GRR may reflect both the additional gradient contribution and differences in estimator variance. To answer the question how much of the SVG improvement comes from the additional gradient term, we have done an experiment omitting the second gradient term in eq 23:
 
@@ -162,19 +145,21 @@ Yes, the shared verifier for both Game24 and Countdown requires every input numb
 
 We sincerely thank the reviewer for their time, thoughtful feedback, and constructive suggestions. We have carefully addressed the concerns regarding methodological consistency, gradient attribution, and verifier implementation, and revised the manuscript accordingly, with all changes highlighted in blue. We believe these revisions have improved the clarity, rigor, and reproducibility of our work.
 
-[1] Ouyang, L., Wu, J., Jiang, X., Almeida, D., Wainwright, C. L., Mishkin, P., Zhang, C., Agarwal, S., Slama, K., Ray, A., et al. Training language models to follow instructions with human feedback. NeurIPS 2022
+[1] Gutmann, M., & Hyvärinen, A. Noise-contrastive estimation: A new estimation principle for unnormalized statistical models. AISTATS 2010.
 
-[2] Brock, A., Donahue, J., & Simonyan, K. Large Scale GAN Training for High Fidelity Natural Image Synthesis. ICLR 2019.
+[2] Ouyang, L., Wu, J., Jiang, X., Almeida, D., Wainwright, C. L., Mishkin, P., Zhang, C., Agarwal, S., Slama, K., Ray, A., et al. Training language models to follow instructions with human feedback. NeurIPS 2022
 
-[3] John Schulman, Nicolas Heess, Theophane Weber, and Pieter Abbeel. Gradient Estimation Using Stochastic Computation Graphs. NeurIPS 2015
+[3] Brock, A., Donahue, J., & Simonyan, K. Large Scale GAN Training for High Fidelity Natural Image Synthesis. ICLR 2019.
 
-[4] Black, K., Janner, M., Du, Y., Kostrikov, I., and Levine, S. Training Diffusion Models with Reinforcement Learning. ICLR 2024
+[4] John Schulman, Nicolas Heess, Theophane Weber, and Pieter Abbeel. Gradient Estimation Using Stochastic Computation Graphs. NeurIPS 2015
 
-[5] Liu, J., Liu, G., Liang, J., Li, Y., Liu, J., Wang, X., Wan, P., Zhang, D., and Ouyang, W. Flow-GRPO: Training Flow Matching Models via Online RL. NeurIPS 2025
+[5] Black, K., Janner, M., Du, Y., Kostrikov, I., and Levine, S. Training Diffusion Models with Reinforcement Learning. ICLR 2024
 
-[6] Fan, Y., Watkins, O., Du, Y., Liu, H., Ryu, M., Boutilier, C., Abbeel, P., Ghavamzadeh, M., Lee, K., and Lee, K. DPOK: Reinforcement Learning for Fine-tuning Text-to-Image Diffusion Models. NeurIPS 2023.
+[6] Liu, J., Liu, G., Liang, J., Li, Y., Liu, J., Wang, X., Wan, P., Zhang, D., and Ouyang, W. Flow-GRPO: Training Flow Matching Models via Online RL. NeurIPS 2025
 
-[7] Clark, K., Vicol, P., Swersky, K., and Fleet, D. J. Directly Fine-Tuning Diffusion Models on Differentiable Rewards. ICLR 2024
+[7] Fan, Y., Watkins, O., Du, Y., Liu, H., Ryu, M., Boutilier, C., Abbeel, P., Ghavamzadeh, M., Lee, K., and Lee, K. DPOK: Reinforcement Learning for Fine-tuning Text-to-Image Diffusion Models. NeurIPS 2023.
+
+[8] Clark, K., Vicol, P., Swersky, K., and Fleet, D. J. Directly Fine-Tuning Diffusion Models on Differentiable Rewards. ICLR 2024
 
 ## Reviewer oqag
 
