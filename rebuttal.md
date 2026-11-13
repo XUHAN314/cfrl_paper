@@ -59,9 +59,9 @@ $$
 \log\frac{P(R=1)}{P(R=0)}.
 $$
 
-Thus, under an accurate probabilistic critic, the logit estimates a success-versus-failure log-density ratio up to a state-independent constant, consistent with the established connection between logistic classification and density-ratio estimation ([1], Eqs. 3–9). Maximizing this score encourages the generator toward states that are relatively more characteristic of successful than unsuccessful trajectories. Furthermore, the two objectives give the same per-sample gradient direction, since $\nabla_\theta\mathrm{logit}(V_\phi)=\nabla_\theta V_\phi/\big(V_\phi(1-V_\phi)\big)$. However, directly maximizing $V_\phi$ introduces a multiplicative factor $V_\phi(1-V_\phi)$ in the pathwise gradient, which attenuates the learning signal when the critic confidently predicts success or failure. The logit transformation removes this sigmoid-induced attenuation while preserving the per-sample gradient direction, providing a stronger optimization signal, particularly for samples predicted to fail with high confidence. Table 3 confirms the effect: ascending $V_\phi$ instead lowers accuracy.
+Thus, under an accurate probabilistic critic, the logit estimates a success-versus-failure log-density ratio up to a state-independent constant, consistent with the established connection between logistic classification and density-ratio estimation ([1], Secs. 2.1–2.2, Eqs. 4–9"). Maximizing this score encourages the generator toward states that are relatively more characteristic of successful than unsuccessful trajectories. Furthermore, the two objectives give the same per-sample gradient direction, since $\nabla_\theta\mathrm{logit}(V_\phi)=\nabla_\theta V_\phi/\big(V_\phi(1-V_\phi)\big)$. However, directly maximizing $V_\phi$ introduces a multiplicative factor $V_\phi(1-V_\phi)$ in the pathwise gradient, which attenuates the learning signal when the critic confidently predicts success or failure. The logit transformation removes this sigmoid-induced attenuation while preserving the per-sample gradient direction, providing a stronger optimization signal, particularly for samples predicted to fail with high confidence. Table 3 confirms the effect: ascending $V_\phi$ instead lowers accuracy.
 
-Training a scalar score through classification-based supervision and subsequently optimizing the score directly is established practice. In RLHF, reward models are trained using a log-sigmoid pairwise preference loss, while the policy directly maximizes the learned scalar reward ([2], Eqs. 1–2). Similarly, hinge-loss GANs train discriminators using a margin-based classification loss, while generators directly maximize the discriminator's unbounded score ([3]). Although these approaches differ from our success-probability critic, they provide precedent for optimizing learned scalar scores rather than bounded classification probabilities. We add the clarification of these connections in the revised manuscript.
+Training a scalar score through classification-based supervision and subsequently optimizing the score directly is established practice. In RLHF, reward models are trained using a log-sigmoid pairwise preference loss, while the policy directly maximizes the learned scalar reward ([2], Eqs. 1–2). Similarly, hinge-loss GANs train discriminators using a margin-based classification loss, while generators directly maximize the discriminator's unbounded score ([3], [4]). Although these approaches differ from our success-probability critic, they provide precedent for optimizing learned scalar scores rather than bounded classification probabilities. We add the clarification of these connections in the revised manuscript.
 
 For the pooling method over positions, we used mean pooling in the implementation, consistent with 1D critic as well as Appendix B.4. The sum in Eq. (10) is a typo and we have corrected Eq. (10) highlighted in blue in the revised manuscript.
 
@@ -147,19 +147,19 @@ We sincerely thank the reviewer for their time, thoughtful feedback, and constru
 
 [1] Gutmann, M., & Hyvärinen, A. Noise-contrastive estimation: A new estimation principle for unnormalized statistical models. AISTATS 2010.
 
-[2] Ouyang, L., Wu, J., Jiang, X., Almeida, D., Wainwright, C. L., Mishkin, P., Zhang, C., Agarwal, S., Slama, K., Ray, A., et al. Training language models to follow instructions with human feedback. NeurIPS 2022
+[2] Ouyang, L., Wu, J., Jiang, X., Almeida, D., Wainwright, C. L., Mishkin, P., Zhang, C., Agarwal, S., Slama, K., Ray, A., et al. Training language models to follow instructions with human feedback. NeurIPS 2022.
 
 [3] Brock, A., Donahue, J., & Simonyan, K. Large Scale GAN Training for High Fidelity Natural Image Synthesis. ICLR 2019.
 
-[4] John Schulman, Nicolas Heess, Theophane Weber, and Pieter Abbeel. Gradient Estimation Using Stochastic Computation Graphs. NeurIPS 2015
+[4] Lim, J. H., & Ye, J. C. (2017). Geometric GAN. arXiv:1705.02894.
 
-[5] Black, K., Janner, M., Du, Y., Kostrikov, I., and Levine, S. Training Diffusion Models with Reinforcement Learning. ICLR 2024
+[5] Black, K., Janner, M., Du, Y., Kostrikov, I., and Levine, S. Training Diffusion Models with Reinforcement Learning. ICLR 2024.
 
-[6] Liu, J., Liu, G., Liang, J., Li, Y., Liu, J., Wang, X., Wan, P., Zhang, D., and Ouyang, W. Flow-GRPO: Training Flow Matching Models via Online RL. NeurIPS 2025
+[6] Liu, J., Liu, G., Liang, J., Li, Y., Liu, J., Wang, X., Wan, P., Zhang, D., and Ouyang, W. Flow-GRPO: Training Flow Matching Models via Online RL. NeurIPS 2025.
 
 [7] Fan, Y., Watkins, O., Du, Y., Liu, H., Ryu, M., Boutilier, C., Abbeel, P., Ghavamzadeh, M., Lee, K., and Lee, K. DPOK: Reinforcement Learning for Fine-tuning Text-to-Image Diffusion Models. NeurIPS 2023.
 
-[8] Clark, K., Vicol, P., Swersky, K., and Fleet, D. J. Directly Fine-Tuning Diffusion Models on Differentiable Rewards. ICLR 2024
+[8] Clark, K., Vicol, P., Swersky, K., and Fleet, D. J. Directly Fine-Tuning Diffusion Models on Differentiable Rewards. ICLR 2024.
 
 ## Reviewer oqag
 
