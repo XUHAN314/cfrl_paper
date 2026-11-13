@@ -98,10 +98,10 @@ $$
 D_\theta\log\pi_\theta(z_k\mid s_{k-1})
 ={}\underbrace{
 \frac{\eta_k}{\sigma_k^2}
-(z_k-\mu_k)^{\top}\,\partial_\theta d_\theta(s_{k-1})
+(z_k-\mu_k)^{\top}\partial_\theta d_\theta(s_{k-1})
 }_{\text{GRR gradient}}+\underbrace{
 \frac{\eta_k}{\sigma_k^2}
-(z_k-\mu_k)^{\top}\,(\partial_{x_{k-2}}d_\theta(s_{k-1}))\,D_\theta x_{k-2}
+(z_k-\mu_k)^{\top}(\partial_{x_{k-2}}d_\theta(s_{k-1}))D_\theta x_{k-2}
 }_{\text{Omitted trajectory gradient}}.
 \end{aligned}
 $$
@@ -115,7 +115,7 @@ $$
 R(s_{K+1})
 \sum_k
 \frac{\eta_k}{\sigma_k^2}
-(z_k-\mu_k)^{\top}\,(\partial_{x_{k-2}}d_\theta(s_{k-1}))\,D_\theta x_{k-2}
+(z_k-\mu_k)^{\top}(\partial_{x_{k-2}}d_\theta(s_{k-1}))D_\theta x_{k-2}
 \right], 
 $$
 
