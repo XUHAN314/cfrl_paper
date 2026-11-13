@@ -11,6 +11,7 @@ the decoded response $\rvw$. The reinforcement learning objective is to maximize
 \end{equation}
 
 \subsection{CFRL-GRR: Learning with group-relative REINFORCE}
+\label{sec:grr}
 
 Similar to other language models, an ELF model can be post-trained using policy-gradient methods \citep{sutton1998reinforcement}, without concerning the last non-differentible decoding step. We start with a simple method and consider a variant of the group-relative REINFORCE method \citep{yao2026grouprelative}. 
 For each context $\rvc$, we sample a group of $G$ responses, $(s^1_{K+1}, \ldots, s^G_{K+1})$. For each response, we additionally record the corresponding generation trajectory. Let 
@@ -22,6 +23,19 @@ The maximization objective is:
 \end{equation}
 The last step, $\pi_\theta\bigl(a^g_{K} \mid s^g_K\bigr)$, decodes all $L$ token embeddings with a shared output matrix.
 Because this decoding step is comparatively easy to optimize, we scale its term by $\frac{1}{L}$ to slow its updates.
+
+\begingroup\color{blue}
+The full REINFORCE gradient up to the decoding step is:
+\begin{align*}
+\nabla_\theta J&=\mathbb E[g_{\mathrm{GRR}}]
++\mathbb E\Big[R(s_{K+1})\sum_{k=1}^{K-1}
+\frac{\eta_k}{\psi_k^2c_\sigma^2}(z_k-\mu_k)^\top
+\big(\partial_{x_{k-2}}\mathrm d_\theta(s_{k-1})\big)D_\theta x_{k-2}\Big],\\
+g_{\mathrm{GRR}}&=R(s_{K+1})\sum_{k=1}^{K-1}
+\frac{\eta_k}{\psi_k^2c_\sigma^2}(z_k-\mu_k)^\top\partial_\theta\mathrm d_\theta(s_{k-1}),
+\end{align*}
+where $D_\theta$ is the total derivative through the recursively generated self-conditioning predictions with the sampled trajectory held fixed. With self-conditioning, each state also depends on $\theta$ through the earlier denoiser predictions, resulting in a backpropagation through time term. We therefore omit the second term of $\nabla_\theta J$ in our implementation, and only use the first term, which is a local REINFORCE gradient. The derivation details are given in Appendix~\ref{app:variance}.
+\endgroup
 
 We also experimented with GRPO \citep{shao2024deepseekmath} with various settings and found that neither ratio clipping nor a KL penalty was necessary in our setting.
 This observation that the KL-penalty has no benefit is consistent with findings reported in DAPO \citep{yu2025dapo}. One important distinction is that our denoiser operates over a continuous state space of dimension $dL$, whereas an AR language model defines a discrete distribution over a vocabulary at each generation step. These differences in the underlying generation process and policy parameterization may call for different RL optimization strategies. We leave an  investigation of such training techniques to future work.

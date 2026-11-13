@@ -81,12 +81,67 @@ independently across the generated positions $i\in\mathcal G$ (the response posi
 
 \subsection{Score-function and pathwise gradients of one transition}
 \label{app:variance}
-From~(\ref{eq:kernel}), the score of transition $k$ is
+\textcolor{blue}{From~(\ref{eq:kernel}), the local score of a stochastic transition $k<K$, with the input state $s_{k-1}$ held fixed, is}
 \begin{equation}
-\nabla_\theta\log p_\theta(\rvz_{t_k}\mid s_{k-1})=\frac{\eta_k}{\psi_k^2c_\sigma^2}\sum_{i}\epsilon_{k}[i]^{\top}\,\frac{\partial\,\mathrm d_\theta(s_{k-1})[i]}{\partial\theta},
+\partial_\theta\log p_\theta(\rvz_{t_k}\mid s_{k-1})=\frac{\eta_k}{\psi_k c_\sigma^2}\sum_{i}\epsilon_{k}[i]^{\top}\,\frac{\partial\,\mathrm d_\theta(s_{k-1})[i]}{\partial\theta},
 \label{eq:sf}
 \end{equation}
 where $\epsilon_k\sim\mathcal N(0,c_\sigma^2I)$ is the noise injected at that step: the advantage multiplies the injected noise before it passes through the denoiser's Jacobian. Summed over the steps, (\ref{eq:sf}) is the transition part of the gradient of~(\ref{eq:grpo_loss}). A trajectory therefore contributes $(K-1)\cdot|\mathcal G|\cdot d$ terms, each proportional to an independent Gaussian coordinate and weighted by an advantage that depends on the trajectory only through its final reward. A coordinate adds to the expected gradient only through the covariance of the reward with that coordinate's noise, but it adds to the variance regardless; with $N$ trajectories per update the signal grows like $N$ times these covariances and the noise like $\sqrt{N(K-1)|\mathcal G|d}$. In an autoregressive model the analogous sum has one term per token and every term is a decision the reward depends on; in the flow model the covariances are, as far as we can measure, undetectable (the half-split cosine of Table~\ref{tab:main} stays at the level of a zero-mean control up to $2{,}048$ rollouts), which is the origin of the gap between the two estimators in Table~\ref{tab:main}. A finer advantage, per step or per position, changes which terms receive weight but leaves the factor $\epsilon_k/(\psi_kc_\sigma)$ in place.
+
+\begingroup
+\color{blue}
+\paragraph{The full trajectory score and the GRR approximation.}
+Equation~\ref{eq:sf}, when multiplied by the terminal reward and summed over stochastic steps, is a truncation of the unbiased trajectory-level likelihood-ratio gradient estimator: it retains the local transition derivative and omits derivatives through earlier self-conditioning predictions. To make this distinction explicit, abbreviate $z_k=\rvz_{t_k}$ and $x_{k-1}=\rvx_{t_{k-1}}$, with the prompt and parameter-independent initial state held fixed. In our sampler, the complete stochastic trajectory before the deterministic final step is $\mathbf z=(z_1,\ldots,z_{K-1})$, and its likelihood is
+\begin{equation}
+p_\theta(\mathbf z)=\prod_{k=1}^{K-1}\pi_\theta(z_k\mid s_{k-1}),
+\qquad s_{k-1}=(z_{k-1},x_{k-2}),\quad x_{k-1}=\mathrm d_\theta(s_{k-1}).
+\label{eq:full_trajectory_likelihood}
+\end{equation}
+Here $\pi_\theta$ denotes the Gaussian embedding-transition density in Equation~\ref{eq:kernel}; the self-conditioning variables are deterministic functions of the preceding stochastic states and $\theta$. The exact REINFORCE gradient is
+\begin{equation}
+\nabla_\theta J
+=\mathbb E\left[R(s_{K+1})\sum_{k=1}^{K-1}D_\theta\log\pi_\theta(z_k\mid s_{k-1})\right],
+\label{eq:full_trajectory_score}
+\end{equation}
+where $D_\theta$ differentiates through recursively generated self-conditioning variables while holding the stochastic trajectory $\mathbf z$ fixed. By the chain rule,
+\begin{equation}
+D_\theta x_{k-1}
+=\underbrace{\partial_\theta\mathrm d_\theta(s_{k-1})}_{\text{Local gradient}}
++\underbrace{\big(\partial_{x_{k-2}}\mathrm d_\theta(s_{k-1})\big)D_\theta x_{k-2}}_{\text{Earlier self-conditioning path}},
+\label{eq:self_conditioning_chain}
+\end{equation}
+with $D_\theta x_{-1}=0$. The local derivative $\partial_\theta\mathrm d_\theta(s_{k-1})$ holds the entire input state fixed, including the stored self-conditioning input. Since the Gaussian transition has mean $\mu_k=\lambda_k z_{k-1}+\eta_k x_{k-1}$ and covariance $\sigma_k^2 I$, where $\sigma_k=\psi_k c_\sigma>0$, its total score is
+\begin{equation}
+\begin{aligned}
+D_\theta\log\pi_\theta(z_k\mid s_{k-1})
+={}&\underbrace{\frac{\eta_k}{\sigma_k^2}(z_k-\mu_k)^\top\partial_\theta\mathrm d_\theta(s_{k-1})}_{\text{GRR local score}}\\
+&+\underbrace{\frac{\eta_k}{\sigma_k^2}(z_k-\mu_k)^\top
+\big(\partial_{x_{k-2}}\mathrm d_\theta(s_{k-1})\big)D_\theta x_{k-2}}_{\text{Omitted trajectory score}}.
+\end{aligned}
+\label{eq:trajectory_score_decomposition}
+\end{equation}
+The vector products sum over all generated positions and embedding coordinates. Because $z_k-\mu_k=\psi_k\epsilon_k$, the first term is precisely the local score in Equation~\ref{eq:sf}.
+
+Consequently, under the assumptions of Equation~\ref{eq:full_trajectory_score}, the exact trajectory-level gradient decomposes as stated in Section~\ref{sec:grr},
+\begin{equation}
+\begin{aligned}
+\nabla_\theta J={}&\mathbb E[g_{\mathrm{GRR}}]\\
+&+\mathbb E\left[R(s_{K+1})\sum_{k=1}^{K-1}
+\frac{\eta_k}{\sigma_k^2}(z_k-\mu_k)^\top
+\big(\partial_{x_{k-2}}\mathrm d_\theta(s_{k-1})\big)D_\theta x_{k-2}\right],
+\end{aligned}
+\label{eq:grr_full_gradient}
+\end{equation}
+where
+\begin{equation}
+g_{\mathrm{GRR}}=R(s_{K+1})\sum_{k=1}^{K-1}
+\frac{\eta_k}{\sigma_k^2}(z_k-\mu_k)^\top\partial_\theta\mathrm d_\theta(s_{k-1})
+\label{eq:grr_local_gradient}
+\end{equation}
+is the local likelihood-ratio gradient that GRR estimates before replacing the reward with its group-relative normalized advantage. This normalization is a separate modification and is not asserted to preserve unbiasedness. The local estimator follows the transition-level likelihood-ratio formulation used in DDPO \citep{black2023ddpo} and Flow-GRPO \citep{liu2025flowgrpo}. Without parameter-dependent deterministic self-conditioning, the omitted term vanishes, and the unnormalized reward-weighted score gives an unbiased trajectory-level policy gradient under the assumptions above.
+
+With self-conditioning, recovering the exact trajectory-level score additionally requires differentiating each transition log-density through preceding denoiser predictions, increasing computational and memory costs. We therefore retain the local transition gradient and omit these cross-step dependencies as a computationally motivated approximation. Related approximations appear in diffusion-model optimization: DPOK omits the contribution of earlier transitions to the state-distribution derivative of its expected KL regularizer for efficiency \citep[Section~4.1 and Appendix~A.3]{fan2023dpok}, while DRaFT-$K$ truncates backpropagation to the final $K$ sampling steps \citep{clark2023draft}, where $K$ denotes its truncation length. These methods omit different gradient contributions, but provide precedent for balancing gradient completeness against computational cost.
+\endgroup
 
 The pathwise estimator of $\mathcal J_{\rm SVG}$ uses the same reparameterisation, $\rvz_{t_k}=\lambda_k\rvz_{t_{k-1}}+\eta_k\,\mathrm d_\theta(s_{k-1})+\psi_k\epsilon_k$ and $\rvx_{t_{k-1}}=\mathrm d_\theta(s_{k-1})$, and differentiates the critic through it with $s_{k-1}$ and $\epsilon_k$ held fixed:
 \begin{equation}
@@ -110,6 +165,30 @@ and $V^\star_k$ depends on $\theta$ only through the calls at $s_k$ and later. T
 where the second equality exchanges derivative and expectation, and $\nabla^{(k)}_\theta V^\star_k(s_k)$ is~(\ref{eq:pwgrad}) with $V^\star_k$ in place of $V_\phi$. The exchange needs $V^\star_k$ to be locally Lipschitz in $s_k$ with an integrable gradient. For $k\le K-1$ this holds in the first argument because, by~(\ref{eq:bellman}), $V^\star_k$ is a Gaussian average of $V^\star_{k+1}$ over the noise injected at step $k{+}1$; for the second argument, the estimate carried by self-conditioning, we assume the same regularity. It fails at the last call: $V^\star_K$ is the reward of the decoded response, an $\arg\max$ followed by a program, hence piecewise constant with zero gradient almost everywhere, so a pathwise estimator sees no signal through the final decode. This is why the pathwise route needs a value on \emph{intermediate} states rather than the reward on the final one, and why $\mathcal J_{\rm SVG}$ is written with a critic at $s_k$. Each term of~(\ref{eq:sumover}) is the one-step value gradient of SVG \citep{heess2015svg} with the sampler as the transition model; drawing one $k$ at random and applying~(\ref{eq:pwgrad}) is an unbiased estimate of the window's share of the sum, up to the constant $|\mathcal W|$, when $V_\phi=V^\star_k$.
 
 The first channel of~(\ref{eq:pwgrad}) and the score-function term~(\ref{eq:sf}) estimate the same quantity. By Gaussian integration by parts, $\mathbb E[\psi(\mu+\sigma\epsilon)\,\epsilon]=\sigma\,\mathbb E[\nabla\psi(\mu+\sigma\epsilon)]$ for standard Gaussian $\epsilon$ and locally Lipschitz $\psi$ with integrable gradient; applied to $\psi=V^\star_k(\cdot,\rvx_{t_{k-1}})$ it turns the factor $V^\star_k(s_k)\,\epsilon_k/(\psi_kc_\sigma)$ of the score-function form into the factor $\nabla_{\rvz}V^\star_k(s_k)$ of the pathwise form, conditionally on $s_{k-1}$. The two have the same expectation and differ only in variance, coordinate by coordinate: the score-function factor at a coordinate has variance of order $\mathbb E[(V^\star_k)^2]/(\psi_kc_\sigma)^2$ whether or not the coordinate affects the reward, whereas the pathwise factor is identically zero on every coordinate the value does not depend on. The second channel of~(\ref{eq:pwgrad}) has no counterpart in~(\ref{eq:grpo_loss}), which holds the stored estimates fixed. With a learned critic in place of $V^\star_k$ the estimate is biased by the difference of the two slopes on the states the current policy visits; both the visited states and $V^\star_k$ itself move with $\theta$, which is why the critic is refit on the current policy's own rollouts after every policy update (Section~\ref{sec:jpc_2d}).
+
+\begingroup
+\color{blue}
+\subsection{The logit surrogate for the actor objective}
+\label{app:logit_surrogate}
+Equation~\ref{eq:svg_objective} gives the original actor objective. In our SVG implementation, we instead maximize $\mathrm{logit}(V_\phi)$ as a surrogate for all reported SVG results, except the explicit objective ablation in Table~\ref{tab:needs}. Our critic is trained with binary cross-entropy to estimate the probability of eventual success, $V_\phi(s_k)\approx P(R=1\mid s_k)$. As in binary logistic classification, its pre-sigmoid score has a log-odds interpretation. For a fixed policy and sampling distribution, Bayes' rule gives
+\begin{equation}
+\mathrm{logit}\big(P(R=1\mid s_k)\big)
+= \log\frac{p(s_k\mid R=1)}{p(s_k\mid R=0)}
++ \log\frac{P(R=1)}{P(R=0)}.
+\label{eq:success_log_density_ratio}
+\end{equation}
+Thus, under an accurate probabilistic critic, $\mathrm{logit}(V_\phi(s_k))$ estimates a success-versus-failure log-density ratio up to a state-independent constant, consistent with the established connection between logistic classification and density-ratio estimation \citep[Sections~2.1--2.2, Equations~4--9]{gutmann2010noise}. Maximizing this score encourages the generator toward states that are relatively more characteristic of successful than unsuccessful trajectories.
+
+The two objectives give the same per-sample gradient direction: with the critic parameters held fixed and $0<V_\phi(s_k)<1$,
+\begin{equation}
+\nabla_\theta\mathrm{logit}(V_\phi(s_k))
+= \frac{\nabla_\theta V_\phi(s_k)}{V_\phi(s_k)\big(1-V_\phi(s_k)\big)}.
+\label{eq:logit_surrogate_gradient}
+\end{equation}
+Directly maximizing $V_\phi$ introduces a multiplicative factor $V_\phi(1-V_\phi)$ relative to the gradient of the pre-sigmoid score, attenuating the learning signal when the critic confidently predicts success or failure. The logit transformation removes this sigmoid-induced attenuation while preserving the per-sample gradient direction, providing a stronger optimization signal, particularly for samples predicted to fail with high confidence. This state-dependent rescaling changes the relative weights of samples, so it need not preserve the direction of the expected gradient; the logit is a surrogate rather than an equivalent expected objective. Table~\ref{tab:needs} confirms the empirical benefit: ascending $V_\phi$ instead lowers accuracy.
+
+Training a scalar score through classification-based supervision and subsequently optimizing the score directly is established practice. In RLHF, reward models are trained using a log-sigmoid pairwise preference loss, while the policy optimizes the learned scalar reward together with regularization terms \citep[Equations~1--2]{ouyang2022instructgpt}. Similarly, hinge-loss GANs train discriminators using a margin-based classification loss, while generators directly maximize the discriminator's unbounded score \citep{brock2019large,lim2017geometric}. Although these approaches differ from our success-probability critic, they provide precedent for optimizing learned scalar scores rather than bounded classification probabilities.
+\endgroup
 
 \subsection{Head before or after the mean}
 \label{app:additive}

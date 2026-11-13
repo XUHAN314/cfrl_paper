@@ -34,6 +34,67 @@ Game24, $10^{-5}$ & 26.9 & 39.8 & 40.2 & 42.5 & 45.8 & 44.2 & 42.8 & \textbf{46.
 \label{app:d1}
 d1 \citep{zhao2025d1} is the most used RL recipe for masked diffusion language models: LLaDA-8B-Instruct \citep{nie2025llada} with LoRA, a supervised stage, and diffu-GRPO, a GRPO variant whose per-token log-probabilities come from one forward pass in which all completion tokens are masked. That estimator requires a mask token and a discrete masked-diffusion model, so it cannot be applied to a continuous flow model; \methodGRPO{} is its counterpart on ELF. We ran d1's own recipe, unchanged, on its own base model and on our four held-out sets, with the authors' code and hyperparameters (LoRA rank 128 on all attention and MLP projections, six generations per prompt, 256-token completions with 128 diffusion steps, block length 32, learning rate $3\times10^{-6}$, 12 inner iterations, KL weight 0.04, clip $0.5$), prompts and rewards in d1's own formats, and accuracy as our exact-success metric. The supervised stage is completion-only masked SFT on the same training data as ELF-B's task SFT (3--20 epochs per task); diffu-GRPO then runs from the merged SFT model for 8{,}000 inner steps, about 32k rollouts, the budget of our pathwise runs. The comparison is across architectures and training histories: LLaDA-8B-Instruct was never trained on these tasks and its supervised stage is a LoRA run, whereas ELF-B is trained in full, so we make no claim about the ceiling of masked diffusion models. What Table~\ref{tab:main} shows is the behaviour of the estimator: diffu-GRPO moves the supervised model by under three points on every task, consistent with d1's own results on its easier three-number Countdown and $4{\times}4$ Sudoku.
 
+\begingroup
+\color{blue}
+Our tasks are more difficult than d1's original benchmarks: Countdown uses 4--5 numbers instead of 3, Sudoku uses $9\times9$ grids instead of $4\times4$, and solutions require programmatically verified derivations. We additionally evaluated \method{} on d1's original Countdown-3 and $4\times4$ Sudoku test sets (256 problems each), using d1's own reported LLaDA results as references. ELF-B was fine-tuned on a limited subset of solver-generated training examples (20k Countdown-3 examples and 200 unique Sudoku puzzles) to avoid saturating the SFT baseline; with the full training data, SFT alone achieves 88.3\% and 100\%, respectively. We then applied the same critic pre-training and RL procedures as in Table~\ref{tab:main}. Checkpoints were selected using separate validation data, and accuracies were averaged over five sampler seeds.
+
+\begin{table}[H]
+\centering\small\color{blue}
+\arrayrulecolor{blue}
+\caption{\textcolor{blue}{Test accuracy (\%) on d1's original benchmarks. The LLaDA results are reported by d1~\citep{zhao2025d1}; ELF-B results are averaged over five sampler seeds.}}
+\label{tab:d1_original}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{@{}lrr@{}}
+\toprule
+\textbf{Method} & \textbf{$4\times4$ Sudoku} & \textbf{Countdown (3 numbers)} \\
+\midrule
+LLaDA-8B-Instruct (d1) & 11.7 & 20.7 \\
+d1-LLaDA: SFT + diffu-GRPO (d1) & 22.1 & 42.2 \\
+\midrule
+ELF-B task-SFT base (105M, data-limited) & 49.2 & 41.6 \\
++ \methodGRPO{} & 58.9 & 43.7 \\
++ \methodSVGScalar{} & 95.9 & 61.4 \\
++ \methodSVGTwoD{} & \textbf{96.1} & \textbf{62.8} \\
+\bottomrule
+\end{tabular}}
+\arrayrulecolor{black}
+\end{table}
+
+Table~\ref{tab:d1_original} shows that, on $4\times4$ Sudoku, CFRL-SVG and CFRL-GRR improve the ELF-B baseline from 49.2\% to approximately 96\% and 59\%, respectively, whereas d1-LLaDA improves its baseline from 11.7\% to 22.1\%. On Countdown-3, CFRL-SVG-2D and CFRL-GRR improve the ELF-B baseline from 41.6\% to approximately 63\% and 43.7\%, respectively (CFRL-SVG-1D reaches 61.4\%), whereas d1-LLaDA improves its baseline from 20.7\% to 42.2\%.
+\endgroup
+
+\begingroup
+\color{blue}
+\subsubsection{Comparison at matched compute}
+\label{app:matched_compute}
+Table~\ref{tab:matched_compute} gives an approximately compute-matched version of Table~\ref{tab:main}. With comparable training compute, SVG-2D still outperforms GRR on all four datasets, supporting that its performance gains are not simply due to a larger compute budget.
+
+\begin{table}[H]
+\centering\small\color{blue}
+\arrayrulecolor{blue}
+\caption{\textcolor{blue}{Test accuracy (\%) and total training compute (PFLOPs). The GRR deployment-sampler row is newly evaluated; all other accuracies are from Table~\ref{tab:main}. Critic-stage costs are included in the SVG totals. Compute is measured relative to the task-SFT base.}}
+\label{tab:matched_compute}
+\setlength{\tabcolsep}{3pt}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{@{}lrrrrrrrr@{}}
+\toprule
+\textbf{Method} & \multicolumn{2}{c}{\textbf{Countdown}} & \multicolumn{2}{c}{\textbf{Sudoku}} & \multicolumn{2}{c}{\textbf{K\&K}} & \multicolumn{2}{c}{\textbf{Game24}} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}\cmidrule(lr){8-9}
+ & Acc. & PFLOPs & Acc. & PFLOPs & Acc. & PFLOPs & Acc. & PFLOPs \\
+\midrule
+Task-SFT base & 42.8 & 0 & 64.0 & 0 & 68.2 & 0 & 44.0 & 0 \\
+\methodGRPO{} ($\gamma4$@16) & 42.6 & 97 & 67.9 & 221 & 71.4 & 130 & 47.4 & 97 \\
+\shortstack[l]{\methodGRPO{} ($\gamma56$@64;\\$\gamma28$@32 Sudoku), new} & 42.8 & 208 & 64.2 & 306 & 77.0 & 278 & 47.3 & 208 \\
+\methodSVGScalar{} & 47.4 & 263 & 64.1 & 269 & 76.5 & 277 & 51.2 & 232 \\
+\textbf{\methodSVGTwoD{}} & \textbf{49.7} & 263 & \textbf{68.7} & 269 & \textbf{77.5} & 277 & \textbf{58.2} & 232 \\
+\midrule
+Critic stage (included in SVG) & -- & 67 & -- & 113 & -- & 103 & -- & 36 \\
+\bottomrule
+\end{tabular}}
+\arrayrulecolor{black}
+\end{table}
+\endgroup
+
 % ---- CUT 2026-09-26 (not needed for the main narrative): Choice of the Game24 base checkpoint ----
 \iffalse
 \subsubsection{Choice of the Game24 base checkpoint}
@@ -650,4 +711,3 @@ $\gamma112$@128 & 44.0 & $\gamma112$@128 & 37.4\\\bottomrule\end{tabular}}\end{t
 
 
 \fi
-

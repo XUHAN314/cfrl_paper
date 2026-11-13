@@ -41,14 +41,81 @@ released model & \phantom{0}0.0 & \phantom{0}0.0 & \phantom{0}0.0 & \phantom{0}0
 \label{tab:main}
 \end{table}
 
+\begin{table}[t]
+\centering\small\color{blue}
+\arrayrulecolor{blue}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lccccc@{}}
+\toprule
+\textbf{Task} & \textbf{SFT base} & \textbf{\methodGRPO{}} & \textbf{\methodSVGScalar{}} & \textbf{\methodSVGTwoD{}} & \textbf{ELF-B SVG-2D gain} \\
+\midrule
+Countdown & 60.5 & 63.3 {\scriptsize(+2.8)} & 72.6 {\scriptsize(+12.1)} & \textbf{74.4} {\scriptsize(+13.9)} & +6.9 \\
+Sudoku & 71.0 & 70.3 {\scriptsize($-$0.7)} & \textbf{79.3} {\scriptsize(+8.3)} & 77.9 {\scriptsize(+6.9)} & +4.7 \\
+Game24 & 58.6 & 66.9 {\scriptsize(+8.3)} & 70.5 {\scriptsize(+11.9)} & \textbf{71.0} {\scriptsize(+12.4)} & +14.2 \\
+K\&K & 100.0 & -- & -- & -- & SFT saturated \\
+\bottomrule
+\end{tabular*}
+\arrayrulecolor{black}
+\caption{\textcolor{blue}{\textbf{Results on ELF-L (652M).} Test accuracy (\%).}}
+\label{tab:elf_l}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.24\linewidth]{figures/cost_countdown.pdf}\hfill
+\includegraphics[width=0.24\linewidth]{figures/cost_game24.pdf}\hfill
+\includegraphics[width=0.24\linewidth]{figures/cost_kk.pdf}\hfill
+\includegraphics[width=0.24\linewidth]{figures/cost_sudoku.pdf}
+\caption{\textcolor{blue}{Accuracy vs FLOPs across CFRL variants on four datasets.}}
+\label{fig:accuracy_flops}
+\end{figure}
+
 \paragraph{Main results.}\label{sec:exp_main}
-Table~\ref{tab:main} compares the three \method{} variants with the two references. Every variant raises the accuracy of the base model over the four tasks; \methodGRPO{}, which needs no critic, provides the least improvement and \methodSVGTwoD{} is the best flow row on every task. Across architectures, GPT-2 leads on Countdown and K\&K, which require longer derivations, whereas the flow model leads on Game24 and Sudoku, the latter of which neither reference model learns. The 8B masked-diffusion model stays far below the flow model on every task, and \methodSVGTwoD{} gains more than diffu-GRPO on every task. Two patterns emerge. Score-function methods appear capped: \methodGRPO{} on the flow model and diffu-GRPO on the 8B masked model improve by only a few points on any task, regardless of model size, whereas the critic-based variants achieve substantially larger, task-dependent gains. Critic resolution also matters: the 1D critic does not consistently outperform \methodGRPO{}, whereas the 2D critic outperforms both methods across all four tasks. The gains are substantial: \methodSVGTwoD{} improves Game24 by \hl{14.2} points and reaches \hl{68.7} on Sudoku, making the 105M flow model the strongest model on both tasks.
+Table~\ref{tab:main} compares the three \method{} variants with the two references. Every variant raises the accuracy of the base model over the four tasks; \methodGRPO{}, which needs no critic, provides the least improvement and \methodSVGTwoD{} is the best flow row on every task. Across architectures, GPT-2 leads on Countdown and K\&K, which require longer derivations, whereas the flow model leads on Game24 and Sudoku, the latter of which neither reference model learns. The 8B masked-diffusion model stays far below the flow model on every task, and \methodSVGTwoD{} gains more than diffu-GRPO on every task. Two patterns emerge. Score-function methods appear capped: \methodGRPO{} on the flow model and diffu-GRPO on the 8B masked model improve by only a few points on any task, regardless of model size, whereas the critic-based variants achieve substantially larger, task-dependent gains. Critic resolution also matters: the 1D critic does not consistently outperform \methodGRPO{}, whereas the 2D critic outperforms both methods across all four tasks. The gains are substantial: \methodSVGTwoD{} improves Game24 by \hl{14.2} points and reaches \hl{68.7} on Sudoku, making the 105M flow model the strongest model on both tasks. \textcolor{blue}{Figure~\ref{fig:accuracy_flops} plots accuracy versus FLOPs across CFRL variants on all four datasets, showing that SVG-2D consistently outperforms GRR at matched compute.} \textcolor{blue}{Table~\ref{tab:elf_l} repeats the comparison on ELF-L (652M). \method{}-SVG consistently improves over the SFT baseline and \methodGRPO{} across all three non-saturated tasks. These gains are comparable to or greater than those observed on ELF-B, demonstrating that \method{}'s effectiveness extends to a substantially larger continuous-flow model.}
 
 
 \paragraph{Effect of the gradient estimator.}\label{sec:exp_estimator}
 The right panels of Table~\ref{tab:main} test the two estimators at the same point, before any training moves the policy. We take the Game24 task-SFT model, sample $N$ complete rollouts under the deployment sampler and score them with the verifier. On these rollouts we form, at one fixed flow step (24 of 64), one gradient per rollout with respect to both the score-function gradient of \methodGRPO{} and the pathwise gradient of 2D critic. A control sets every advantage to 1, which gives an estimator whose expectation is exactly 0. GPT-2 is measured the same way on its own task-SFT model, with its token-level gradient. \emph{Top:} the $N$ rollouts are split at random into two halves, the gradients of each half are averaged, and the cosine between the two averages is plotted. Two halves of an estimator with a non-zero expectation agree more as $N$ grows, and the cosine rises towards 1; two halves of noise are unrelated, and the cosine stays near 0. \emph{Bottom:} from the base model we take one AdamW-normalized parameter update along each estimator's mean gradient over 1{,}024 rollouts; the unit $\Lambda$ is the distance in parameter space that the 2D-critic policy of Table~\ref{tab:main} travels from the base over its training. Each updated model is evaluated on the held-out prompts with the same random numbers as the base, and the change in accuracy is shown with a paired 95\% interval; a random direction of the same lengths is the control.
 
 The score-function gradient of the flow model does not separate from the zero-mean control at any $N$ up to 2{,}048, whereas the pathwise gradient agrees with itself from 256 rollouts on. GPT-2's token gradient separates from the control at 1{,}024 rollouts: indicating that the limitation lies not only in the score-function estimator itself but also in the flow model's action space. The one-step test says the same in accuracy: a single step along the pathwise direction, at a quarter or a half of $\Lambda$, raises held-out accuracy by about 4 points, whereas the score-function step and the random step stay within about 1 point of the base at every length. The two panels tell a consistent story. Relative to its mean, the flow model's score-function gradient has high variance that independent estimates disagree and a single update has no measurable effect, even at practical rollout budgets. By contrast, pathwise estimates agree within a few hundred rollouts, and one update recovers a substantial fraction of the full-training gain. Because this difference appears before training, it reflects the estimators rather than their training recipes.
+
+\begingroup\color{blue}
+\paragraph{Effect of the self-conditioning gradient.}\label{sec:exp_selfcond}
+Table~\ref{tab:selfcond} investigates the improvement of \methodSVGTwoD{} over \methodGRPO{} which may come from both the additional gradient contribution and a difference in estimator variance. \emph{Left:} detaching the estimate $\hat\rvx$ at \methodSVGTwoD{} critic's input lowers \methodSVGTwoD{} on both Countdown and Game24. The detached variant is comparable to \methodGRPO{} on Countdown and keeps a substantial advantage on Game24 ($+6.0$ points). \emph{Right:} removing self-conditioning altogether, in which case both \methodGRPO{} and \methodSVGTwoD{} are unbiased estimators but lose the self-conditioning capabilities, lowers the accuracy for base, \methodSVGTwoD{} and \methodGRPO{}. \methodSVGTwoD{} nevertheless keeps a substantial advantage over \methodGRPO{} ($+13.5$ and $+7.8$ points). Self-conditioning is thus important for the overall accuracy of the model, while the pathwise estimator remains effective in its absence.
+\endgroup
+
+\begin{table}[!t]
+\centering\small\color{blue}
+\arrayrulecolor{blue}
+\setlength{\tabcolsep}{3pt}
+\begin{minipage}[c]{0.57\linewidth}
+\centering
+\begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lcccc@{}}
+\toprule
+ & & & \multicolumn{2}{c}{\textbf{SVG-2D}} \\
+\cmidrule(l){4-5}
+\textbf{Task} & \textbf{Base} & \textbf{GRR} & \textbf{detached $\hat\rvx$} & \textbf{full} \\
+\midrule
+Countdown & 41.8 & 42.6 & 42.7 & \textbf{49.2} \\
+Game24 & 44.5 & 46.7 & 52.7 & \textbf{58.4} \\
+\bottomrule
+\end{tabular*}
+\end{minipage}\hfill
+\begin{minipage}[c]{0.39\linewidth}
+\centering
+\begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lccc@{}}
+\toprule
+\textbf{Task} & \textbf{Base} & \textbf{GRR} & \textbf{SVG-2D} \\
+\midrule
+Countdown & 12.7 & 13.4 & \textbf{26.9} \\
+Game24 & 13.6 & 15.3 & \textbf{23.1} \\
+\bottomrule
+\end{tabular*}
+\end{minipage}
+\arrayrulecolor{black}
+\caption{\textcolor{blue}{\textbf{Self-conditioning gradient.} Held-out accuracy (\%). \textbf{Left:} \methodSVGTwoD{} with the estimate $\hat\rvx$ detached at the critic's input, which omits the second term of~(\ref{eq:pwgrad}), against the full estimator. \textbf{Right:} self-conditioning removed from the sampler for the base model and for both estimators.}}
+\label{tab:selfcond}
+\end{table}
 
 
 \begin{table}[!t]

@@ -33,10 +33,11 @@ The critic can read out the information about the response from these embeddings
 
 Now we can directly backpropagate the reward information to denoising actions. We don't have reward in non-terminal states, so the maximization objective is
 \begin{align}
- \mathcal{J}_{\mathrm{SVG}}(\theta) &= \mathbb{E}_{s_{k - 1}, s_k} \Bigl[ V_\phi(s_k) \Bigr]
+ \mathcal{J}_{\mathrm{SVG}}(\theta) &= \mathbb{E}_{s_{k - 1}, s_k} \Bigl[ V_\phi(s_k) \Bigr]\label{eq:svg_objective}
 = \mathbb{E}_{\rvz_{t_{k - 1}}, \rvx_{t_{k-2}}, \varepsilon} \Bigl[ V_\phi(\rvz_{t_k}, \rvx_{t_{k-1}}) \Bigr] \quad \text{with} \\
 \rvx_{t_{k-1}} &= \mathrm{d}_\theta(\rvz_{t_{k-1}}, \rvx_{t_{k-2}}),  \quad \rvz_{t_{k}} = \lambda_{k} \rvz_{t_{k-1}} + \eta_k \rvx_{t_{k-1}} + \psi_k \varepsilon
 \end{align}
+\textcolor{blue}{While Equation~\ref{eq:svg_objective} gives the original actor objective, our SVG implementation ascends $\mathrm{logit}(V_\phi(s_k))$ as a surrogate; see Appendix~\ref{app:logit_surrogate} for details.}
 In the calculation of $\nabla_\theta \mathcal{J}_{\mathrm{SVG}}(\theta)$, we only use the gradient from one transition and do not take the derivative of 
 state $s_{k-1} = (\rvz_{t_{k - 1}}, \rvx_{t_{k-2}})$. Then the calcualtion of $\mathcal{J}_{\mathrm{SVG}}(\theta)$ can be viewed reparameterization, 
 which allows the gradient to propagate from $V_\phi$ to $d_\theta$ directly.    
@@ -80,4 +81,3 @@ Here $f_{\phi}$ is an MLP, whose parameters are included in $\phi$.
 %\label{eq:pw}
 %\end{equation}\eqalias{eq:logodds}\eqalias{eq:biasm}
 %The actor gradient passes through the sampled transition only, not the whole chain: the critic carries the later transitions in expectation, so memory does not grow with $K$. The weight $1/[V^\star_k(1-V^\star_k)]$ above amplifies the probability gradient where the outcome is nearly decided. With a learned critic the update is biased, $\mathbb E[\hat g_{\rm PW}\mid k]=\nabla^{(k)}_\theta\tilde J_k+b_k$. The bias vanishes when the critic's slope matches that of the log-odds on the states the current policy visits, which motivates the critic's design (\S\ref{sec:critic}) and its training (\S\ref{sec:joint}).
-
