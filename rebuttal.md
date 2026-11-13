@@ -169,15 +169,14 @@ We thank the reviewer for their positive assessment and thoughtful feedback. We 
 
 We thank the reviewer for this insightful suggestion. We agree that supervising each token-wise critic output with the same sequence-level reward does not guarantee semantic token-level credit assignment. To investigate this, we conducted two additional experiments examining whether the 2D critic identifies incorrect token positions and whether its token-wise readings respond to targeted perturbations.
 
-**(1) Correlation between token-wise readings and incorrect positions.** We first evaluate whether the 2D critic assigns lower readings to incorrect token positions in failed Sudoku solutions. We focus on Sudoku because each output position corresponds directly to a specific answer cell, enabling unambiguous identification of incorrect tokens. We measure the AUC for discriminating correct and incorrect positions using the critic's token-wise readings, as well as P@1, the probability that the lowest-scored position is incorrect.
+**(1) Correlation between token-wise readings and incorrect positions.** We first evaluate whether the 2D critic assigns lower readings to incorrect token positions in failed Sudoku solutions. We focus on Sudoku because each output position corresponds directly to a specific answer cell, enabling unambiguous identification of incorrect tokens. We use precision to measure whether the lowest-scored position is incorrect.
 
 | Metric | range over K steps |
 |---|---|
-| AUC | **0.65–0.66** |
-| P@1 | **0.62–0.65** |
-| Random baseline (P@1) | 0.42 |
+| Precision | **0.62–0.65** |
+| Random baseline precision | 0.42 |
 
-Both metrics exceed random performance. This suggests that the 2D critic's readings contain information about which token positions are incorrect, despite being trained with sequence-level supervision.
+The precision exceeds random performance. This suggests that the 2D critic's readings contain information about which token positions are incorrect, despite being trained with sequence-level supervision.
 
 **(2) Counterfactual token corruption.** Following the reviewer's suggestion, we conduct a controlled perturbation experiment to evaluate whether the 2D critic responds to token-level errors. Starting from a correct solution, we corrupt a single token and measure the change in each position's critic reading. We report the percentage of cases in which the corrupted position exhibits the **largest decrease in its critic reading** among all positions, compared with the random-position baseline.
 
@@ -190,19 +189,15 @@ Both metrics exceed random performance. This suggests that the 2D critic's readi
 
 Across all four tasks, the corrupted position is substantially more likely to exhibit the largest decrease in critic reading than expected by chance. These results demonstrate that the 2D critic is sensitive to localized token perturbations, providing evidence of position-specific reward attribution despite being trained with sequence-level supervision.
 
-**Interpretation and limitations.** We acknowledge that the 2D critic's performance gains may also arise from gradient scaling, conditioning, or optimization dynamics. While our experiments show that the critic captures position-specific information and responds to localized corruption, they do not establish that semantic token-level credit assignment is the sole source of its advantage. We have therefore refine our claims to distinguish position-sensitive reward estimation from fully interpretable token-level credit assignment.
+**Interpretation and limitations.**  Our experiments show that the critic captures position-specific information and responds to localized corruption, while they do not establish that semantic token-level credit assignment is the sole source of its advantage and we do not rule out the possibility that the 2D critic's performance gains may also arise from gradient scaling, conditioning, or optimization dynamics. We have therefore refined our claims to distinguish position-sensitive reward estimation from fully interpretable token-level credit assignment.
 
 > The empirical evidence is limited to one 105M continuous-flow model that is separately fine-tuned for four synthetic tasks with exact verifiers. This is sufficient to demonstrate that CFRL can work, but not that the approach remains stable or computationally worthwhile at language-model scale. The autoregressive rows are also not matched in pretraining, model size, or task-specific adaptation, so they should not be interpreted as evidence that continuous-flow RL is competitive with autoregressive RL.
 
-
-
-### 3. Scalability and comparison with autoregressive models
-
 We thank the reviewer for highlighting the importance of scalability and fair comparisons. We agree that our autoregressive (AR) baselines, which differ in pretraining, model size, and task-specific adaptation, should not be interpreted as evidence that continuous-flow RL is competitive with autoregressive RL. We have clarified that these results serve only as reference points rather than controlled comparisons.
 
-**New experiments on a larger model.** To investigate whether CFRL's improvements extend beyond the 105M-parameter ELF-B model, we conducted additional experiments on **ELF-L (652M parameters)**, approximately 6.2× larger than ELF-B. We applied the same critic pre-training and RL hyperparameters without additional tuning, using the same validation-based checkpoint selection and averaging test accuracy over five sampling seeds.
+To investigate whether CFRL's improvements extend beyond the 105M-parameter ELF-B model, we conducted additional experiments on **ELF-L (652M parameters)**, approximately 6.2× larger than ELF-B. We applied the same critic pre-training and RL hyperparameters without additional tuning, using the same validation-based checkpoint selection and averaging test accuracy over five sampling seeds.
 
-**Table R3.** Test accuracy (%) on ELF-L (652M). Improvements over task-SFT are shown in parentheses. The final column reports the corresponding SVG-2D improvement on ELF-B (105M) for comparison.
+Test accuracy (%) on ELF-L (652M). Improvements over task-SFT are shown in parentheses. The final column reports the corresponding SVG-2D improvement on ELF-B (105M) for comparison.
 
 | Task | SFT Base | CFRL-GRR | CFRL-SVG-1D | CFRL-SVG-2D | ELF-B SVG-2D Gain |
 |---|---:|---:|---:|---:|---:|
@@ -211,9 +206,30 @@ We thank the reviewer for highlighting the importance of scalability and fair co
 | Game24 | 58.6 | 66.9 (+8.3) | 70.5 (+11.9) | **71.0 (+12.4)** | +14.2 |
 | K&K | 100.0 | – | – | – | SFT saturated |
 
-**Results.** CFRL-SVG consistently improves over the SFT baseline and CFRL-GRR across all three non-saturated tasks. In particular, SVG-2D achieves improvements of +13.9, +6.9, and +12.4 percentage points on Countdown, Sudoku, and Game24, respectively. These gains are comparable to or greater than those observed on ELF-B, demonstrating that CFRL's effectiveness extends to a substantially larger continuous-flow model. On Sudoku, SVG-1D slightly outperforms SVG-2D, suggesting that the relative benefit of the token-wise critic can vary with model size and task.
+CFRL-SVG consistently improves over the SFT baseline and CFRL-GRR across all three non-saturated tasks. In particular, SVG-2D achieves improvements of +13.9, +6.9, and +12.4 percentage points on Countdown, Sudoku, and Game24, respectively. These gains are comparable to or greater than those observed on ELF-B, demonstrating that CFRL's effectiveness extends to a substantially larger continuous-flow model. On Sudoku, SVG-1D slightly outperforms SVG-2D, suggesting that the relative benefit of the token-wise critic can vary with model size and task.
 
 While these experiments provide encouraging evidence of **scalability from 105M to 652M parameters**, we acknowledge that they do not establish stability or computational efficiency at multi-billion-parameter scale. We have therefore clarified the scope of our claims and identified further scaling studies as future work.
 
-We have incorporated these additional experiments and clarifications into the revised manuscript, with all changes highlighted in blue.
+> What is the total training cost of CFRL, including critic pretraining, fresh rollouts, and repeated critic refitting, relative to CFRL-GRR? A compute-matched comparison would clarify whether the improvement comes from the estimator or from substantially more learned supervision.
+
+We thank the reviewer for raising this question about compute matching. We measure total training FLOPs across all network evaluations, including rollouts, actor updates, critic pre-training, and online critic updates. Following the standard parameter-based FLOPs approximation ([1]), we count a forward pass as one unit and a full backward pass as two units. We additionally approximate an input-gradient-only backward pass as one unit, since the critic backbone is frozen during RL. The full-run Table1 compute of CFRL-SVG is 1.2–2.7× that of the original CFRL-GRR. The critic stage accounts for 14–42% of the total SVG compute.
+
+**Compute-matched comparison.** We additionally trained CFRL-GRR using the same deployment sampler as CFRL-SVG (64 steps, or 32 for Sudoku), rather than its original 16-step sampler. This approximately doubles GRR's computational cost while keeping all other training settings unchanged. As shown in the new Table below and Figure R2.1, CFRL-SVG-2D consistently outperforms CFRL-GRR at matched total FLOPs across all four tasks, even after accounting for the full critic cost. For example, at approximately 200 PFLOPs on Countdown, SVG-2D achieves 49.6% accuracy versus 43.0% for GRR; at approximately 100 PFLOPs on Game24, SVG-2D achieves 56.4% versus 46.3% for GRR with the deployment sampler. Similar improvements hold on Sudoku and K&K.
+
+Test accuracy (%) and total training compute (PFLOPs). The GRR deployment-sampler row is newly evaluated; all other accuracies are from Table 1. Critic-stage costs are included in the SVG totals.
+
+| Method | Countdown Acc. | PFLOPs | Sudoku Acc. | PFLOPs | K&K Acc. | PFLOPs | Game24 Acc. | PFLOPs |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| Task-SFT base | 42.8 | 0 | 64.0 | 0 | 68.2 | 0 | 44.0 | 0 |
+| CFRL-GRR (γ4@16) | 42.6 | 97 | 67.9 | 221 | 71.4 | 130 | 47.4 | 97 |
+| CFRL-GRR (γ56@64; γ28@32 Sudoku), new | 42.8 | 208 | 64.2 | 306 | 77.0 | 278 | 47.3 | 208 |
+| CFRL-SVG-1D | 47.4 | 263 | 64.1 | 269 | 76.5 | 277 | 51.2 | 232 |
+| **CFRL-SVG-2D** | **49.7** | 263 | **68.7** | 269 | **77.5** | 277 | **58.2** | 232 |
+| Critic stage (included in SVG) | – | 67 | – | 113 | – | 103 | – | 36 |
+
+Our existing same-rollout experiments of Table 1 (right panels) demonstrate that the pathwise estimator provides more effective updates under identical rollout conditions. The new compute-matched experiments further show that this advantage persists after accounting for the critic's cost and matching the rollout sampler. Together, these results support that the performance gains arise from the improved optimization signal rather than simply greater computational expenditure. We have incorporated the detailed FLOPs accounting into Appendix D and added the new GRR experiments and accuracy-versus-compute curves to Section 5 of the revised manuscript, with all changes highlighted in blue.
+
+We sincerely thank the reviewer for their time and thoughtful feedback, which have helped us strengthen the paper and improve its clarity and rigor. We have incorporated these additional experiments and clarifications into the revised manuscript, with all changes highlighted in blue.
+
+[1] Hoffmann, J., Borgeaud, S., Mensch, A., Buchatskaya, E., Cai, T., Rutherford, E., de Las Casas, D., Hendricks, L. A., Welbl, J., Clark, A., et al. Training Compute-Optimal Large Language Models. NeurIPS 2022.
 
