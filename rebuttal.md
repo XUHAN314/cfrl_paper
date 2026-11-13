@@ -84,24 +84,24 @@ $$
 D_\theta x_{k-1}
 ={}\underbrace{
 \partial_\theta d_\theta(s_{k-1})
-}_{Local gradient}+\underbrace{
-(\partial_{x_{k-2}}d_\theta)
+}_{\text{Local gradient}}+\underbrace{
+(\partial_{x_{k-2}}d_\theta(s_{k-1}))
 D_\theta x_{k-2}
 }_{\text{Earlier self-conditioning path}}.
 \end{aligned}
 $$
 
-The local gradient $\partial_\theta d_\theta(s_{k-1})$ is taken with the input state held fixed, including the stored self-conditioning input. Since the Gaussian transition has mean $\mu_k=\lambda z_{k-1}+\eta x_{k-1}$, we obtain
+The local gradient $\partial_\theta d_\theta(s_{k-1})$ is taken with the input state held fixed, including the stored self-conditioning input. Since the Gaussian transition has mean $\mu_k=\lambda_k z_{k-1}+\eta_k x_{k-1}$ and variance $\sigma_k^2$, we obtain
 
 $$
 \begin{aligned}
 D_\theta\log\pi_\theta(z_k\mid s_{k-1})
 ={}\underbrace{
-\frac{\eta}{\sigma^2}
-(z_k-\mu_k)(\partial_\theta d_\theta(s_{k-1}))^{\top}
+\frac{\eta_k}{\sigma_k^2}
+(z_k-\mu_k)^{\top}\,\partial_\theta d_\theta(s_{k-1})
 }_{\text{GRR gradient}}+\underbrace{
-\frac{\eta}{\sigma^2}
-\big((z_k-\mu_k)(\partial_{x_{k-2}}d_\theta)\,D_\theta x_{k-2}\big)^{\top}
+\frac{\eta_k}{\sigma_k^2}
+(z_k-\mu_k)^{\top}\,(\partial_{x_{k-2}}d_\theta(s_{k-1}))\,D_\theta x_{k-2}
 }_{\text{Omitted trajectory gradient}}.
 \end{aligned}
 $$
@@ -109,17 +109,17 @@ $$
 Therefore, the exact trajectory-level gradient can be decomposed as
 
 $$
-\mathbb E[g_{\mathrm{GRR}}]
+\nabla_\theta J=\mathbb E[g_{\mathrm{GRR}}]
 +
 \mathbb E\left[
 R(s_{K+1})
 \sum_k
-\frac{\eta}{\sigma^2}
-\big((z_k-\mu_k)(\partial_{x_{k-2}}d_\theta(s_{k-1}))\,D_\theta x_{k-2}\big)^{\top}
-\right],
+\frac{\eta_k}{\sigma_k^2}
+(z_k-\mu_k)^{\top}\,(\partial_{x_{k-2}}d_\theta(s_{k-1}))\,D_\theta x_{k-2}
+\right], 
 $$
 
-Here, $g_{\mathrm{GRR}}$ denotes the gradient implemented in GRR, which follows the transition-level likelihood-ratio formulation used in DDPO ([5]) and Flow-GRPO ([6]), which yields an unbiased trajectory-level policy gradient for samplers without parameter-dependent deterministic self-conditioning. With self-conditioning, recovering the exact trajectory-level gradient additionally requires differentiating each transition log-density through preceding denoiser predictions, substantially increasing computational and memory costs. We therefore retain the local transition gradient and omit these cross-step dependencies as a computationally motivated approximation. Similar gradient approximations have been adopted in diffusion-model optimization: DPOK ([7], Sec. 4.1 and App. A.3) omits gradients through earlier denoising transitions for efficiency, while DRaFT-K ([8]) truncates backpropagation to the final K sampling steps. Although these methods omit different gradient contributions, they provide precedent for balancing gradient completeness against computational cost.
+where $g_{\mathrm{GRR}}=R(s_{K+1})\sum_k\frac{\eta_k}{\sigma_k^2}(z_k-\mu_k)^{\top}\,\partial_\theta d_\theta(s_{k-1})$ is the local likelihood-ratio gradient that GRR estimates, up to its group-relative advantage normalization, which follows the transition-level likelihood-ratio formulation used in DDPO ([5]) and Flow-GRPO ([6]), which yields an unbiased trajectory-level policy gradient for samplers without parameter-dependent deterministic self-conditioning. With self-conditioning, recovering the exact trajectory-level gradient additionally requires differentiating each transition log-density through preceding denoiser predictions, substantially increasing computational and memory costs. We therefore retain the local transition gradient and omit these cross-step dependencies as a computationally motivated approximation. Similar gradient approximations have been adopted in diffusion-model optimization: DPOK ([7], Sec. 4.1 and App. A.3) omits gradients through earlier denoising transitions for efficiency, while DRaFT-K ([8]) truncates backpropagation to the final K sampling steps. Although these methods omit different gradient contributions, they provide precedent for balancing gradient completeness against computational cost.
 
 SVG instead estimates the additional self-conditioning gradient using a differentiable critic, avoiding the need to backpropagate through the entire sampling trajectory. Consequently, its improvement over GRR may reflect both the additional gradient contribution and differences in estimator variance. To answer the question how much of the SVG improvement comes from the additional gradient term, we have done an experiment omitting the second gradient term in eq 23:
 
