@@ -63,34 +63,35 @@ For the pooling method over positions, we used mean pooling in the implementatio
 
 We thank the reviewer for this insightful observation. We acknowledge that GRR retains the REINFORCE gradient computed through one denoising step but does not account the gradient from the computation path of deterministic self-conditioning.
 
-In our new version, we clarify the action definition to be $a_k = \eta_k x_{t_{k}} + \psi_k \epsilon$ and then update our derivation in the submission as follows. The optimization of the actor's objective $\mathcal J_{\mathrm{GRR}}(\theta)$ (Eq. 5)requires the computation of the gradient $\nabla_\theta \log\pi_\theta\bigl(a^g_k \mid s^g_{k}\bigr)$ for each group $g$. Below we omit $g$ for notation simplicity. Note that $a_k$ is from a Gaussian distribution $\mathcal{N}(\eta_k x_{t_{k}}, \psi_k^2 c_\sigma^2 I)$, and we have:
+In our new version, we clarify the action definition to be $a_k = \eta_k x_{t_{k}} + \psi_k \epsilon$ and then update our derivation in the submission as follows. The optimization of the actor's objective $\mathcal J_{\mathrm{GRR}}(\theta)$ (Eq. 5) requires the computation of the gradient $\nabla_\theta \log\pi_\theta\bigl(a^g_k \mid s^g_{k}\bigr)$ for each group $g$. Below we omit $g$ for notation simplicity. Note that $a_k$ is from a Gaussian distribution $\mathcal{N}(\eta_k x_{t_{k}}, \psi_k^2 c_\sigma^2 I)$, and we have:
 
 $$
 \nabla_\theta \log\pi_\theta\bigl(a_k \mid s_{k}\bigr) = \frac{\eta_k(a_k - \eta_k x_{t_{k}})^\top }{\psi_{k}^2 c_\sigma^2} \left( \frac{\partial x_{t_{k}}}{\partial \theta} + \quad \frac{\partial x_{t_{k}}}{\partial x_{t_{k-1}}} \cdot D_{\theta} x_{t_{k-1}} \right)  \approx \frac{\eta_k(a_k - \eta_k x_{t_{k}})^\top }{\psi_{k}^2 c_\sigma^2}\frac{\partial x_{t_{k}}}{\partial \theta}.
 $$
 
-There is a determinstic computation path from $x_{t_0}$ to $x_{t_{k}}$ through the self-conditioning mechanism in the denoiser. The term $D_\theta x_{t_{k-1}}$ is the total derivative of $x_{t_{k-1}}$ with respect to $\theta$ through the path. The exact gradient calculation requires backpropagation through denoising steps, which has the same issue as backpropagation through time. In our implementation, we truncate the backpropagation through steps and only use the local gradient $\frac{\partial x_{t_{k}}}{\partial \theta}$ as the approximate gradient.
+There is a deterministic computation path from $x_{t_0}$ to $x_{t_{k}}$ through the self-conditioning mechanism in the denoiser. The term $D_\theta x_{t_{k-1}}$ is the total derivative of $x_{t_{k-1}}$ with respect to $\theta$ through the path. The exact gradient calculation requires backpropagation through denoising steps, which has the same issue as backpropagation through time. In our implementation, we truncate the backpropagation through steps and only use the local gradient $\frac{\partial x_{t_{k}}}{\partial \theta}$ as the approximate gradient.
 
-From this derivation, we agree that the gradient of GRR is biased, and computing the unbiased estimation is computationally hard. Similar gradient approximations have been adopted in diffusion-model optimization: DPOK ([7], Sec. 4.1 and App. A.3) omits gradients through earlier denoising transitions for efficiency, while DRaFT-K ([8]) truncates backpropagation to the final K sampling steps. 
+From this derivation, we agree that the gradient of GRR is biased, and computing the unbiased estimation is computationally hard. Similar gradient approximations have been adopted in diffusion-model optimization: DPOK ([2], Sec. 4.1 and App. A.3) omits gradients through earlier denoising transitions for efficiency, while DRaFT-K ([3]) truncates backpropagation to the final K sampling steps. 
 
-Therefore, bias in gradient estimation is a weakness of GRR. In contrast, SVG estimates the additional self-conditioning gradient using a differentiable critic, avoiding the need to backpropagate through the entire sampling trajectory. Consequently, SVG's improvement over GRR may reflect its ability to reduce both bias and variance in gradient estimation. To isolate the contribution of gradient estimation to performance, we conduct two additional experiments. First, we remove the second gradient term from SVG to match the gradient formulation of GRR. Second, we remove self-conditioning, under which the GRR gradient estimator becomes unbiased.
+Therefore, bias in gradient estimation is a weakness of GRR. In contrast, SVG estimates the additional self-conditioning gradient using a differentiable critic, avoiding the need to backpropagate through the entire sampling trajectory. Consequently, SVG's improvement over GRR may reflect its ability to reduce both bias and variance in gradient estimation. To isolate the contribution of gradient estimation to performance, we conduct two additional experiments. First, we remove the second gradient term in Eq. (28) from SVG to match the gradient formulation of GRR. Second, we remove self-conditioning entirely for both GRR and SVG, under which the GRR gradient estimator becomes unbiased.
 
-The table below show the results from the first experiment. 
+The table below shows the results from the experiment that removes the second gradient term in Eq. (28) from SVG. 
 
 | Task | Base | GRR | SVG-2D (Detached $\hat{x}$) | SVG-2D (Full) |
 |---|---:|---:|---:|---:|
 | Countdown | 41.8 | 42.6 | 42.7 | **49.2** |
 | Game24 | 44.5 | 46.7 | 52.7 | **58.4** |
 
-Detaching the self-conditioning gradient reduces SVG-2D accuracy from 49.2% to 42.7% on Countdown and from 58.4% to 52.7% on Game24. The detached variant performs comparably to GRR on Countdown (42.7% vs. 42.6%) but retains a substantial advantage on Game24 (+6.0 percentage points). 
+Detaching the self-conditioning gradient reduces SVG-2D accuracy from 49.2% to 42.7% on Countdown and from 58.4% to 52.7% on Game24. The detached variant performs comparably to GRR on Countdown but retains a substantial advantage on Game24 (+6.0 percentage points). 
 
-We also add an experiment omitting the self-conditional at all for both GRR and SVG for a fair comparison:
+The table below shows the experiment omitting the self-conditional at all for both GRR and SVG for a fair comparison. For this experiment, we retrain the task-SFT base of ELF-B with self-conditioning disabled, with the same supervised budget as Table~\ref{tab:main}, and rerun the whole pipeline without self-conditioning: rollout collection, critic pre-training, RL and evaluation. The base drops by about 30 points, so self-conditioning matters greatly for the model, yet SVG-2D still leads GRR by $+13.5$ and $+7.8$. 
+
 | Task | Base | GRR | SVG-2D |
 |---|---:|---:|---:|
 | Countdown | 12.7 | 13.4 | **26.9** |
 | Game24 | 13.6 | 15.3 | **23.1** | 
 
-Removing self-conditioning substantially reduces the base accuracy from 41.8% to 12.7% on Countdown and from 44.5% to 13.6% on Game24. Accordingly, SVG-2D accuracy decreases from 49.2% to 26.9% on Countdown and from 58.4% to 23.1% on Game24. GRR also experiences substantial degradation, dropping from 42.6% to 13.4% on Countdown and from 46.7% to 15.3% on Game24. Despite these reductions, **SVG-2D maintains a substantial advantage over GRR** (+13.5 and +7.8 percentage points, respectively). These results suggest that self-conditioning is important for overall model performance, while the pathwise estimator retains its effectiveness even in its absence.
+These results suggest that self-conditioning is important for overall model performance, while the SVG retains its effectiveness even in its absence. The SVG gain thus comes from both reduced variance and reduced bias. The tables can be found in Table 3 in the revised manuscript.
 
 > Does the Game24 verifier require every input number to be used exactly once? For example, would it reject 3*8=24 for inputs [1,2,3,8]? Appendix A only describes at-most-once use for the reused Countdown verifier.
 
@@ -98,7 +99,7 @@ Yes, the shared verifier for both Game24 and Countdown requires every input numb
 
 We sincerely thank the reviewer for their time, thoughtful feedback, and constructive suggestions. We have carefully addressed the concerns regarding methodological consistency, gradient attribution, and verifier implementation, and revised the manuscript accordingly, with all changes highlighted in blue. We believe these revisions have improved the clarity, rigor, and reproducibility of our work.
 
-[1] Gutmann, M., & Hyvärinen, A. Noise-contrastive estimation: A new estimation principle for unnormalized statistical models. AISTATS 2010.
+[1] Tajwar, F., Zeng, G., Zhou, Y., Song, Y., Arora, D., Jiang, Y., Schneider, J., Salakhutdinov, R., Feng, H., & Zanette, A. ICML 2026.
 
 [2] Ouyang, L., Wu, J., Jiang, X., Almeida, D., Wainwright, C. L., Mishkin, P., Zhang, C., Agarwal, S., Slama, K., Ray, A., et al. Training language models to follow instructions with human feedback. NeurIPS 2022.
 
