@@ -62,13 +62,13 @@ We thank the reviewer for this insightful observation. We acknowledge that GRR r
 
 In our new version, we clarify the action definition to be $a_k = \eta_k \mathbf{x}_k + \psi_k \epsilon$ and then update our derivation in the submission as follows. The optimization of the actor's objective $\mathcal J_{\mathrm{GRR}}(\theta)$ (Eq. 5)requires the computation of the gradient $\nabla_\theta \log\pi_\theta\bigl(a^g_k \mid s^g_{k}\bigr)$ for each group $g$. Below we omit $g$ for notation simplicity. Note that $a_k$ is from a Gaussian distribution $\mathcal{N}(\eta_k \rvx_{t_{k}}, \psi_k^2 c_\sigma^2 I)$, and we have:
 
-\begin{align*}
+$$
 
 \nabla_\theta \log\pi_\theta\bigl(a_k \mid s_{k}\bigr) &= \frac{(a_k - \eta_k \rvx_{t_{k}})^\top }{\psi_{k}^2 c_\sigma^2} \left( \frac{\partial \rvx_{t_{k}}}{\partial \theta} + 
 
 \frac{\partial \rvx_{t_{k}}}{\partial \rvx_{t_{k-1}}} \cdot D_{\theta} \rvx_{t_{k-1}} \right)  \approx \frac{(a_k - \eta_k \rvx_{t_{k}})^\top }{\psi_{k}^2 c_\sigma^2}\frac{\partial \rvx_{t_{k}}}{\partial \theta}.
 
-\end{align*}
+$$
 
 There is a determinstic computation path from $\rvx_{t_0}$ to $\rvx_{t_{k}}$ through the self-conditioning mechanism in the denoiser. The term $D_\theta \rvx_{t_{k-1}}$ is the total derivative of $\rvx_{t_{k-1}}$ with respect to $\theta$ through the path. The exact gradient calculation requires backpropagation through denoising steps, which has the same issue as backpropagation through time. In our implementation, we truncate the backpropagation through steps and only use the local gradient $\frac{\partial \rvx_{t_{k}}}{\partial \theta}$ as the approximate gradient. 
 
