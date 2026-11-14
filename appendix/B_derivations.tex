@@ -83,7 +83,7 @@ independently across the generated positions $i\in\mathcal G$ (the response posi
 \label{app:variance}
 \begingroup
 \color{blue}
-We use the departure-state indexing of Section~\ref{sec:grr}: action $a_k$ is taken from $s_k$ and produces $s_{k+1}$. For a stochastic step,
+Action $a_k$ is taken from $s_k$ and produces $s_{k+1}$. For a stochastic step,
 \[
 a_k=\eta_k\rvx_{t_k}+\psi_k\epsilon_k,
 \qquad \rvz_{t_{k+1}}=\lambda_k\rvz_{t_k}+a_k,
@@ -101,13 +101,13 @@ where $\epsilon_k\sim\mathcal N(0,c_\sigma^2I)$ is the noise injected at that st
 \begingroup
 \color{blue}
 \paragraph{The full trajectory score and the GRR approximation.}
-Equation~\ref{eq:sf}, when multiplied by the group-relative advantage $A$ and summed over stochastic steps, is a truncation of the full trajectory-level likelihood-ratio update: it retains the local transition derivative and omits derivatives through earlier self-conditioning predictions. The expected full-backpropagation update:
+Equation~\ref{eq:sf}, when multiplied by the group-relative advantage $A$ and summed over stochastic steps, is a truncation of the full trajectory-level likelihood-ratio update: it retains the local transition derivative and omits derivatives through earlier self-conditioning predictions. The expected full-backpropagation update up to the decoding step is:
 \begin{equation}
 G_{\mathrm{full}}
-=\mathbb E\left[A\sum_{k=0}^{K-1}D_\theta\log\pi_\theta(a_k\mid s_k)\right]+\mathbb E[g_{\mathrm{dec}}],
+=\mathbb E\left[A\sum_{k=0}^{K-1}D_\theta\log\pi_\theta(a_k\mid s_k)\right],
 \label{eq:full_trajectory_score}
 \end{equation}
-where $D_\theta$ holds the sampled actions and decoded response fixed while differentiating through recursively generated self-conditioning variables, and $g_{\mathrm{dec}}=\frac{A}{L}D_\theta\log q_\theta(\rvw\mid\mathbf a)$ is the decoder contribution. The factor $1/L$ matches the decoder weighting in the main-text objective. This is a surrogate update, not an assertion that group-relative normalization preserves an unbiased gradient of expected reward. We now expand the denoising-action scores. By the chain rule,
+where $D_\theta$ differentiates through recursively generated self-conditioning variables. This is a surrogate update, not an assertion that group-relative normalization preserves an unbiased gradient of expected reward. We now expand the denoising-action scores. By the chain rule,
 \begin{equation}
 D_\theta \rvx_{t_{k}}
 =\underbrace{\partial_\theta\mathrm d_\theta(s_k)}_{\text{Local gradient}}
@@ -126,10 +126,10 @@ D_\theta\log\pi_\theta(a_k\mid s_k)
 \end{equation}
 The vector products sum over all generated positions and embedding coordinates. Because $a_k-m_k=\psi_k\epsilon_k$, the first term is precisely the local score in Equation~\ref{eq:sf}.
 
-Consequently, the full trajectory-level surrogate update decomposes as stated in Section~\ref{sec:grr},
+Consequently, the full trajectory-level surrogate up to the decoding step update decomposes as stated in Section~\ref{sec:grr},
 \begin{equation}
 \begin{aligned}
-G_{\mathrm{full}}={}&\mathbb E[g_{\mathrm{GRR}}]+\mathbb E[g_{\mathrm{dec}}]\\
+G_{\mathrm{full}}={}&\mathbb E[g_{\mathrm{GRR}}]\\
 &+\mathbb E\left[A\sum_{k=0}^{K-1}
 \frac{\eta_k}{\sigma_k^2}(a_k-m_k)^\top
 \big(\partial_{\rvx_{t_{k-1}}}\mathrm d_\theta(s_k)\big)D_\theta \rvx_{t_{k-1}}\right],
