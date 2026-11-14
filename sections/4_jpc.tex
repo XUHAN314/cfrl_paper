@@ -37,7 +37,7 @@ Now we can directly backpropagate the reward information to denoising actions. W
 = \mathbb{E}_{\rvz_{t_{k - 1}}, \rvx_{t_{k-2}}, \varepsilon} \Bigl[ V_\phi(\rvz_{t_k}, \rvx_{t_{k-1}}) \Bigr] \quad \text{with} \\
 \rvx_{t_{k-1}} &= \mathrm{d}_\theta(\rvz_{t_{k-1}}, \rvx_{t_{k-2}}),  \quad \rvz_{t_{k}} = \lambda_{k} \rvz_{t_{k-1}} + \eta_k \rvx_{t_{k-1}} + \psi_k \varepsilon
 \end{align}
-\textcolor{blue}{While Equation~\ref{eq:svg_objective} gives the original actor objective, our SVG implementation ascends $\mathrm{logit}(V_\phi(s_k))$ as a surrogate; see Appendix~\ref{app:logit_surrogate} for details.}
+\textcolor{blue}{In the implementation of Equation~\ref{eq:svg_objective}, we maximize the expectation of $\mathrm{logit}(V_\phi(s_k))$ instead of the expected value. This objective will push the actor to stay away from bad solutions; see Appendix~\ref{app:logit_surrogate} for details.}
 In the calculation of $\nabla_\theta \mathcal{J}_{\mathrm{SVG}}(\theta)$, we only use the gradient from one transition and do not take the derivative of 
 state $s_{k-1} = (\rvz_{t_{k - 1}}, \rvx_{t_{k-2}})$. Then the calcualtion of $\mathcal{J}_{\mathrm{SVG}}(\theta)$ can be viewed reparameterization, 
 which allows the gradient to propagate from $V_\phi$ to $d_\theta$ directly.    
