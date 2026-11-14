@@ -81,7 +81,7 @@ The score-function gradient of the flow model does not separate from the zero-me
 
 \begingroup\color{blue}
 \paragraph{Effect of the self-conditioning gradient.}\label{sec:exp_selfcond}
-Table~\ref{tab:selfcond} investigates the improvement of \methodSVGTwoD{} over \methodGRPO{} which may come from both the additional gradient contribution and a difference in estimator variance. \emph{Left:} detaching the estimate $\hat\rvx$ at \methodSVGTwoD{} critic's input lowers \methodSVGTwoD{} on both Countdown and Game24. The detached variant is comparable to \methodGRPO{} on Countdown and keeps a substantial advantage on Game24 ($+6.0$ points). \emph{Right:} removing self-conditioning altogether, in which case both \methodGRPO{} and \methodSVGTwoD{} are unbiased estimators but lose the self-conditioning capabilities, lowers the accuracy for base, \methodSVGTwoD{} and \methodGRPO{}. \methodSVGTwoD{} nevertheless keeps a substantial advantage over \methodGRPO{} ($+13.5$ and $+7.8$ points). Self-conditioning is thus important for the overall accuracy of the model, while the pathwise estimator remains effective in its absence.
+Table~\ref{tab:selfcond} investigates the improvement of \methodSVGTwoD{} over \methodGRPO{} which may come from both the reduced bias and variance. \emph{Left:} detaching the estimate $\hat\rvx$ at \methodSVGTwoD{} critic's input lowers \methodSVGTwoD{} on both Countdown and Game24. The detached variant is comparable to \methodGRPO{} on Countdown and keeps a substantial advantage on Game24 ($+6.0$ points). \emph{Right:} removing self-conditioning altogether, in which case both \methodGRPO{} and \methodSVGTwoD{} are unbiased estimators but lose the self-conditioning capabilities, lowers the accuracy for base, \methodSVGTwoD{} and \methodGRPO{}. \methodSVGTwoD{} nevertheless keeps a substantial advantage over \methodGRPO{} ($+13.5$ and $+7.8$ points). Self-conditioning is thus important for the overall accuracy of the model, while the pathwise estimator remains effective in its absence.
 \endgroup
 
 \begin{table}[!t]
@@ -113,7 +113,7 @@ Game24 & 13.6 & 15.3 & \textbf{23.1} \\
 \end{tabular*}
 \end{minipage}
 \arrayrulecolor{black}
-\caption{\textcolor{blue}{\textbf{Self-conditioning gradient.} Held-out accuracy (\%). \textbf{Left:} \methodSVGTwoD{} with the estimate $\hat\rvx$ detached at the critic's input, which omits the second term of~(\ref{eq:pwgrad}), against the full estimator. \textbf{Right:} self-conditioning removed from the sampler for the base model and for both estimators.}}
+\caption{\textcolor{blue}{\textbf{Self-conditioning gradient.} Held-out accuracy (\%). \textbf{Left:} omit the second gradient term of \methodSVGTwoD{}~(\ref{eq:pwgrad}) with the estimate $\hat\rvx$ detached. \textbf{Right:} self-conditioning removed for the base model and for both SVG and GRR.}}
 \label{tab:selfcond}
 \end{table}
 
