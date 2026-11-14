@@ -60,17 +60,13 @@ For the pooling method over positions, we used mean pooling in the implementatio
 
 We thank the reviewer for this insightful observation. We acknowledge that GRR retains the REINFORCE gradient computed through one denoising step but does not account the gradient from the computation path of deterministic self-conditioning.
 
-In our new version, we clarify the action definition to be $a_k = \eta_k x_k + \psi_k \epsilon$ and then update our derivation in the submission as follows. The optimization of the actor's objective $\mathcal J_{\mathrm{GRR}}(\theta)$ (Eq. 5)requires the computation of the gradient $\nabla_\theta \log\pi_\theta\bigl(a^g_k \mid s^g_{k}\bigr)$ for each group $g$. Below we omit $g$ for notation simplicity. Note that $a_k$ is from a Gaussian distribution $\mathcal{N}(\eta_k \rvx_{t_{k}}, \psi_k^2 c_\sigma^2 I)$, and we have:
+In our new version, we clarify the action definition to be $a_k = \eta_k x_{t_{k}} + \psi_k \epsilon$ and then update our derivation in the submission as follows. The optimization of the actor's objective $\mathcal J_{\mathrm{GRR}}(\theta)$ (Eq. 5)requires the computation of the gradient $\nabla_\theta \log\pi_\theta\bigl(a^g_k \mid s^g_{k}\bigr)$ for each group $g$. Below we omit $g$ for notation simplicity. Note that $a_k$ is from a Gaussian distribution $\mathcal{N}(\eta_k x_{t_{k}}, \psi_k^2 c_\sigma^2 I)$, and we have:
 
 $$
-
-\nabla_\theta \log\pi_\theta\bigl(a_k \mid s_{k}\bigr) &= \frac{(a_k - \eta_k \rvx_{t_{k}})^\top }{\psi_{k}^2 c_\sigma^2} \left( \frac{\partial \rvx_{t_{k}}}{\partial \theta} + 
-
-\frac{\partial \rvx_{t_{k}}}{\partial \rvx_{t_{k-1}}} \cdot D_{\theta} \rvx_{t_{k-1}} \right)  \approx \frac{(a_k - \eta_k \rvx_{t_{k}})^\top }{\psi_{k}^2 c_\sigma^2}\frac{\partial \rvx_{t_{k}}}{\partial \theta}.
-
+\nabla_\theta \log\pi_\theta\bigl(a_k \mid s_{k}\bigr) = \frac{(a_k - \eta_k x_{t_{k}})^\top }{\psi_{k}^2 c_\sigma^2} \left( \frac{\partial x_{t_{k}}}{\partial \theta} + \quad \frac{\partial x_{t_{k}}}{\partial x_{t_{k-1}}} \cdot D_{\theta} x_{t_{k-1}} \right)  \approx \frac{(a_k - \eta_k x_{t_{k}})^\top }{\psi_{k}^2 c_\sigma^2}\frac{\partial x_{t_{k}}}{\partial \theta}.
 $$
 
-There is a determinstic computation path from $\rvx_{t_0}$ to $\rvx_{t_{k}}$ through the self-conditioning mechanism in the denoiser. The term $D_\theta \rvx_{t_{k-1}}$ is the total derivative of $\rvx_{t_{k-1}}$ with respect to $\theta$ through the path. The exact gradient calculation requires backpropagation through denoising steps, which has the same issue as backpropagation through time. In our implementation, we truncate the backpropagation through steps and only use the local gradient $\frac{\partial \rvx_{t_{k}}}{\partial \theta}$ as the approximate gradient. 
+There is a determinstic computation path from $x_{t_0}$ to $x_{t_{k}}$ through the self-conditioning mechanism in the denoiser. The term $D_\theta x_{t_{k-1}}$ is the total derivative of $x_{t_{k-1}}$ with respect to $\theta$ through the path. The exact gradient calculation requires backpropagation through denoising steps, which has the same issue as backpropagation through time. In our implementation, we truncate the backpropagation through steps and only use the local gradient $\frac{\partial x_{t_{k}}}{\partial \theta}$ as the approximate gradient.
 
 From this derivation, we agree that the gradient of GRR is biased, and computing the unbiased estimation is computationally hard. Similar gradient approximations have been adopted in diffusion-model optimization: DPOK ([7], Sec. 4.1 and App. A.3) omits gradients through earlier denoising transitions for efficiency, while DRaFT-K ([8]) truncates backpropagation to the final K sampling steps. 
 
