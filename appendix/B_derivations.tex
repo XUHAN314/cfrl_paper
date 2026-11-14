@@ -100,21 +100,14 @@ where $\epsilon_k\sim\mathcal N(0,c_\sigma^2I)$ is the noise injected at that st
 
 \begingroup
 \color{blue}
-\paragraph{The full trajectory score and the GRR approximation.}
-Equation~\ref{eq:sf}, when multiplied by the group-relative advantage $A$ and summed over stochastic steps, is a truncation of the full trajectory-level likelihood-ratio update: it retains the local transition derivative and omits derivatives through earlier self-conditioning predictions. The expected full-backpropagation update up to the decoding step is:
-\begin{equation}
-G_{\mathrm{full}}
-=\mathbb E\left[A\sum_{k=0}^{K-1}D_\theta\log\pi_\theta(a_k\mid s_k)\right],
-\label{eq:full_trajectory_score}
-\end{equation}
-where $D_\theta$ differentiates through recursively generated self-conditioning variables. This is a surrogate update, not an assertion that group-relative normalization preserves an unbiased gradient of expected reward. We now expand the denoising-action scores. By the chain rule,
+We now expand the denoising-action scores. By the chain rule,
 \begin{equation}
 D_\theta \rvx_{t_{k}}
 =\underbrace{\partial_\theta\mathrm d_\theta(s_k)}_{\text{Local gradient}}
 +\underbrace{\big(\partial_{\rvx_{t_{k-1}}}\mathrm d_\theta(s_k)\big)D_\theta \rvx_{t_{k-1}}}_{\text{Earlier self-conditioning path}},
 \label{eq:self_conditioning_chain}
 \end{equation}
-with $D_\theta \rvx_{t_{-1}}=0$. The local derivative $\partial_\theta\mathrm d_\theta(s_k)$ holds the entire input state fixed, including the stored self-conditioning input. Since the Gaussian action has mean $m_k=\eta_k \rvx_{t_{k}}$ and covariance $\sigma_k^2 I$, where $\sigma_k=\psi_k c_\sigma>0$, its total score is
+where $D_\theta$ is the total derivative with respect to $\theta$ through the deterministic self-conditioning path, with $D_\theta \rvx_{t_{-1}}=0$. The local derivative $\partial_\theta\mathrm d_\theta(s_k)$ holds the entire input state fixed, including the stored self-conditioning input. Since the Gaussian action has mean $m_k=\eta_k \rvx_{t_{k}}$ and covariance $\sigma_k^2 I$, where $\sigma_k=\psi_k c_\sigma>0$, its total score is
 \begin{equation}
 \begin{aligned}
 D_\theta\log\pi_\theta(a_k\mid s_k)
@@ -126,23 +119,7 @@ D_\theta\log\pi_\theta(a_k\mid s_k)
 \end{equation}
 The vector products sum over all generated positions and embedding coordinates. Because $a_k-m_k=\psi_k\epsilon_k$, the first term is precisely the local score in Equation~\ref{eq:sf}.
 
-Consequently, the full trajectory-level surrogate update up to the decoding step decomposes as stated in Section~\ref{sec:grr},
-\begin{equation}
-\begin{aligned}
-G_{\mathrm{full}}={}&\mathbb E[g_{\mathrm{GRR}}]\\
-&+\mathbb E\left[A\sum_{k=0}^{K-1}
-\frac{\eta_k}{\sigma_k^2}(a_k-m_k)^\top
-\big(\partial_{\rvx_{t_{k-1}}}\mathrm d_\theta(s_k)\big)D_\theta \rvx_{t_{k-1}}\right],
-\end{aligned}
-\label{eq:grr_full_gradient}
-\end{equation}
-where
-\begin{equation}
-g_{\mathrm{GRR}}=A\sum_{k=0}^{K-1}
-\frac{\eta_k}{\sigma_k^2}(a_k-m_k)^\top\partial_\theta\mathrm d_\theta(s_k)
-\label{eq:grr_local_gradient}
-\end{equation}
-is the local denoising-action update estimated by GRR using its group-relative normalized advantage. Without parameter-dependent deterministic self-conditioning, the omitted term vanishes, so local differentiation recovers the full denoising-action contribution to this surrogate update.
+Without parameter-dependent deterministic self-conditioning, the omitted term vanishes, so local differentiation recovers the full denoising-action contribution.
 
 With self-conditioning, recovering the exact trajectory-level score additionally requires differentiating each transition log-density through preceding denoiser predictions, increasing computational and memory costs. We therefore retain the local transition gradient and omit these cross-step dependencies as a computationally motivated approximation. Related approximations appear in diffusion-model optimization: DPOK omits the contribution of earlier transitions to the state-distribution derivative of its expected KL regularizer for efficiency \citep[Section~4.1 and Appendix~A.3]{fan2023dpok}, while DRaFT-$K$ truncates backpropagation to the final $K$ sampling steps \citep{clark2023draft}, where $K$ denotes its truncation length. 
 \endgroup
