@@ -60,7 +60,7 @@ For the pooling method over positions, we used mean pooling in the implementatio
 
 We thank the reviewer for this insightful observation. We acknowledge that GRR retains the REINFORCE gradient computed through one denoising step but does not account the gradient from the computation path of deterministic self-conditioning.
 
-In our new version, we clarify the action definition to be $a_k = \eta_k \mathbf{x}_k + \psi_k \epsilon$ and then update our derivation in the submission as follows. The optimization of the actor's objective $\mathcal J_{\mathrm{GRR}}(\theta)$ (Eq. 5)requires the computation of the gradient $\nabla_\theta \log\pi_\theta\bigl(a^g_k \mid s^g_{k}\bigr)$ for each group $g$. Below we omit $g$ for notation simplicity. Note that $a_k$ is from a Gaussian distribution $\mathcal{N}(\eta_k \rvx_{t_{k}}, \psi_k^2 c_\sigma^2 I)$, and we have:
+In our new version, we clarify the action definition to be $a_k = \eta_k x_k + \psi_k \epsilon$ and then update our derivation in the submission as follows. The optimization of the actor's objective $\mathcal J_{\mathrm{GRR}}(\theta)$ (Eq. 5)requires the computation of the gradient $\nabla_\theta \log\pi_\theta\bigl(a^g_k \mid s^g_{k}\bigr)$ for each group $g$. Below we omit $g$ for notation simplicity. Note that $a_k$ is from a Gaussian distribution $\mathcal{N}(\eta_k \rvx_{t_{k}}, \psi_k^2 c_\sigma^2 I)$, and we have:
 
 $$
 
