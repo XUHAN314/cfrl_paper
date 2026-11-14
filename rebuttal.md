@@ -52,16 +52,7 @@ We thank the reviewer for their thoughtful and constructive feedback and for rec
 
 We thank the reviewer for raising this question. In the actor's training objective, Eq. (7) maximizes the expected reward $\mathbb{E}[V_\phi]$. Given that $V_\phi(s_k)\approx P(R=1\mid s_k)$, the actor is trained to maximize the expected reward. In our SVG implementation, we use $\mathbb{E}[\mathrm{logit}(V_{\phi})]$ instead. This design encourages the actor to stay away from wrong answers, even when its output is correct. It shares the same spirit as MaxRL [].
 
-We thank the reviewer for raising this question and we apologize for the confusion. For the actor objective, eq7 is the original objective and we use $\mathrm{logit}(V_{\phi})$ in SVG implementation as a surrogate for all reported results. We will clarify this in our revised manuscript. Our critic is trained with binary cross-entropy to estimate the probability of eventual success, $V_\phi(s_k)\approx P(R=1\mid s_k)$. As in binary logistic classification, its pre-sigmoid score has a log-odds interpretation. By Bayes' rule,
-
-$$
-\mathrm{logit}(V_\phi(s_k)) = \log\frac{p(s_k\mid R=1)}
-{p(s_k\mid R=0)}
-+
-\log\frac{P(R=1)}{P(R=0)}.
-$$
-
-Thus, under an accurate probabilistic critic, the logit estimates a success-versus-failure log-density ratio up to a state-independent constant, consistent with the established connection between logistic classification and density-ratio estimation ([1], Secs. 2.1–2.2, Eqs. 4–9"). Maximizing this score encourages the generator toward states that are relatively more characteristic of successful than unsuccessful trajectories. Furthermore, the two objectives give the same per-sample gradient direction, since $\nabla_\theta\mathrm{logit}(V_\phi)=\nabla_\theta V_\phi/\big(V_\phi(1-V_\phi)\big)$. However, directly maximizing $V_\phi$ introduces a multiplicative factor $V_\phi(1-V_\phi)$ in the pathwise gradient, which attenuates the learning signal when the critic confidently predicts success or failure. The logit transformation removes this sigmoid-induced attenuation while preserving the per-sample gradient direction, providing a stronger optimization signal, particularly for samples predicted to fail with high confidence. Table 3 confirms the effect: ascending $V_\phi$ instead lowers accuracy.
+Maximizing this score encourages the generator toward states that are relatively more characteristic of successful than unsuccessful trajectories. Furthermore, the two objectives give the same per-sample gradient direction, since $\nabla_\theta\mathrm{logit}(V_\phi)=\nabla_\theta V_\phi/\big(V_\phi(1-V_\phi)\big)$. However, directly maximizing $V_\phi$ introduces a multiplicative factor $V_\phi(1-V_\phi)$ in the pathwise gradient, which attenuates the learning signal when the critic confidently predicts success or failure. The logit transformation removes this sigmoid-induced attenuation while preserving the per-sample gradient direction, providing a stronger optimization signal, particularly for samples predicted to fail with high confidence. Table 3 confirms the effect: ascending $V_\phi$ instead lowers accuracy.
 
 Training a scalar score through classification-based supervision and subsequently optimizing the score directly is established practice. In RLHF, reward models are trained using a log-sigmoid pairwise preference loss, while the policy directly maximizes the learned scalar reward ([2], Eqs. 1–2). Similarly, hinge-loss GANs train discriminators using a margin-based classification loss, while generators directly maximize the discriminator's unbounded score ([3], [4]). Although these approaches differ from our success-probability critic, they provide precedent for optimizing learned scalar scores rather than bounded classification probabilities. We add the clarification of these connections in the revised manuscript.
 
@@ -69,74 +60,44 @@ For the pooling method over positions, we used mean pooling in the implementatio
 
 > The pathwise update includes a self-conditioning gradient absent from the REINFORCE baseline (Appendix B.3). Together with possible critic bias, this prevents attributing the gains to variance reduction alone. How much of the pathwise improvement remains when the self-conditioning gradient is detached?
 
-We thank the reviewer for this insightful observation. We acknowledge that GRR retains the likelihood-ratio gradient through individual stochastic transitions but does not account for all gradient paths through deterministic self-conditioning. We clarify this distinction below and show how the omitted contribution can, in principle, be recovered by a full-trajectory likelihood-ratio estimator.
+We thank the reviewer for this insightful observation. We acknowledge that GRR retains the REINFORCE gradient computed through one denoising step but does not account the gradient from the computation path of deterministic self-conditioning.
 
-**Recovering the full gradient through trajectory-level REINFORCE.**
+In our new version, we clarify the action definition to be $a_k = \eta_k \mathbf{x}_k + \psi_k \epsilon$ and then update our derivation in the submission as follows. The optimization of the actor's objective $\mathcal J_{\mathrm{GRR}}(\theta)$ (Eq. 5)requires the computation of the gradient $\nabla_\theta \log\pi_\theta\bigl(a^g_k \mid s^g_{k}\bigr)$ for each group $g$. Below we omit $g$ for notation simplicity. Note that $a_k$ is from a Gaussian distribution $\mathcal{N}(\eta_k \rvx_{t_{k}}, \psi_k^2 c_\sigma^2 I)$, and we have:
 
-Consider the complete stochastic trajectory $\mathbf z=(z_1,\ldots,z_K)$, the full trajectory likelihood is $p_\theta(\mathbf z)=\prod_k\pi_\theta(z_k\mid s_{k-1})$. Assuming the terminal reward has no additional explicit parameter dependence when $\mathbf z$ is fixed, the exact REINFORCE gradient up to the final decoding step is
+\begin{align*}
 
-$$
-\mathbb E\left[R(s_{K+1})\sum_kD_\theta\log\pi_\theta(z_k\mid s_{k-1})\right],
-$$
+\nabla_\theta \log\pi_\theta\bigl(a_k \mid s_{k}\bigr) &= \frac{(a_k - \eta_k \rvx_{t_{k}})^\top }{\psi_{k}^2 c_\sigma^2} \left( \frac{\partial \rvx_{t_{k}}}{\partial \theta} + 
 
-where $D_\theta$ includes gradients through the recursively generated self-conditioning variables while holding the stochastic trajectory fixed. By the chain rule,
+\frac{\partial \rvx_{t_{k}}}{\partial \rvx_{t_{k-1}}} \cdot D_{\theta} \rvx_{t_{k-1}} \right)  \approx \frac{(a_k - \eta_k \rvx_{t_{k}})^\top }{\psi_{k}^2 c_\sigma^2}\frac{\partial \rvx_{t_{k}}}{\partial \theta}.
 
-$$
-\begin{aligned}
-D_\theta x_{k-1}
-={}\underbrace{
-\partial_\theta d_\theta(s_{k-1})
-}_{\text{Local gradient}}+\underbrace{
-(\partial_{x_{k-2}}d_\theta(s_{k-1}))
-D_\theta x_{k-2}
-}_{\text{Earlier self-conditioning path}}.
-\end{aligned}
-$$
+\end{align*}
 
-The local gradient $\partial_\theta d_\theta(s_{k-1})$ is taken with the input state held fixed, including the stored self-conditioning input. Since the Gaussian transition has mean $\mu_k=\lambda_k z_{k-1}+\eta_k x_{k-1}$ and variance $\sigma_k^2$, we obtain
+There is a determinstic computation path from $\rvx_{t_0}$ to $\rvx_{t_{k}}$ through the self-conditioning mechanism in the denoiser. The term $D_\theta \rvx_{t_{k-1}}$ is the total derivative of $\rvx_{t_{k-1}}$ with respect to $\theta$ through the path. The exact gradient calculation requires backpropagation through denoising steps, which has the same issue as backpropagation through time. In our implementation, we truncate the backpropagation through steps and only use the local gradient $\frac{\partial \rvx_{t_{k}}}{\partial \theta}$ as the approximate gradient. 
 
-$$
-\begin{aligned}
-D_\theta\log\pi_\theta(z_k\mid s_{k-1})
-={}\underbrace{
-\frac{\eta_k}{\sigma_k^2}
-(z_k-\mu_k)^{\top}\partial_\theta d_\theta(s_{k-1})
-}_{\text{GRR gradient}}+\underbrace{
-\frac{\eta_k}{\sigma_k^2}
-(z_k-\mu_k)^{\top}(\partial_{x_{k-2}}d_\theta(s_{k-1}))D_\theta x_{k-2}
-}_{\text{Omitted trajectory gradient}}.
-\end{aligned}
-$$
+From this derivation, we agree that the gradient of GRR is biased, and computing the unbiased estimation is computationally hard. Similar gradient approximations have been adopted in diffusion-model optimization: DPOK ([7], Sec. 4.1 and App. A.3) omits gradients through earlier denoising transitions for efficiency, while DRaFT-K ([8]) truncates backpropagation to the final K sampling steps. 
 
-Therefore, the exact trajectory-level gradient can be decomposed as
+Therefore, bias in gradient estimation is a weakness of GRR. In contrast, SVG estimates the additional self-conditioning gradient using a differentiable critic, avoiding the need to backpropagate through the entire sampling trajectory. Consequently, SVG's improvement over GRR may reflect its ability to reduce both bias and variance in gradient estimation. To isolate the contribution of gradient estimation to performance, we conduct two additional experiments. First, we remove the second gradient term from SVG to match the gradient formulation of GRR. Second, we remove self-conditioning, under which the GRR gradient estimator becomes unbiased.
 
-$$
-\nabla_\theta J=\mathbb E[g_{\mathrm{GRR}}]
-+
-\mathbb E\left[
-R(s_{K+1})
-\sum_k
-\frac{\eta_k}{\sigma_k^2}
-(z_k-\mu_k)^{\top}(\partial_{x_{k-2}}d_\theta(s_{k-1}))D_\theta x_{k-2}
-\right], 
-$$
-
-where $g_{\mathrm{GRR}}=R(s_{K+1})\sum_k\frac{\eta_k}{\sigma_k^2}(z_k-\mu_k)^{\top}\partial_\theta d_\theta(s_{k-1})$ is the local likelihood-ratio gradient that GRR estimates, up to its group-relative advantage normalization, which follows the transition-level likelihood-ratio formulation used in DDPO ([5]) and Flow-GRPO ([6]), which yields an unbiased trajectory-level policy gradient for samplers without parameter-dependent deterministic self-conditioning. With self-conditioning, recovering the exact trajectory-level gradient additionally requires differentiating each transition log-density through preceding denoiser predictions, substantially increasing computational and memory costs. We therefore retain the local transition gradient and omit these cross-step dependencies as a computationally motivated approximation. Similar gradient approximations have been adopted in diffusion-model optimization: DPOK ([7], Sec. 4.1 and App. A.3) omits gradients through earlier denoising transitions for efficiency, while DRaFT-K ([8]) truncates backpropagation to the final K sampling steps. Although these methods omit different gradient contributions, they provide precedent for balancing gradient completeness against computational cost.
-
-SVG instead estimates the additional self-conditioning gradient using a differentiable critic, avoiding the need to backpropagate through the entire sampling trajectory. Consequently, its improvement over GRR may reflect both the additional gradient contribution and differences in estimator variance. To answer the question how much of the SVG improvement comes from the additional gradient term, we have done an experiment omitting the second gradient term in eq 23:
+The table below show the results from the first experiment. 
 
 | Task | Base | GRR | SVG-2D (Detached $\hat{x}$) | SVG-2D (Full) |
+
 |---|---:|---:|---:|---:|
+
 | Countdown | 41.8 | 42.6 | 42.7 | **49.2** |
+
 | Game24 | 44.5 | 46.7 | 52.7 | **58.4** |
 
 Detaching the self-conditioning gradient reduces SVG-2D accuracy from 49.2% to 42.7% on Countdown and from 58.4% to 52.7% on Game24. The detached variant performs comparably to GRR on Countdown (42.7% vs. 42.6%) but retains a substantial advantage on Game24 (+6.0 percentage points). 
 
-In addition, we also add an experiment omitting the self-conditional at all for both GRR and SVG for a fair comparison:
+We also add an experiment omitting the self-conditional at all for both GRR and SVG for a fair comparison:
 
 | Task | Base | GRR | SVG-2D | 
+
 |---|---:|---:|---:|
+
 | Countdown | 12.7 | 13.4 | **26.9** |
+
 | Game24 | 13.6 | 15.3 | **23.1** | 
 
 Removing self-conditioning substantially reduces the base accuracy from 41.8% to 12.7% on Countdown and from 44.5% to 13.6% on Game24. Accordingly, SVG-2D accuracy decreases from 49.2% to 26.9% on Countdown and from 58.4% to 23.1% on Game24. GRR also experiences substantial degradation, dropping from 42.6% to 13.4% on Countdown and from 46.7% to 15.3% on Game24. Despite these reductions, **SVG-2D maintains a substantial advantage over GRR** (+13.5 and +7.8 percentage points, respectively). These results suggest that self-conditioning is important for overall model performance, while the pathwise estimator retains its effectiveness even in its absence.
