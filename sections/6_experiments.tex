@@ -56,7 +56,7 @@ K\&K & 100.0 & -- & -- & -- \\
 \bottomrule
 \end{tabular*}
 \arrayrulecolor{black}
-\caption{\textcolor{blue}{\textbf{Results on ELF-L (652M).} Test accuracy (\%).}}
+\caption{\textcolor{blue}{\textbf{Results on ELF-L (652M).} Test accuracy (\%). Bold: best flow row.} }
 \label{tab:elf_l}
 \end{table}
 
@@ -82,7 +82,7 @@ The score-function gradient of the flow model does not separate from the zero-me
 \begingroup\color{blue}
 
 \paragraph{Effect of the self-conditioning gradient.}\label{sec:exp_selfcond}
-Table~\ref{tab:selfcond} separates the two sources of \methodSVGTwoD{}'s advantage over \methodGRPO{}. \emph{Left:} omitting the second gradient term of~(\ref{eq:pwgrad}), by detaching $\hat\rvx$ at the critic's input, costs \methodSVGTwoD{} 6.5 and 5.7 points, leaving it level with \methodGRPO{} on Countdown and $+6.0$ ahead on Game24. \emph{Right:} we retrain the task-SFT base of ELF-B with self-conditioning disabled, with the same supervised budget as Table~\ref{tab:main}, and rerun the whole pipeline without self-conditioning: rollout collection, critic pre-training, \methodGRPO{}, \methodSVGTwoD{} and evaluation. The base drops by about 30 points, so self-conditioning matters greatly for the model, yet \methodSVGTwoD{} still leads \methodGRPO{} by $+13.5$ and $+7.8$. The pathwise gain thus comes from both reduced variance and reduced bias.
+Table~\ref{tab:selfcond} separates the two sources of SVG-2D's advantage over GRR. \emph{Left:} omitting the second gradient term of~(\ref{eq:pwgrad}), by detaching $\hat\rvx$ at the critic's input, costs SVG-2D 6.5 and 5.7 points, leaving it level with GRR on Countdown and $+6.0$ ahead on Game24. \emph{Right:} we retrain the task-SFT base of ELF-B with self-conditioning disabled, with the same supervised budget as Table~\ref{tab:main}, and rerun the whole pipeline without self-conditioning: rollout collection, critic pre-training, RL and evaluation. The base drops by about 30 points, so self-conditioning matters greatly for the model, yet SVG-2D still leads GRR by $+13.5$ and $+7.8$. The SVG gain thus comes from both reduced variance and reduced bias.
 \endgroup
 
 \begin{table}[!t]
