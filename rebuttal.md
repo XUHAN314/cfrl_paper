@@ -84,7 +84,7 @@ The table below shows the results from the experiment that removes the second gr
 
 Detaching the self-conditioning gradient reduces SVG-2D accuracy from 49.2% to 42.7% on Countdown and from 58.4% to 52.7% on Game24. The detached variant performs comparably to GRR on Countdown but retains a substantial advantage on Game24 (+6.0 percentage points). 
 
-The table below shows the experiment omitting the self-conditional at all for both GRR and SVG for a fair comparison. For this experiment, we retrain the task-SFT base of ELF-B with self-conditioning disabled, with the same supervised budget as Table~\ref{tab:main}, and rerun the whole pipeline without self-conditioning: rollout collection, critic pre-training, RL and evaluation. The base drops by about 30 points, so self-conditioning matters greatly for the model, yet SVG-2D still leads GRR by $+13.5$ and $+7.8$. 
+The table below shows the experiment omitting the self-conditional at all for both GRR and SVG for a fair comparison. For this experiment, we retrain the task-SFT base of ELF-B with self-conditioning disabled, with the same supervised budget as Table 1, and rerun the whole pipeline without self-conditioning: rollout collection, critic pre-training, RL and evaluation. The base drops by about 30 points, so self-conditioning matters greatly for the model, yet SVG-2D still leads GRR by $+13.5$ and $+7.8$. 
 
 | Task | Base | GRR | SVG-2D |
 |---|---:|---:|---:|
@@ -97,23 +97,13 @@ These results suggest that self-conditioning is important for overall model perf
 
 Yes, the shared verifier for both Game24 and Countdown requires every input number to be used exactly once and the resulting expression to evaluate to the target. Thus, for inputs [1, 2, 3, 8], it rejects 3*8=24 because 1 and 2 are unused. The “at-most-once” description is incomplete. We apologize for the ambiguity and have revised Appendix A to state the full acceptance criteria explicitly.
 
-We sincerely thank the reviewer for their time, thoughtful feedback, and constructive suggestions. We have carefully addressed the concerns regarding methodological consistency, gradient attribution, and verifier implementation, and revised the manuscript accordingly, with all changes highlighted in blue. We believe these revisions have improved the clarity, rigor, and reproducibility of our work.
+We sincerely thank the reviewer for their time, thoughtful feedback, and constructive suggestions. We have carefully addressed the concerns regarding methodological consistency, gradient estimation, and verifier implementation, and revised the manuscript accordingly, with all changes highlighted in blue. We believe these revisions have improved the clarity and rigor of our manuscript.
 
 [1] Tajwar, F., Zeng, G., Zhou, Y., Song, Y., Arora, D., Jiang, Y., Schneider, J., Salakhutdinov, R., Feng, H., & Zanette, A. ICML 2026.
 
-[2] Ouyang, L., Wu, J., Jiang, X., Almeida, D., Wainwright, C. L., Mishkin, P., Zhang, C., Agarwal, S., Slama, K., Ray, A., et al. Training language models to follow instructions with human feedback. NeurIPS 2022.
+[2] Fan, Y., Watkins, O., Du, Y., Liu, H., Ryu, M., Boutilier, C., Abbeel, P., Ghavamzadeh, M., Lee, K., and Lee, K. DPOK: Reinforcement Learning for Fine-tuning Text-to-Image Diffusion Models. NeurIPS 2023.
 
-[3] Brock, A., Donahue, J., & Simonyan, K. Large Scale GAN Training for High Fidelity Natural Image Synthesis. ICLR 2019.
-
-[4] Lim, J. H., & Ye, J. C. (2017). Geometric GAN. arXiv:1705.02894.
-
-[5] Black, K., Janner, M., Du, Y., Kostrikov, I., and Levine, S. Training Diffusion Models with Reinforcement Learning. ICLR 2024.
-
-[6] Liu, J., Liu, G., Liang, J., Li, Y., Liu, J., Wang, X., Wan, P., Zhang, D., and Ouyang, W. Flow-GRPO: Training Flow Matching Models via Online RL. NeurIPS 2025.
-
-[7] Fan, Y., Watkins, O., Du, Y., Liu, H., Ryu, M., Boutilier, C., Abbeel, P., Ghavamzadeh, M., Lee, K., and Lee, K. DPOK: Reinforcement Learning for Fine-tuning Text-to-Image Diffusion Models. NeurIPS 2023.
-
-[8] Clark, K., Vicol, P., Swersky, K., and Fleet, D. J. Directly Fine-Tuning Diffusion Models on Differentiable Rewards. ICLR 2024.
+[3] Clark, K., Vicol, P., Swersky, K., and Fleet, D. J. Directly Fine-Tuning Diffusion Models on Differentiable Rewards. ICLR 2024.
 
 ## Reviewer oqag
 
