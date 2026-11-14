@@ -36,7 +36,7 @@ d1 \citep{zhao2025d1} is the most used RL recipe for masked diffusion language m
 
 \begingroup
 \color{blue}
-Our tasks are more difficult than d1's original benchmarks: Countdown uses 4--5 numbers instead of 3, Sudoku uses $9\times9$ grids instead of $4\times4$, and solutions require programmatically verified derivations. We additionally evaluated \method{} on d1's original Countdown-3 and $4\times4$ Sudoku test sets (256 problems each), using d1's own reported LLaDA results as references. ELF-B was fine-tuned on a limited subset of solver-generated training examples (20k Countdown-3 examples and 200 unique Sudoku puzzles) to avoid saturating the SFT baseline; with the full training data, SFT alone achieves 88.3\% and 100\%, respectively. We then applied the same critic pre-training and RL procedures as in Table~\ref{tab:main}. Checkpoints were selected using separate validation data, and accuracies were averaged over five sampler seeds.
+Our tasks are more difficult than d1's original benchmarks: Countdown uses 4--5 numbers instead of 3, Sudoku uses $9\times9$ grids instead of $4\times4$, and solutions require programmatically verified derivations. We additionally evaluated \method{} on d1's original Countdown-3 and $4\times4$ Sudoku test sets (256 problems each), using d1's own reported LLaDA results as references. We applied the same critic pre-training and RL procedures as in Table~\ref{tab:main}. Checkpoints were selected using separate validation data, and accuracies were averaged over five sampler seeds.
 
 \begin{table}[H]
 \centering\small\color{blue}
@@ -72,7 +72,7 @@ Table~\ref{tab:matched_compute} gives an approximately compute-matched version o
 \begin{table}[H]
 \centering\small\color{blue}
 \arrayrulecolor{blue}
-\caption{\textcolor{blue}{Test accuracy (\%) and total training compute (PFLOPs). The GRR deployment-sampler row is newly evaluated; all other accuracies are from Table~\ref{tab:main}. Critic-stage costs are included in the SVG totals. Compute is measured relative to the task-SFT base.}}
+\caption{\textcolor{blue}{Test accuracy (\%) and total training compute (PFLOPs). The GRR 64-sampler row is newly evaluated; all other accuracies are from Table~\ref{tab:main}. Critic-stage costs are included in the SVG totals. Compute is measured relative to the task-SFT base.}}
 \label{tab:matched_compute}
 \setlength{\tabcolsep}{3pt}
 \resizebox{\linewidth}{!}{%
