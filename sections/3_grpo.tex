@@ -1,7 +1,7 @@
 \section{Method}
 The generation procedure of ELF introduced in Section~\ref{sec:prelim} proceeds over a fixed horizon of $K+1$ steps. At each generation step $k\in\{1,\ldots,K\}$, we define the MDP state as $s_k = (\rvz_{t_k}, \rvx_{t_{k-1}})$. The initial state is $s_0 = (\epsilon, \mathbf{0})$, where $\epsilon$ is the Gaussian noise defined above. We include $\rvx_{t_{k-1}}$ in the state because it is required by the self-conditioning mechanism of ELF. We omit $\rvc$ and $t_{k}$ from the state $s_k$ for notational simplicity. The terminal state $s_{K+1} = \rvw$  corresponds to the decoded response. 
 
-The actions consist of the denoising predictions followed by the final decoding step. Specifically, for $k \in \{0, \ldots, K-1\}$, we define the action as $a_{k} = (\rvx_{t_{k}}, \epsilon)$. The corresponding policy $\pi_\theta(a_k | s_k)$ defined by the denoiser $\mathrm{d}_\theta$ and the noise distribution. The final action is $a_{K} = \rvw$, and the policy at this step is $\pi_\theta(a_K | s_K)=p_\theta(\rvw | \rvz_{t_K})$. 
+The actions consist of the denoising predictions followed by the final decoding step. Specifically, for $k \in \{0, \ldots, K-1\}$, we define the action as \textcolor{blue}{$a_{k} = (\eta_k \rvx_{t_{k}} + \psi_k \epsilon)$}. The corresponding policy $\pi_\theta(a_k | s_k)$ defined by the denoiser $\mathrm{d}_\theta$ and the noise distribution. The final action is $a_{K} = \rvw$, and the policy at this step is $\pi_\theta(a_K | s_K)=p_\theta(\rvw | \rvz_{t_K})$. 
 
 The transition probability is defined by the denoising process in~(\ref{eq:sde}). A terminal reward  $R(s_{K+1})$ is provided by a verifier that evaluates 
 the decoded response $\rvw$. The reinforcement learning objective is to maximize the expected terminal reward over trajectories induced by the policy:
@@ -25,16 +25,13 @@ The last step, $\pi_\theta\bigl(a^g_{K} \mid s^g_K\bigr)$, decodes all $L$ token
 Because this decoding step is comparatively easy to optimize, we scale its term by $\frac{1}{L}$ to slow its updates.
 
 \begingroup\color{blue}
-The full REINFORCE gradient up to the decoding step is:
+The key to optimization is to compute $\nabla_\theta \log\pi_\theta\bigl(a^g_k \mid s^g_{k}\bigr)$ for each group $g$. Below we omit $g$ for notation simplicity. Note that $a_k$ is from a Gaussian distribution $\mathcal{N}(\eta_k \rvx_{t_{k}}, \psi_k^2 c_\sigma^2 I)$.
 \begin{align*}
-\nabla_\theta J&=\mathbb E[g_{\mathrm{GRR}}]
-+\mathbb E\Big[R(s_{K+1})\sum_{k=1}^{K-1}
-\frac{\eta_k}{\psi_k^2c_\sigma^2}(z_k-\mu_k)^\top
-\big(\partial_{x_{k-2}}\mathrm d_\theta(s_{k-1})\big)D_\theta x_{k-2}\Big],\\
-g_{\mathrm{GRR}}&=R(s_{K+1})\sum_{k=1}^{K-1}
-\frac{\eta_k}{\psi_k^2c_\sigma^2}(z_k-\mu_k)^\top\partial_\theta\mathrm d_\theta(s_{k-1}),
+\nabla_\theta \log\pi_\theta\bigl(a_k \mid s_{k}\bigr) &= \frac{(a_k - \eta_k \rvx_{t_{k}})^\top }{\psi_{k}^2 c_\sigma^2} \left( \frac{\partial \rvx_{t_{k-1}}}{\partial \theta} + 
+\frac{\partial \rvx_{t_{k-1}}}{\partial \rvx_{t_{k-2}}} \cdot D_{\theta} \rvx_{t_{k-2}} \right) 
 \end{align*}
-where $D_\theta$ is the total derivative through the recursively generated self-conditioning predictions with the sampled trajectory held fixed. With self-conditioning, each state also depends on $\theta$ through the earlier denoiser predictions, resulting in a backpropagation through time term. We therefore omit the second term of $\nabla_\theta J$ in our implementation, and only use the first term, which is a local REINFORCE gradient. The derivation details are given in Appendix~\ref{app:variance}.
+Note that there is a determinstic computation path from $\rvx_{t_0}$ to $\rvx_{t_{k-1}}$ through the self-conditioning mechanism in the denoiser. Therefore, the exact gradients  need to be backpropagated through the denoising steps. The term $D_\theta \rvx_{t_{k-2}}$ is the total derivative of $\rvx_{t_{k-2}}$ with respect to $\theta$ through the path.
+It brings computation difficulty in the same way as backpropagation through time. In our implementation, we omit the second term and only use the local gradient $\frac{\partial \rvx_{t_{k-1}}}{\partial \theta}$ when calculating the gradient of $\mathcal J_{\mathrm{GRR}}(\theta)$. The derivation details are given in Appendix~\ref{app:variance}. The gradient $\nabla_\theta\log\pi_\theta\bigl(a^g_{K} \mid s^g_K\bigr)$ is from the final decoding step, which is a standard cross-entropy loss and can be computed with the standard backpropagation.
 \endgroup
 
 We also experimented with GRPO \citep{shao2024deepseekmath} with various settings and found that neither ratio clipping nor a KL penalty was necessary in our setting.
