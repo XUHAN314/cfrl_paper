@@ -148,7 +148,7 @@ To investigate whether CFRL's improvements extend beyond the 105M-parameter ELF-
 
 Test accuracy (%) on ELF-L (652M). Improvements over task-SFT are shown in parentheses.
 
-| Task | SFT Base | CFRL-GRR | CFRL-SVG-1D |
+| Task | SFT Base | CFRL-GRR | CFRL-SVG-1D |CFRL-SVG-2D |
 |---|---:|---:|---:|---:|
 | Countdown | 60.5 | 63.3 (+2.8) | 72.6 (+12.1) | **74.4 (+13.9)** | 
 | Sudoku | 71.0 | 70.3 (-0.7) | **79.3 (+8.3)** | 77.9 (+6.9) | 
