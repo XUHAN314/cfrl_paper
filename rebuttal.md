@@ -187,7 +187,7 @@ The precision exceeds random performance. This suggests that the 2D critic's rea
 | Countdown | 8-61% | 3.7% |
 | Game24 | 13–26% | 5.6% |
 
-Across all four tasks, the corrupted position is substantially more likely to exhibit the largest decrease in critic reading than expected by chance. These results demonstrate that the 2D critic is sensitive to localized token perturbations, providing evidence of position-specific reward attribution despite being trained with sequence-level supervision.
+Across all four tasks, the corrupted position is substantially more likely to exhibit the largest decrease in critic reading than expected by chance. An incorrect answer token can be sufficient to establish sequence-level failure, whereas a correct token alone cannot establish success. This asymmetry motivates position-sensitive critic readings even under sequence-level supervision. These results demonstrate that the 2D critic is sensitive to localized token perturbations, providing evidence of position-specific reward attribution despite being trained with sequence-level supervision. 
 
 **Interpretation and limitations.**  Our experiments show that the critic captures position-specific information and responds to localized corruption, while they do not establish that semantic token-level credit assignment is the sole source of its advantage and we do not rule out the possibility that the 2D critic's performance gains may also arise from gradient scaling, conditioning, or optimization dynamics. We have therefore refined our claims to distinguish position-sensitive reward estimation from fully interpretable token-level credit assignment.
 
