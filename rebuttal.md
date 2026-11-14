@@ -75,23 +75,16 @@ Therefore, bias in gradient estimation is a weakness of GRR. In contrast, SVG es
 The table below show the results from the first experiment. 
 
 | Task | Base | GRR | SVG-2D (Detached $\hat{x}$) | SVG-2D (Full) |
-
 |---|---:|---:|---:|---:|
-
 | Countdown | 41.8 | 42.6 | 42.7 | **49.2** |
-
 | Game24 | 44.5 | 46.7 | 52.7 | **58.4** |
 
 Detaching the self-conditioning gradient reduces SVG-2D accuracy from 49.2% to 42.7% on Countdown and from 58.4% to 52.7% on Game24. The detached variant performs comparably to GRR on Countdown (42.7% vs. 42.6%) but retains a substantial advantage on Game24 (+6.0 percentage points). 
 
 We also add an experiment omitting the self-conditional at all for both GRR and SVG for a fair comparison:
-
-| Task | Base | GRR | SVG-2D | 
-
+| Task | Base | GRR | SVG-2D |
 |---|---:|---:|---:|
-
 | Countdown | 12.7 | 13.4 | **26.9** |
-
 | Game24 | 13.6 | 15.3 | **23.1** | 
 
 Removing self-conditioning substantially reduces the base accuracy from 41.8% to 12.7% on Countdown and from 44.5% to 13.6% on Game24. Accordingly, SVG-2D accuracy decreases from 49.2% to 26.9% on Countdown and from 58.4% to 23.1% on Game24. GRR also experiences substantial degradation, dropping from 42.6% to 13.4% on Countdown and from 46.7% to 15.3% on Game24. Despite these reductions, **SVG-2D maintains a substantial advantage over GRR** (+13.5 and +7.8 percentage points, respectively). These results suggest that self-conditioning is important for overall model performance, while the pathwise estimator retains its effectiveness even in its absence.
