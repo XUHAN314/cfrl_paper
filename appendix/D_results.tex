@@ -333,6 +333,56 @@ $1/2$ & $+3.3$ {\scriptsize[+1.4, +5.3]} & $+0.2$ {\scriptsize[-1.8, +2.1]} & $+
 $1$ & $+3.9$ {\scriptsize[+1.6, +6.2]} & $-2.1$ {\scriptsize[-4.5, +0.1]} & $-0.4$ & $-42.2$ & $-4.1$ \\
 \bottomrule\end{tabular}\end{table}
 
+\begingroup
+\color{blue}
+\subsection{Position sensitivity of the token-wise critic}
+\label{app:position_sensitivity}
+Supervising each token-wise critic output with the same sequence-level reward does not guarantee semantic token-level credit assignment. We examine this distinction through two experiments: whether the 2D critic assigns lower readings to incorrect token positions, and whether its token-wise readings respond to targeted perturbations.
+
+\paragraph{Correlation with incorrect positions.}
+We evaluate the 2D critic on failed Sudoku solutions, where each output position corresponds directly to an answer cell and can therefore be identified as correct or incorrect. At each denoising step, we select the position with the lowest critic reading and measure precision as the fraction of selected positions that are incorrect. Table~\ref{tab:critic_position_precision} reports the range across the $K$ steps. Precision is 0.62--0.65, compared with 0.42 for a randomly selected position. The readings thus contain information about which positions are incorrect despite the sequence-level training supervision.
+
+\begin{table}[H]
+\centering\small\color{blue}
+\arrayrulecolor{blue}
+\caption{\textcolor{blue}{Identifying incorrect positions in failed Sudoku solutions. Precision measures whether the position with the lowest critic reading is incorrect; the reported range is over the $K$ denoising steps.}}
+\label{tab:critic_position_precision}
+\begin{tabular}{@{}lc@{}}
+\toprule
+\textbf{Metric} & \textbf{Range over $K$ steps} \\
+\midrule
+Precision & \textbf{0.62--0.65} \\
+Random baseline precision & 0.42 \\
+\bottomrule
+\end{tabular}
+\arrayrulecolor{black}
+\end{table}
+
+\paragraph{Counterfactual token corruption.}
+Starting from a correct solution, we corrupt a single token and measure the change in the critic reading at every position. We report the percentage of cases in which the corrupted position exhibits the largest decrease in reading among all positions, together with the random-position baseline (Table~\ref{tab:critic_token_corruption}). Across all four tasks, the corrupted position is substantially more likely to exhibit the largest decrease than expected by chance. This response provides evidence that the critic is sensitive to localized token perturbations and captures position-specific information despite being trained with sequence-level supervision.
+
+\begin{table}[H]
+\centering\small\color{blue}
+\arrayrulecolor{blue}
+\caption{\textcolor{blue}{Response to single-token corruption of correct solutions. The middle column reports the percentage of cases in which the corrupted position has the largest decrease in critic reading.}}
+\label{tab:critic_token_corruption}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+\textbf{Task} & \shortstack{\textbf{Corrupted position with}\\\textbf{largest reading decrease}} & \textbf{Random baseline} \\
+\midrule
+Sudoku & 11--22\% & 1.2\% \\
+K\&K & 23--30\% & 6.5\% \\
+Countdown & 8--61\% & 3.7\% \\
+Game24 & 13--26\% & 5.6\% \\
+\bottomrule
+\end{tabular}
+\arrayrulecolor{black}
+\end{table}
+
+\paragraph{Interpretation and limitations.}
+These experiments show that the critic captures position-specific information and responds to localized corruption, which may contribute to the 2D critic's advantage. An incorrect answer token can be sufficient to establish sequence-level failure, whereas a correct token alone cannot establish success. This asymmetry motivates position-sensitive critic readings even under sequence-level supervision. They do not establish that semantic token-level credit assignment is the sole source of the 2D critic's advantage: gradient scaling, conditioning, and optimization dynamics may also contribute to its performance gains. We therefore distinguish position-sensitive reward estimation from fully interpretable token-level credit assignment.
+\endgroup
+
 \subsection{The critic and the joint training}
 This group supports the critic paragraphs of Section~\ref{sec:experiments}: how the critic's value develops along the trajectory and over positions (Appendices~\ref{app:critic_quality} and~\ref{app:critic_maps}), the two critics over training on all tasks (Appendix~\ref{app:traj}), the measurements showing that they are interchangeable at a fixed policy (Appendix~\ref{app:critic_equiv}), the frozen critic (Appendix~\ref{app:frozen}), and the training dynamics of the reference runs (Appendix~\ref{app:dynamics}).
 
