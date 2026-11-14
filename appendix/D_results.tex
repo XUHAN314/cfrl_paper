@@ -379,7 +379,7 @@ Game24 & 13--26\% & 5.6\% \\
 \arrayrulecolor{black}
 \end{table}
 
-\paragraph{Interpretation and limitations.}
+
 These experiments show that the critic captures position-specific information and responds to localized corruption, which may contribute to the 2D critic's advantage. An incorrect answer token can be sufficient to establish sequence-level failure, whereas a correct token alone cannot establish success. This asymmetry motivates position-sensitive critic readings even under sequence-level supervision. They do not establish that semantic token-level credit assignment is the sole source of the 2D critic's advantage: gradient scaling, conditioning, and optimization dynamics may also contribute to its performance gains. We therefore distinguish position-sensitive reward estimation from fully interpretable token-level credit assignment.
 \endgroup
 
