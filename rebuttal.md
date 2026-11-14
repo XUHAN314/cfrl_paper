@@ -38,11 +38,14 @@ Test accuracy (%) on d1's original benchmarks.
 
 On 4×4 Sudoku, CFRL-SVG and CFRL-GRR improves the ELF-B baseline from 49.2% to approximately 96% and 59% respectively, compared to d1-LLaDA that improves the baseline from 11.7% to 22.1%. On Countdown-3, CFRL-SVG and CFRL-GRR improves the ELF-B baseline from 41.6% to approximately 63% and 43.7% respectively, compared to d1-LLaDA that improves the baseline from 20.7% to 42.2%.
 
-Our LLaDA baseline in Table 1 follows d1's released code and hyperparameters (LoRA rank 128, 6 generations per prompt, 256-token completions, 128 diffusion steps, learning rate 3×10⁻⁶, and KL weight 0.04). We use completion-only masked SFT, followed by diffu-GRPO for 8,000 inner steps (~32k rollouts), matching the rollout budget of our pathwise methods. All models use the same exact-success metric and validation-based checkpoint selection. 
+Our LLaDA baseline in Table 1 follows d1's released code and hyperparameters. All models use the same exact-success metric and validation-based checkpoint selection.We have added these experiments and clarifications to the revised manuscript （Table 9). 
 
-We have added these experiments and clarifications to the revised manuscript, with changes highlighted in blue. We thank the reviewer again for your constructive feedback. The additional compute accounting and external benchmark evaluation strengthen our empirical analysis and clarify the scope of our conclusions.
+
+Thanks for your valuable comments and suggestions, which helped in improving the manuscript. We have revised the manuscript with changes highlighted in blue. We thank the reviewer again for your constructive feedback. The additional compute accounting and external benchmark evaluation strengthen our empirical analysis and clarify the scope of our conclusions.
 
 [1] Hoffmann, J., Borgeaud, S., Mensch, A., Buchatskaya, E., Cai, T., Rutherford, E., de Las Casas, D., Hendricks, L. A., Welbl, J., Clark, A., et al. Training Compute-Optimal Large Language Models. NeurIPS 2022.
+
+[2] Zhao, S., Devaansh G., Qinqing Z., and Aditya G., d1: Scaling Reasoning in Diffusion Large Language Models via Reinforcement Learning. NeurIPS 2025
 
 ## Reviewer 6mKE
 
