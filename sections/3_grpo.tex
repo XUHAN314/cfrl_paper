@@ -25,13 +25,12 @@ The last step, $\pi_\theta\bigl(a^g_{K} \mid s^g_K\bigr)$, decodes all $L$ token
 Because this decoding step is comparatively easy to optimize, we scale its term by $\frac{1}{L}$ to slow its updates.
 
 \begingroup\color{blue}
-The key to optimization is to compute $\nabla_\theta \log\pi_\theta\bigl(a^g_k \mid s^g_{k}\bigr)$ for each group $g$. Below we omit $g$ for notation simplicity. Note that $a_k$ is from a Gaussian distribution $\mathcal{N}(\eta_k \rvx_{t_{k}}, \psi_k^2 c_\sigma^2 I)$.
+The key to the optimization of $\mathcal J_{\mathrm{GRR}}(\theta)$ is to compute the gradient $\nabla_\theta \log\pi_\theta\bigl(a^g_k \mid s^g_{k}\bigr)$ for each group $g$. Below we omit $g$ for notation simplicity. Note that $a_k$ is from a Gaussian distribution $\mathcal{N}(\eta_k \rvx_{t_{k}}, \psi_k^2 c_\sigma^2 I)$, and we have:
 \begin{align*}
-\nabla_\theta \log\pi_\theta\bigl(a_k \mid s_{k}\bigr) &= \frac{(a_k - \eta_k \rvx_{t_{k}})^\top }{\psi_{k}^2 c_\sigma^2} \left( \frac{\partial \rvx_{t_{k-1}}}{\partial \theta} + 
-\frac{\partial \rvx_{t_{k-1}}}{\partial \rvx_{t_{k-2}}} \cdot D_{\theta} \rvx_{t_{k-2}} \right) 
+\nabla_\theta \log\pi_\theta\bigl(a_k \mid s_{k}\bigr) &= \frac{(a_k - \eta_k \rvx_{t_{k}})^\top }{\psi_{k}^2 c_\sigma^2} \left( \frac{\partial \rvx_{t_{k}}}{\partial \theta} + 
+\frac{\partial \rvx_{t_{k}}}{\partial \rvx_{t_{k-1}}} \cdot D_{\theta} \rvx_{t_{k-1}} \right)  \approx \frac{(a_k - \eta_k \rvx_{t_{k}})^\top }{\psi_{k}^2 c_\sigma^2}\frac{\partial \rvx_{t_{k}}}{\partial \theta}.
 \end{align*}
-Note that there is a determinstic computation path from $\rvx_{t_0}$ to $\rvx_{t_{k-1}}$ through the self-conditioning mechanism in the denoiser. Therefore, the exact gradients  need to be backpropagated through the denoising steps. The term $D_\theta \rvx_{t_{k-2}}$ is the total derivative of $\rvx_{t_{k-2}}$ with respect to $\theta$ through the path.
-It brings computation difficulty in the same way as backpropagation through time. In our implementation, we omit the second term and only use the local gradient $\frac{\partial \rvx_{t_{k-1}}}{\partial \theta}$ when calculating the gradient of $\mathcal J_{\mathrm{GRR}}(\theta)$. The derivation details are given in Appendix~\ref{app:variance}. The gradient $\nabla_\theta\log\pi_\theta\bigl(a^g_{K} \mid s^g_K\bigr)$ is from the final decoding step, which is a standard cross-entropy loss and can be computed with the standard backpropagation.
+There is a determinstic computation path from $\rvx_{t_0}$ to $\rvx_{t_{k}}$ through the self-conditioning mechanism in the denoiser. The term $D_\theta \rvx_{t_{k-1}}$ is the total derivative of $\rvx_{t_{k-1}}$ with respect to $\theta$ through the path. The exact gradient calculation requires backpropagation through denoising steps, which has the same issue as backpropagation through time. In our implementation, we truncate the backpropagation through steps and only use the local gradient $\frac{\partial \rvx_{t_{k}}}{\partial \theta}$ as the approximate gradient. The derivation details are given in Appendix~\ref{app:variance}. The gradient $\nabla_\theta\log\pi_\theta\bigl(a^g_{K} \mid s^g_K\bigr)$ is from the final decoding step, which is a standard cross-entropy loss and can be computed with the standard backpropagation.
 \endgroup
 
 We also experimented with GRPO \citep{shao2024deepseekmath} with various settings and found that neither ratio clipping nor a KL penalty was necessary in our setting.
