@@ -1,6 +1,6 @@
 ## Reviewer oAZU
 
-We thank the reviewer for their positive assessment of our work and for recognizing the strengths of CFRL, particularly its application of pathwise policy optimization to continuous language generation and its ability to accommodate non-differentiable decoding and verification. We also appreciate the reviewer's acknowledgment that our gradient agreement and single-update experiments provide evidence of the critic's ability to guide effective policy optimization. We address the two concerns below.
+We thank the reviewer for the positive assessment of our work and for recognizing the strengths of CFRL, particularly its application of pathwise policy optimization to continuous language generation and its ability to accommodate non-differentiable decoding and verification. We also appreciate the reviewer's acknowledgment that our gradient agreement and single-update experiments provide evidence of the critic's ability to guide effective policy optimization. We address the two concerns below.
 
 > The within-ELF comparison lacks compute matching and clear attribution. Appendix D reports 4–6M rollout denoiser calls for CFRL-SVG versus 1.2M for CFRL-GRR (about 2M for SVG on Sudoku), with additional critic pre-training and online computation. The same-rollout gradient experiments support update quality but do not establish performance under equal total compute. A budget-matched comparison including critic costs is needed.
 
