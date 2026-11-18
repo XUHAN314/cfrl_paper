@@ -6,15 +6,11 @@ We sincerely thank all reviewers for their thoughtful feedback, constructive sug
 
 - **Self-Conditioning Gradient Analysis:** We expanded the theoretical analysis of GRR gradients, showing that accounting for self-conditioning requires backpropagation through the denoising trajectory, which is computationally expensive and therefore omitted in GRR, introducing bias. In contrast, SVG efficiently incorporates the self-conditioning gradient through a single transition. To isolate its contribution, we conducted two additional ablations: detaching the self-conditioning gradient in SVG and removing self-conditioning entirely from both methods. The results help disentangle the contributions of reduced bias and variance in SVG relative to GRR and demonstrate that SVG retains substantial advantages over GRR even without self-conditioning.
 
-- **Actor Objective Clarification:** We resolved confusion in the actor objective and critic pooling, and added a theoretical justification for our design in the appendix.
+- **Actor Objective Clarification:** We clarified the actor objective. Eq. (7) maximizes the expected reward $\mathbb{E}[V_\phi]$ and our implementation uses $\mathrm{logit}(V_{\phi})$ instead. We added this clarification in the main paper and theoretical justification in the appendix.
 
 - **Token-Level Credit Assignment Analysis:** We conducted two additional experiments evaluating whether the 2D critic captures position-specific information. We measured the correlation between token-wise readings and incorrect Sudoku positions and introduced controlled token-corruption tests across all four tasks. The results demonstrate sensitivity to localized errors while clarifying the distinction between position-sensitive reward estimation and semantic token-level credit assignment.
 
 - **Scalability to Larger Models:** We extended our experiments from ELF-B (105M) to ELF-L (652M). Scaling from ELF-B (105M) to ELF-L (652M) raises CFRL-SVG accuracy on all three non-saturated tasks (Table 2). Despite stronger SFT baselines, ELF-L retains comparable or larger RL gains and outperforms CFRL-GRR, suggesting that increased model capacity complements CFRL and supports its scaling potential.
-
-- **Additional Diffusion Language Model Comparisons:** We clarified the LLaDA baseline's training and evaluation settings and extended our experiments to the original d1 benchmarks, using the authors' reported LLaDA results as references. These evaluations provide further evidence of CFRL's effectiveness while clarifying that we do not claim superiority of continuous-flow language models over discrete diffusion language models.
-
-- **Verifier Implementation and Reproducibility:** We clarified the exact-success verification procedures, including the requirement that the shared verifier of Game24 and Countdown uses every input number exactly once.
 
 We sincerely appreciate the reviewers' feedback, which has helped us improve the clarity, rigor, and empirical support of our work. We believe these revisions substantially strengthen the manuscript and more clearly establish the contributions and limitations of CFRL.
 
